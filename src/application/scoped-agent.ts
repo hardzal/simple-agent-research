@@ -5,7 +5,10 @@ import {
   type AgentRunOptions,
   type AgentFinishEvent,
 } from "@anvia/core/agent";
-import type { StreamingCompletionModel } from "@anvia/core/completion";
+import type {
+  CompletionResponse,
+  StreamingCompletionModel,
+} from "@anvia/core/completion";
 import type { AnyTool } from "@anvia/core/tool";
 
 export type RunScope = {
@@ -25,6 +28,11 @@ type ScopedAgentOptions = {
   instructions?: string;
   maxTurns: number;
   maxExecutionMs: number;
+  prepareInput?(settings: AgentRunOptions): AgentRunOptions;
+  transformResponse?(
+    scope: RunScope,
+    response: CompletionResponse,
+  ): CompletionResponse;
   tools(scope: RunScope): readonly AnyTool[];
   finalize(scope: RunScope, event: AgentFinishEvent): void | Promise<void>;
   onClose?(scope: RunScope): void;
@@ -51,6 +59,7 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
     tools: options.tools(inactive),
   };
   function bind(settings: AgentRunOptions) {
+    settings = options.prepareInput?.(settings) ?? settings;
     const controller = new AbortController();
     const signals = [controller.signal];
     if (settings.abortSignal) signals.push(settings.abortSignal);
@@ -89,6 +98,10 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
             onToolInput() {
               scope.assertActive();
               scope.toolCalls++;
+            },
+            onCompletionResponse({ response }) {
+              const transformed = options.transformResponse?.(scope, response);
+              return transformed ? { response: transformed } : undefined;
             },
           },
         ],

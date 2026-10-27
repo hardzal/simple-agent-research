@@ -1,6 +1,18 @@
 import { marked } from "marked";
 import { normalizeSourceUrl, type Source } from "./source-registry.js";
 
+export function reportCitationIds(content: string): string[] {
+  const heading = /^##\s+(?:Sources|Sumber|References|Referensi)\s*$/im.exec(
+    content,
+  );
+  const body = content.slice(0, heading?.index ?? content.length);
+  return [
+    ...new Set(
+      [...body.matchAll(/\[(S[1-9]\d*)\]/g)].map((match) => match[1]!),
+    ),
+  ];
+}
+
 function linksIn(content: string): { urls: string[]; hasHtml: boolean } {
   const tokens = marked.lexer(content);
   const urls = Object.values(tokens.links).map((link) => link.href);

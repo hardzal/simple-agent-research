@@ -2,7 +2,7 @@
 
 Proof of concept research agent dengan TypeScript, Anvia SDK v1, Tavily, dan Docker. Agent menerima topik, melakukan pencarian web dalam budget, lalu menulis dan memverifikasi laporan Markdown dengan citation yang dapat ditelusuri.
 
-**Status saat ini:** branch `phase/03-agent-behavior` disiapkan dari codebase Fase 2 dengan dua perbaikan review yang verified offline. P3-01–P3-04 masih planned; research agent, completion policy produk, UI/server Studio, dan Docker belum tersedia. LIVE-01/02 merupakan bukti terdahulu, tidak dijalankan ulang pada persiapan ini. Persiapan menunggu owner review pada [draft PR #2](https://github.com/hardzal/simple-agent-research/pull/2). Evidence dan batas verifikasi ada di CONTEXT.
+**Status saat ini:** P3-01–P3-04 verified offline pada `phase/03-agent-behavior`: satu factory agent, instructions, runtime programatik, policy minimum, metrics dan scripted behavior suite tersedia. Menunggu owner review pada [draft PR #2](https://github.com/hardzal/simple-agent-research/pull/2). Kelengkapan status/revisi Fase 4, UI/server Studio, dan Docker belum selesai. LIVE-01/02 adalah bukti terdahulu, tidak dijalankan ulang pada Fase 3. Evidence dan batas verifikasi ada di CONTEXT.
 
 ## Dokumen proyek
 
@@ -20,7 +20,7 @@ Target development adalah Windows dengan Docker Desktop/WSL2. Runtime memakai ga
 
 Hermes mengerjakan satu fase pada branch terpisah, menjalankan checks yang relevan, memperbarui PLAN/CONTEXT, dan menyerahkan draft PR ke master. Pemilik proyek melakukan review dan merge sebelum fase berikutnya.
 
-PR spesifikasi sudah di-merge. Atas instruksi pengguna, phase/02-tools dibuat langsung dari commit Fase 1 5f516eb pada phase/01-project-foundation, tanpa menunggu merge Fase 1. Pada instruksi berikutnya, pengguna juga mengizinkan branch `phase/03-agent-behavior` dibuat dari Fase 2 `e425782` untuk perbaikan review dan persiapan transisi. Fase 1/2 belum di-merge; pengecualian ini tidak mengubah scope produk atau menandai task behavior Fase 3 selesai.
+PR spesifikasi sudah di-merge. Atas instruksi pengguna, phase/02-tools dibuat langsung dari commit Fase 1 5f516eb pada phase/01-project-foundation, tanpa menunggu merge Fase 1. Pada instruksi berikutnya, pengguna juga mengizinkan branch `phase/03-agent-behavior` dibuat dari Fase 2 `e425782` untuk perbaikan review dan persiapan transisi. Pengguna kemudian meminta melanjutkan P3-01–P3-04 pada branch tersebut. Fase 1/2 belum di-merge; PR #2 diperbarui pada branch yang sama. Pengecualian ini tidak mengubah scope produk, menganggap M1 selesai, atau mengizinkan Fase 4 tanpa review/merge.
 
 ## Pengecekan offline
 
@@ -31,13 +31,21 @@ pnpm install --frozen-lockfile
 pnpm run check
 ```
 
-check menjalankan format:check, lint, typecheck, build, test:unit, dan test:integration. Semuanya offline terhadap provider: fake/scripted model dan fetch sintetis; tidak memerlukan kredensial atau membaca .env. Integration suite memakai filesystem sementara. Instalasi dependency tetap memerlukan registry atau cache pnpm yang lengkap. Gunakan pnpm run format untuk memperbaiki format. Offline eval riset, pnpm run studio, dan Docker Compose belum tersedia; build menghasilkan modul, bukan aplikasi riset siap pakai.
+check menjalankan format:check, lint, typecheck, build, test:unit, test:integration, dan eval:offline. Semuanya offline terhadap provider: fake/scripted model dan fetch sintetis; tidak memerlukan kredensial atau membaca .env. Integration/behavior suite memakai filesystem sementara dan membersihkannya. Instalasi dependency tetap memerlukan registry atau cache pnpm yang lengkap. Gunakan pnpm run format untuk memperbaiki format. pnpm run studio dan Docker Compose belum tersedia; build menghasilkan API programatik, bukan CLI interaktif atau server UI.
 
 ## Tools Fase 2
 
 Fase 2 menyediakan tiga tools scoped: `webSearch`, `writeFile`, dan `readFile`. Search memakai adapter Tavily bounded (maksimum lima hasil, tanpa raw page/LLM answer/retry), registry memberi ID sumber per run, dan report store memakai path aplikasi berbasis UUID, batas UTF-8/hash, hardlink tanpa overwrite, serta penolakan traversal/symlink/junction. Validator awal menolak sumber asing, URL asing, HTML mentah, dan laporan tanpa citation. Handler menegakkan satu operasi aktif, kuota sebelum I/O, deadline/cancellation, satu write, dan satu read-back. Research agent dan completion policy produk belum termasuk Fase 2.
 
-Perintah terpisah: `pnpm run test:unit` (107 tests) dan `pnpm run test:integration` (12 tests). LIVE-02 menggunakan query publik `Redis official documentation`, satu provider call, maksimum lima hasil, tanpa LLM/retry; output hanya metadata aman.
+Perintah terpisah: `pnpm run test:unit` (107 tests), `pnpm run test:integration` (32 tests), dan `pnpm run eval:offline` (12 behavior cases). LIVE-02 menggunakan query publik `Redis official documentation`, satu provider call, maksimum lima hasil, tanpa LLM/retry; output hanya metadata aman.
+
+## Runtime programatik Fase 3
+
+`src/index.ts` (hasil build `dist/index.js`) mengekspor `createResearchRuntime`, `createResearchAgent`, `createScopedStudio`, dan `parseConfig`. `createResearchRuntime(config, overrides)` menyediakan `{ agent, run }`. Overrides model/searchProvider/reportStore/logger mendukung fixture offline tanpa API asli. Runtime tidak memuat .env sendiri dan konstruksinya tidak membuat model/search request. Pemanggilan run tanpa overrides memakai provider nyata dari config; itu bukan command test otomatis.
+
+`run(prompt)` mengembalikan typed ResearchResponse setelah policy yang sama dengan agent.generate/stream: completed wajib search/write/read-back sah, klarifikasi mengakhiri request tanpa tools, no-evidence memerlukan pencarian sukses tanpa report. Path/sources dibuat dari state, bukan dipercaya dari output model. Untuk route Studio in-process, daftarkan runtime.agent dengan createScopedStudio; jangan memakai new Studio default yang mengkloning scoped agent.
+
+Behavior suite mencakup faktual/eksploratif/komparatif, EVAL-01–03, bahasa/override, source isolation dan injection negative control. Fixtures membuktikan wiring/enforcement, bukan kualitas LLM live. Raw stream delta/turn adalah draft; hanya terminal text/output JSON yang sudah melewati policy. Invalid request menolak sebelum run. Exception model/turn/deadline/cancellation dapat tetap reject; pemetaan seluruh status, revisi end-to-end dan citation edge cases dilengkapi Fase 4. UI/trace persistence dan bind mount tetap Fase 5; suite Anvia eval lengkap tetap Fase 6.
 
 ## Guarded LIVE-01 — bukan bagian checks offline
 

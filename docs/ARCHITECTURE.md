@@ -1,8 +1,8 @@
 # Architecture — Simple Contextual Research Agent
 
-**Status:** Fondasi Fase 1 diimplementasikan; checks offline dan LIVE-01 lulus; handoff/review belum dilakukan
+**Status:** Runtime/instructions Fase 3 verified offline; draft PR #2 awaiting_review; kelengkapan status/revisi Fase 4 dan Docker/Studio UI Fase 5 belum selesai
 
-**Diperbarui:** 2026-10-27
+**Diperbarui:** 2026-10-28
 
 **Requirement:** [PRD.md](PRD.md)
 
@@ -104,7 +104,15 @@ Direct tool invocation tanpa scope run yang sah ditolak sebelum side effect. Uni
 
 src/application/scoped-agent.ts menyediakan adapter tipis turunan Agent: setiap generate/stream membuat instance SDK baru, UUID aplikasi, timer/AbortSignal, dan tools yang menutup scope request. Lifecycle menyimpan sdkRunId dan menjalankan callback finalization sebelum terminal outcome. Model attempts dihitung sebelum completion; cleanup juga berjalan ketika pembuatan scoped tools, provider, finalizer, atau cancellation gagal. Uji dua generation/stream overlap membuktikan identitas dan cleanup terpisah; ini bukan bukti bahwa seluruh research policy Fase 3/4 sudah tersedia.
 
-Studio 1.3.20 secara default mengkloning agent untuk trace observer; clone menghilangkan override generate/stream pada adapter. Karena itu src/application/scoped-studio.ts memakai stores.sessions=false, pipelineLogs=false, pipelineRuns=false tanpa model registry. Ini menonaktifkan trace store default dan mempertahankan objek scoped asli. Route buffered dan streaming diuji lewat Studio.app.request dengan fake model, bukan sekadar memeriksa daftar agent. Jangan mengganti factory ini dengan new Studio default atau mengaktifkan model registry/trace storage tanpa mengulang compatibility checks. UI/server/Docker dan pembatasan input riset stateless tetap task fase berikutnya.
+Studio 1.3.20 secara default mengkloning agent untuk trace observer; clone menghilangkan override generate/stream pada adapter. Karena itu src/application/scoped-studio.ts memakai stores.sessions=false, pipelineLogs=false, pipelineRuns=false tanpa model registry. Ini menonaktifkan trace store default dan mempertahankan objek scoped asli. Route buffered dan streaming diuji lewat Studio.app.request dengan fake model, bukan sekadar memeriksa daftar agent. Jangan mengganti factory ini dengan new Studio default atau mengaktifkan model registry/trace storage tanpa mengulang compatibility checks. Pembatasan input riset stateless kini ditegakkan Fase 3. UI/server/Docker dan trace persistence tetap task Fase 5.
+
+### Binding produk Fase 3
+
+`src/agent/research.agent.ts` menggunakan factory scoped tersebut dengan hook typed `prepareInput` dan `transformResponse`. Input menerima string atau user message berbasis teks; untuk history Studio hanya pesan terakhir yang harus user dipakai. Envelope divalidasi Zod dan panjang request dibatasi sebelum model. Session/continuation dan override policy runtime tidak diteruskan. Hook default kosong menjaga kompatibilitas probe Fase 1.
+
+State handler/usage/outcome disimpan dalam WeakMap dengan key scope request dan dihapus pada close. Middleware mengubah kandidat final non-tool menjadi JSON response aplikasi sebelum SDK membuat terminal text/output; lifecycle finalizer memeriksa hasilnya lagi. Event delta/turn tetap draft, tidak boleh dianggap completed. `.run(prompt)` memparse output boundary yang sama menjadi typed ResearchResponse, tanpa model kedua atau pembacaan file tambahan.
+
+Policy minimum memeriksa search/write/read-back flags, terminal latch, strict AgentDecision schema, dan citation sources yang dipakai. Source count tidak mencakup hasil search yang tidak dikutip. Metrics dicatat lewat safe logger, token raw Chat yang hilang tetap null. Invalid input menolak sebelum scope dibuat; exception model/turn/deadline/cancellation dapat tetap reject pada Fase 3. Pemetaan lengkap seluruh exception/status/revisi dan citation edge cases dimiliki P4-01–P4-04; integrasi UI/trace/bind mount dimiliki Fase 5.
 
 ## 5. Model provider dan konfigurasi
 

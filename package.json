@@ -14,10 +14,11 @@
     "lint": "eslint .",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "test:unit": "vitest run --exclude '**/*.integration.test.ts' --exclude tests/report-store.test.ts",
-    "test:integration": "vitest run tests/report-store.test.ts tests/research-tools.integration.test.ts",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts' --exclude '**/*.behavior.test.ts' --exclude tests/report-store.test.ts --exclude tests/research-agent.test.ts",
+    "test:integration": "vitest run tests/report-store.test.ts tests/research-tools.integration.test.ts tests/research-agent.test.ts",
+    "eval:offline": "vitest run tests/research.behavior.test.ts",
     "test:live": "tsx scripts/live.ts",
-    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run build && pnpm run test:unit && pnpm run test:integration"
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run build && pnpm run test:unit && pnpm run test:integration && pnpm run eval:offline"
   },
   "dependencies": {
     "@anvia/core": "1.17.1",

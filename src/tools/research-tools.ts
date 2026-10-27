@@ -6,7 +6,10 @@ import type { AppConfig } from "../config/index.js";
 import type { SearchProvider } from "../providers/search-provider.js";
 import type { ReportStore } from "../services/report-store.js";
 import { createSourceRegistry } from "../services/source-registry.js";
-import { validateReport } from "../services/report-validation.js";
+import {
+  reportCitationIds,
+  validateReport,
+} from "../services/report-validation.js";
 
 export function createResearchTools(
   scope: RunScope,
@@ -32,7 +35,9 @@ export function createResearchTools(
   let webSearchCalls = 0;
   let searchSuccesses = 0;
   let validationRejections = 0;
-  let report: { path: string; hash: string; bytes: number } | undefined;
+  let report:
+    | { path: string; hash: string; bytes: number; sources: string[] }
+    | undefined;
   let reportVerified = false;
   function check() {
     if (status) throw new Error("RUN_TERMINAL");
@@ -128,7 +133,16 @@ export function createResearchTools(
           written.bytesWritten !== Buffer.byteLength(content)
         )
           throw new Error();
-        report = { path: written.path, hash, bytes: written.bytesWritten };
+        const cited = new Set(reportCitationIds(content));
+        report = {
+          path: written.path,
+          hash,
+          bytes: written.bytesWritten,
+          sources: registry
+            .list()
+            .filter((source) => cited.has(source.sourceId))
+            .map((source) => source.url),
+        };
         return {
           success: true as const,
           path: written.path,
@@ -183,6 +197,7 @@ export function createResearchTools(
       sources: registry.list(),
       reportCreated: Boolean(report),
       reportVerified,
+      reportSources: report ? [...report.sources] : [],
       ...(reportVerified && report ? { reportPath: report.path } : {}),
     }),
     tools: [
