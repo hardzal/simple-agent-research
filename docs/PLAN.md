@@ -1,6 +1,6 @@
 # Implementation Plan — Milestone 1
 
-**Status:** Checks offline dan LIVE-01 Fase 1 lulus; commit/draft PR dan owner review belum dilakukan; Fase 2 belum dimulai
+**Status:** Implementasi Fase 2 selesai secara lokal; checks offline dan LIVE-02 lulus; handoff/review menunggu; Fase 3 belum dimulai
 
 **Diperbarui:** 2026-10-27
 
@@ -56,7 +56,7 @@ Keputusan spike Studio: factory scoped menonaktifkan session/trace stores untuk 
 
 ## 4. Fase 2 — Tools implementation
 
-**Dependency:** Fase 1 di-merge.
+**Dependency:** Fase 1 telah diverifikasi. Atas instruksi pengguna, branch `phase/02-tools` dibuat langsung dari commit Fase 1 `5f516eb` tanpa menunggu merge; pengecualian basis branch ini tidak memperluas scope fase.
 
 | Task    | Pekerjaan                                                                                          | Syarat selesai                                                                                | Acuan                     |
 | ------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------- |
@@ -66,6 +66,8 @@ Keputusan spike Studio: factory scoped menonaktifkan session/trace stores untuk 
 | LIVE-02 | Satu pencarian Tavily menggunakan query fixture publik                                             | Response dapat dinormalisasi; fields opsional ditangani; tidak ada kredensial di output       | V-03                      |
 
 Validasi dasar di P2-02 harus sudah menolak sumber asing sebelum successful write. Fase 4 memperlengkap format, status, revisi, dan edge cases; tidak menunda semua proteksi sampai fase tersebut.
+
+Status P2-01/P2-02/P2-03: verified offline melalui adapter/registry/validator unit tests serta temp-filesystem integration untuk quota/deadline, isolation, round-trip, tampering, traversal, symlink/junction, dan EACCES sintetis. LIVE-02 verified live dengan tepat satu provider call, lima hasil ternormalisasi, tanpa LLM/retry. Completion policy produk dan bind mount Docker belum diklaim.
 
 **Pemeriksaan:** handler unit tests tanpa LLM, temp-filesystem integration, duplicate/unknown source tests, quota, timeout, symlink, permission failure, dan LIVE-02.
 

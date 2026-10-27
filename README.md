@@ -2,7 +2,7 @@
 
 Proof of concept research agent dengan TypeScript, Anvia SDK v1, Tavily, dan Docker. Agent menerima topik, melakukan pencarian web dalam budget, lalu menulis dan memverifikasi laporan Markdown dengan citation yang dapat ditelusuri.
 
-**Status saat ini:** fondasi Fase 1 diimplementasikan; checks offline dan LIVE-01 lulus. Research agent, tiga application tools, UI/server Studio, dan Docker belum tersedia. Fase 2 belum dimulai; commit/draft PR dan review Fase 1 masih menunggu. Evidence ada di CONTEXT.
+**Status saat ini:** fondasi dan tiga application tools Fase 2 tersedia sebagai modul dengan scope eksplisit. Checks offline, LIVE-01, dan LIVE-02 lulus. Research agent, completion policy produk, UI/server Studio, dan Docker belum tersedia. Evidence dan batas verifikasi ada di CONTEXT.
 
 ## Dokumen proyek
 
@@ -20,9 +20,9 @@ Target development adalah Windows dengan Docker Desktop/WSL2. Runtime memakai ga
 
 Hermes mengerjakan satu fase pada branch terpisah, menjalankan checks yang relevan, memperbarui PLAN/CONTEXT, dan menyerahkan draft PR ke master. Pemilik proyek melakukan review dan merge sebelum fase berikutnya.
 
-PR spesifikasi sudah di-merge. Fase 1 dikerjakan pada branch phase/01-project-foundation; status bukti dan blocker ada di CONTEXT.
+PR spesifikasi sudah di-merge. Atas instruksi pengguna, phase/02-tools dibuat langsung dari commit Fase 1 5f516eb pada phase/01-project-foundation, tanpa menunggu merge Fase 1. Pengecualian basis branch ini tidak mengubah scope produk atau mengizinkan Fase 3 otomatis.
 
-## Pengecekan offline Fase 1
+## Pengecekan offline
 
 Gunakan Node.js 24.14.0 (24 LTS) dan pnpm 11.22.0 sesuai engines/packageManager. Hanya pnpm-lock.yaml yang digunakan; jangan membuat package-lock.json. pnpm-workspace.yaml mengizinkan build script esbuild secara spesifik dan menjaga OpenAI client versi yang sama dengan adapter.
 
@@ -31,7 +31,13 @@ pnpm install --frozen-lockfile
 pnpm run check
 ```
 
-check menjalankan format:check, lint, typecheck, build, dan test:unit. Semuanya offline terhadap provider: fake/scripted model dan fetch sintetis; tidak memerlukan kredensial atau membaca .env. Instalasi dependency tetap memerlukan registry atau cache pnpm yang lengkap. Gunakan pnpm run format untuk memperbaiki format. Integration suite filesystem, offline eval riset, pnpm run studio, dan Docker Compose belum tersedia; build saat ini menghasilkan modul fondasi, bukan aplikasi riset yang sudah dapat dipakai.
+check menjalankan format:check, lint, typecheck, build, test:unit, dan test:integration. Semuanya offline terhadap provider: fake/scripted model dan fetch sintetis; tidak memerlukan kredensial atau membaca .env. Integration suite memakai filesystem sementara. Instalasi dependency tetap memerlukan registry atau cache pnpm yang lengkap. Gunakan pnpm run format untuk memperbaiki format. Offline eval riset, pnpm run studio, dan Docker Compose belum tersedia; build menghasilkan modul, bukan aplikasi riset siap pakai.
+
+## Tools Fase 2
+
+Fase 2 menyediakan tiga tools scoped: `webSearch`, `writeFile`, dan `readFile`. Search memakai adapter Tavily bounded (maksimum lima hasil, tanpa raw page/LLM answer/retry), registry memberi ID sumber per run, dan report store memakai path aplikasi berbasis UUID, batas UTF-8/hash, hardlink tanpa overwrite, serta penolakan traversal/symlink/junction. Validator awal menolak sumber asing, URL asing, HTML mentah, dan laporan tanpa citation. Handler menegakkan satu operasi aktif, kuota sebelum I/O, deadline/cancellation, satu write, dan satu read-back. Research agent dan completion policy produk belum termasuk Fase 2.
+
+Perintah terpisah: `pnpm run test:unit` (94 tests) dan `pnpm run test:integration` (11 tests). LIVE-02 menggunakan query publik `Redis official documentation`, satu provider call, maksimum lima hasil, tanpa LLM/retry; output hanya metadata aman.
 
 ## Guarded LIVE-01 — bukan bagian checks offline
 
@@ -41,8 +47,16 @@ Runner dan guard-nya diuji dengan fixtures; alur tool-call/result/final response
 pnpm run test:live --case LIVE-01
 ```
 
-Runner menolak case lain, case ID yang hilang, dan opt-in yang bukan persis true. Satu invocation adalah satu run, maksimum dua model calls dan satu tool sintetis tanpa side effect; deadline maksimum 60 detik (atau config yang lebih kecil), tanpa SDK/runtime retry atau model/endpoint fallback. Jangan melakukan automatic rerun. Runner meminta nonce tool lalu memverifikasi replay pada jawaban final, dan hanya mengeluarkan ringkasan aman; token yang tidak dilaporkan gateway bernilai null. Tool sintetis ini bukan application tool keempat. Kuota total dan penghentian tetap mengikuti PLAN.
+Runner menerima LIVE-01 dan LIVE-02 pada fase ini; case ID yang hilang/tidak didukung dan opt-in yang bukan persis true ditolak. Satu invocation adalah satu run, maksimum dua model calls dan satu tool sintetis tanpa side effect; deadline maksimum 60 detik (atau config yang lebih kecil), tanpa SDK/runtime retry atau model/endpoint fallback. Jangan melakukan automatic rerun. Runner meminta nonce tool lalu memverifikasi replay pada jawaban final, dan hanya mengeluarkan ringkasan aman; token yang tidak dilaporkan gateway bernilai null. Tool sintetis ini bukan application tool keempat. Kuota total dan penghentian tetap mengikuti PLAN.
 
 Probe memberikan finalResponse siap salin melalui tool; model harus menyalinnya persis. Exact-match tetap ditegakkan kode. Kegagalan menghasilkan diagnostics aman (counters, usage, status, dan kecocokan nonce), tanpa teks model, nonce, raw provider error, atau secret. Untuk memuat .env langsung tanpa mencetak isinya, mekanisme yang telah diuji adalah ALLOW_LIVE_TESTS=true pnpm exec node --env-file=.env --import tsx scripts/live.ts --case LIVE-01; tetap wajib ada izin live baru, bukan automatic rerun.
 
-Spike Studio memakai factory scoped tanpa session/trace persistence agar SDK tidak mengkloning dan melewati boundary. Buffered/streaming route sudah diuji in-process; inspeksi UI/trace produk tetap wajib dibuktikan pada Fase 5. Gateway/model lulus LIVE-01; ini bukan uji riset end-to-end. Tavily asli, report filesystem, dan UI Docker belum diuji.
+## Guarded LIVE-02
+
+```sh
+ALLOW_LIVE_TESTS=true pnpm exec node --env-file=.env --import tsx scripts/live.ts --case LIVE-02
+```
+
+Satu invocation LIVE-02 melakukan satu query publik `Redis official documentation`, maksimum lima hasil, tanpa LLM dan tanpa retry. Output hanya metadata aman; raw response, snippet, dan secret tidak dicetak. LIVE-02 terakhir lulus dengan satu search call, lima hasil, lima source IDs, dan durasi sekitar 2,8 detik. Jangan rerun otomatis.
+
+Spike Studio memakai factory scoped tanpa session/trace persistence agar SDK tidak mengkloning dan melewati boundary. Buffered/streaming route sudah diuji in-process; inspeksi UI/trace produk tetap wajib dibuktikan pada Fase 5. LIVE-01/02 bukan uji riset end-to-end. Report filesystem diuji headless pada Windows; UI dan bind mount Docker belum diuji.

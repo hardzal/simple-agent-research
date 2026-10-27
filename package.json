@@ -14,14 +14,16 @@
     "lint": "eslint .",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "test:unit": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts' --exclude tests/report-store.test.ts",
+    "test:integration": "vitest run tests/report-store.test.ts tests/research-tools.integration.test.ts",
     "test:live": "tsx scripts/live.ts",
-    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run build && pnpm run test:unit"
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run build && pnpm run test:unit && pnpm run test:integration"
   },
   "dependencies": {
     "@anvia/core": "1.17.1",
     "@anvia/openai": "1.3.5",
     "@anvia/studio": "1.3.20",
+    "marked": "18.1.2",
     "openai": "7.43.0",
     "zod": "4.6.7"
   },
