@@ -2,7 +2,7 @@
 
 Proof of concept research agent dengan TypeScript, Anvia SDK v1, Tavily, dan Docker. Agent menerima topik, melakukan pencarian web dalam budget, lalu menulis dan memverifikasi laporan Markdown dengan citation yang dapat ditelusuri.
 
-**Status saat ini:** branch `phase/03-agent-behavior` disiapkan dari codebase Fase 2 dengan dua perbaikan review yang verified offline. P3-01–P3-04 masih planned; research agent, completion policy produk, UI/server Studio, dan Docker belum tersedia. LIVE-01/02 merupakan bukti terdahulu, tidak dijalankan ulang pada persiapan ini. Evidence dan batas verifikasi ada di CONTEXT.
+**Status saat ini:** branch `phase/03-agent-behavior` disiapkan dari codebase Fase 2 dengan dua perbaikan review yang verified offline. P3-01–P3-04 masih planned; research agent, completion policy produk, UI/server Studio, dan Docker belum tersedia. LIVE-01/02 merupakan bukti terdahulu, tidak dijalankan ulang pada persiapan ini. Persiapan menunggu owner review pada [draft PR #2](https://github.com/hardzal/simple-agent-research/pull/2). Evidence dan batas verifikasi ada di CONTEXT.
 
 ## Dokumen proyek
 

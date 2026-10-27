@@ -1,6 +1,6 @@
 # Implementation Plan — Milestone 1
 
-**Status:** Persiapan Fase 3 verified offline pada branch berbasis Fase 2; handoff pending; P3-01–P3-04 masih planned
+**Status:** Persiapan Fase 3 `awaiting_review` pada [draft PR #2](https://github.com/hardzal/simple-agent-research/pull/2); checks offline lulus; P3-01–P3-04 masih planned
 
 **Diperbarui:** 2026-10-27
 
@@ -24,14 +24,14 @@ Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika 
 
 ## 2. Peta fase
 
-| Fase | Branch                        | Hasil                                                  | Status saat ini                      |
-| ---- | ----------------------------- | ------------------------------------------------------ | ------------------------------------ |
-| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | verified; pushed, belum merged       |
-| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | verified; pushed, belum merged       |
-| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | persiapan verified; P3 tasks planned |
-| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | planned                              |
-| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | planned                              |
-| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | planned                              |
+| Fase | Branch                        | Hasil                                                  | Status saat ini                             |
+| ---- | ----------------------------- | ------------------------------------------------------ | ------------------------------------------- |
+| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | verified; pushed, belum merged              |
+| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | verified; pushed, belum merged              |
+| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | persiapan awaiting_review; P3 tasks planned |
+| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | planned                                     |
+| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | planned                                     |
+| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | planned                                     |
 
 ## 3. Fase 1 — Project foundation
 
@@ -46,7 +46,7 @@ Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika 
 
 Tool sintetis LIVE-01 hanya fixture compatibility test, bukan application tool keempat dalam research agent.
 
-Status task: P1-01 verified offline (fresh install frozen lockfile dan full check); P1-02 verified offline untuk spike scope/SDK/Studio routes; P1-03 verified offline (config, provider, logger, dan guards). LIVE-01 verified: run terakhir completed dengan dua model calls, satu tool call, dan exact nonce match. Dua percobaan sebelumnya gagal validasi replay; pada percobaan diagnostik terbukti nonce diterima tetapi format tidak persis. Tool kini memberikan finalResponse siap salin tanpa melonggarkan assertion. Setiap tambahan live run mendapat otorisasi pengguna; tidak ada automatic rerun. Rincian hasil ada di CONTEXT. Commit Fase 1 `5f516eb` sudah tersedia di remote; belum ada PR implementasi atau merge. Pengguna mengizinkan basis Fase 2 dan persiapan Fase 3 tanpa menunggu merge; lihat dependency fase terkait.
+Status task: P1-01 verified offline (fresh install frozen lockfile dan full check); P1-02 verified offline untuk spike scope/SDK/Studio routes; P1-03 verified offline (config, provider, logger, dan guards). LIVE-01 verified: run terakhir completed dengan dua model calls, satu tool call, dan exact nonce match. Dua percobaan sebelumnya gagal validasi replay; pada percobaan diagnostik terbukti nonce diterima tetapi format tidak persis. Tool kini memberikan finalResponse siap salin tanpa melonggarkan assertion. Setiap tambahan live run mendapat otorisasi pengguna; tidak ada automatic rerun. Rincian hasil ada di CONTEXT. Commit Fase 1 `5f516eb` sudah tersedia di remote; belum memiliki PR khusus Fase 1 atau merge. Draft PR persiapan Fase 3 membawa fondasi ini melalui ancestry branch. Pengguna mengizinkan basis Fase 2 dan persiapan Fase 3 tanpa menunggu merge; lihat dependency fase terkait.
 
 Keputusan spike Studio: factory scoped menonaktifkan session/trace stores untuk menghindari clone yang melewati adapter; buffered/streaming route terbukti offline. Trace yang dapat diinspeksi sesuai DoD tetap wajib dipenuhi dan diuji pada integrasi Fase 5; factory spike ini bukan klaim kelulusan UI/trace produk.
 

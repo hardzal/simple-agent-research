@@ -4,7 +4,7 @@
 
 **Milestone aktif:** M1
 
-**Status:** Persiapan Fase 3 verified offline; handoff pending; research behavior P3-01–P3-04 belum diimplementasikan
+**Status:** Persiapan Fase 3 `awaiting_review`; checks offline lulus; research behavior P3-01–P3-04 belum diimplementasikan
 
 **Repository:** https://github.com/hardzal/simple-agent-research
 
@@ -122,11 +122,12 @@ Pada baseline dokumentasi dahulu tidak ada test, provider request, eval live, Do
 - RED: focused suite menunjukkan 9 failures yang diharapkan (URL/round-trip dan input invalid generate/stream), tanpa production fix. GREEN: focused SDK/validator/integration/probe suite 47/47 pass. Valid search dan provider failure masing-masing tetap satu attempt; input invalid tidak memanggil provider atau filesystem.
 - `pnpm install --frozen-lockfile`: exit 0 pada Windows/git-bash, Node v24.16.0, pnpm 11.22.0. `pnpm run check && git diff --check`: exit 0; format, lint, typecheck, build, 107 unit tests, 12 integration tests. Dependency/lockfile, endpoint/model, budget, dan assertion sumber asing tidak diubah.
 - Tidak menjalankan LIVE-01/02/03, membaca secret .env, menjalankan Docker/Studio UI, atau menandai M1 selesai. Bukti live di atas merupakan riwayat, bukan live validation ulang setelah perbaikan.
-- Publikasi persiapan: belum commit/push/draft PR pada saat pencatatan bukti; diperbarui setelah operasi handoff berhasil.
+- Publikasi persiapan: commit perbaikan `8ac7e8b` sudah dipush pada `origin/phase/03-agent-behavior`; [draft PR #2](https://github.com/hardzal/simple-agent-research/pull/2) terbuka dengan base `master`, status persiapan `awaiting_review`. Tidak ada merge atau perubahan master.
+- Review independen pertama terhenti karena transport model, bukan approval. Retry berdasarkan ringkasan diff menemukan nol masalah keamanan/logika baru; bukan pengganti review owner atau bukti pengujian tambahan. Pemeriksaan 25 link lokal pada enam dokumen dan code fences lulus.
 
 ## 7. Titik lanjut
 
-1. Review perubahan persiapan pada branch `phase/03-agent-behavior`; publikasi/draft PR ke `master` mengikuti workflow, tanpa merge otomatis. Diff terhadap master juga mencakup fondasi Fase 1/2 yang belum di-merge.
+1. Owner mereview [draft PR #2](https://github.com/hardzal/simple-agent-research/pull/2) dari `phase/03-agent-behavior` ke `master`; tidak ada merge otomatis. Diff terhadap master juga mencakup fondasi Fase 1/2 yang belum di-merge.
 2. Mulai implementasi behavior dari P3-01 pada branch ini setelah checkpoint persiapan direview; ikuti P3-02–P3-04 dan offline eval. Pengecualian basis branch tidak berarti Fase 3 selesai atau izin otomatis menjalankan fase berikutnya.
 3. Tidak perlu live API pada Fase 3. LIVE-03 tetap Fase 6; Docker/Studio UI tetap Fase 5. Trace store default yang mengkloning scoped agent tidak boleh diaktifkan tanpa compatibility test.
 
