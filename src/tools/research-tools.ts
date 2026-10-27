@@ -49,7 +49,7 @@ export function createResearchTools(
   }
   async function operation<T>(work: () => Promise<T>): Promise<T> {
     check();
-    scope.toolCalls++;
+    if (!scope.toolCallsTrackedByRuntime) scope.toolCalls++;
     if (busy) throw new Error("TOOL_BUSY");
     busy = true;
     try {

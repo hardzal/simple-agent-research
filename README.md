@@ -2,7 +2,7 @@
 
 Proof of concept research agent dengan TypeScript, Anvia SDK v1, Tavily, dan Docker. Agent menerima topik, melakukan pencarian web dalam budget, lalu menulis dan memverifikasi laporan Markdown dengan citation yang dapat ditelusuri.
 
-**Status saat ini:** fondasi dan tiga application tools Fase 2 tersedia sebagai modul dengan scope eksplisit. Checks offline, LIVE-01, dan LIVE-02 lulus. Research agent, completion policy produk, UI/server Studio, dan Docker belum tersedia. Evidence dan batas verifikasi ada di CONTEXT.
+**Status saat ini:** branch `phase/03-agent-behavior` disiapkan dari codebase Fase 2 dengan dua perbaikan review yang verified offline. P3-01–P3-04 masih planned; research agent, completion policy produk, UI/server Studio, dan Docker belum tersedia. LIVE-01/02 merupakan bukti terdahulu, tidak dijalankan ulang pada persiapan ini. Evidence dan batas verifikasi ada di CONTEXT.
 
 ## Dokumen proyek
 
@@ -20,7 +20,7 @@ Target development adalah Windows dengan Docker Desktop/WSL2. Runtime memakai ga
 
 Hermes mengerjakan satu fase pada branch terpisah, menjalankan checks yang relevan, memperbarui PLAN/CONTEXT, dan menyerahkan draft PR ke master. Pemilik proyek melakukan review dan merge sebelum fase berikutnya.
 
-PR spesifikasi sudah di-merge. Atas instruksi pengguna, phase/02-tools dibuat langsung dari commit Fase 1 5f516eb pada phase/01-project-foundation, tanpa menunggu merge Fase 1. Pengecualian basis branch ini tidak mengubah scope produk atau mengizinkan Fase 3 otomatis.
+PR spesifikasi sudah di-merge. Atas instruksi pengguna, phase/02-tools dibuat langsung dari commit Fase 1 5f516eb pada phase/01-project-foundation, tanpa menunggu merge Fase 1. Pada instruksi berikutnya, pengguna juga mengizinkan branch `phase/03-agent-behavior` dibuat dari Fase 2 `e425782` untuk perbaikan review dan persiapan transisi. Fase 1/2 belum di-merge; pengecualian ini tidak mengubah scope produk atau menandai task behavior Fase 3 selesai.
 
 ## Pengecekan offline
 
@@ -37,7 +37,7 @@ check menjalankan format:check, lint, typecheck, build, test:unit, dan test:inte
 
 Fase 2 menyediakan tiga tools scoped: `webSearch`, `writeFile`, dan `readFile`. Search memakai adapter Tavily bounded (maksimum lima hasil, tanpa raw page/LLM answer/retry), registry memberi ID sumber per run, dan report store memakai path aplikasi berbasis UUID, batas UTF-8/hash, hardlink tanpa overwrite, serta penolakan traversal/symlink/junction. Validator awal menolak sumber asing, URL asing, HTML mentah, dan laporan tanpa citation. Handler menegakkan satu operasi aktif, kuota sebelum I/O, deadline/cancellation, satu write, dan satu read-back. Research agent dan completion policy produk belum termasuk Fase 2.
 
-Perintah terpisah: `pnpm run test:unit` (94 tests) dan `pnpm run test:integration` (11 tests). LIVE-02 menggunakan query publik `Redis official documentation`, satu provider call, maksimum lima hasil, tanpa LLM/retry; output hanya metadata aman.
+Perintah terpisah: `pnpm run test:unit` (107 tests) dan `pnpm run test:integration` (12 tests). LIVE-02 menggunakan query publik `Redis official documentation`, satu provider call, maksimum lima hasil, tanpa LLM/retry; output hanya metadata aman.
 
 ## Guarded LIVE-01 — bukan bagian checks offline
 

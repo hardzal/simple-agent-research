@@ -70,7 +70,6 @@ function fixture(
         inputSchema: z.object({}),
         execute() {
           scope.assertActive();
-          scope.toolCalls++;
           seen.push(scope.runId);
           return { runId: scope.runId };
         },

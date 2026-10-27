@@ -4,35 +4,35 @@
 
 **Milestone aktif:** M1
 
-**Status:** Implementasi Fase 2 selesai lokal; checks offline dan LIVE-02 lulus; handoff/review menunggu; Fase 3 belum dimulai
+**Status:** Persiapan Fase 3 verified offline; handoff pending; research behavior P3-01–P3-04 belum diimplementasikan
 
 **Repository:** https://github.com/hardzal/simple-agent-research
 
 **Base branch:** master
 
-**Branch aktif:** phase/02-tools
+**Branch aktif:** phase/03-agent-behavior
 
 Dokumen ini menyimpan kondisi aktual dan titik lanjut. Requirement dimiliki [PRD.md](PRD.md), desain di [ARCHITECTURE.md](ARCHITECTURE.md), task di [PLAN.md](PLAN.md), dan workflow di [AGENTS.md](../AGENTS.md).
 
 ## 1. Kondisi yang telah diverifikasi
 
-Baseline Fase 1: origin/master `858759b`, merge PR dokumentasi #1. Branch implementasi dimulai dari baseline ini. Perubahan implementasi masih lokal, belum commit/push/draft PR.
+Remote `origin/master` masih `858759b`, merge PR dokumentasi #1. Implementasi Fase 1 `5f516eb` dan Fase 2 `e425782` sudah commit/push pada branch masing-masing, tetapi belum di-merge dan belum memiliki PR implementasi saat pengecekan awal. Atas instruksi pengguna 2026-10-27, branch `phase/03-agent-behavior` dibuat dari `origin/phase/02-tools` pada `e425782`; tidak mengubah master atau menandai fase sebelumnya merged.
 
 Sebelum baseline dokumentasi PR #1, repository belum memiliki source aplikasi, package manifest, lockfile, Docker config, atau test suite. Kondisi tersebut bukan status implementasi saat ini.
 
 Implementasi Fase 1 mencakup package/tooling, config parser, provider factory, safe metrics logger, adapter scope, factory Studio tanpa persistence, serta guarded compatibility runner. Fase 2 menambahkan adapter Tavily, source registry, report validation/store, dan tiga scoped tools. Agent riset, Docker, atau application entry point belum tersedia.
 
-| Area                                      | Status                                                                              |
-| ----------------------------------------- | ----------------------------------------------------------------------------------- |
-| Requirement produk M1                     | Baseline dokumentasi sudah di-merge lewat PR #1                                     |
-| Arsitektur dan kontrak tools              | Adapter Tavily, registry, report store, validator, dan tiga scoped tools tersedia   |
-| Rencana enam fase                         | Fase 2 aktif; Fase 3–6 planned                                                      |
-| Aturan kerja Hermes dan draft PR per fase | Disusun berdasarkan keputusan pengguna                                              |
-| Paket/SDK yang terpasang                  | Node 24.14.0; pnpm 11.22.0; core 1.17.1; OpenAI adapter 1.3.5; Studio 1.3.20        |
-| Unit/integration/offline eval             | 94 unit tests dan 11 filesystem integration tests lulus                             |
-| Gateway/model smoke test                  | LIVE-01 terakhir lulus; dua percobaan sebelumnya gagal validasi replay              |
-| Tavily live test                          | LIVE-02 lulus; satu query, lima hasil, tanpa LLM/retry                              |
-| Docker/Studio runtime                     | Route Studio buffered/streaming diuji in-process; UI/server/Docker belum dijalankan |
+| Area                                      | Status                                                                                          |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Requirement produk M1                     | Baseline dokumentasi sudah di-merge lewat PR #1                                                 |
+| Arsitektur dan kontrak tools              | Adapter Tavily, registry, report store, validator, dan tiga scoped tools tersedia               |
+| Rencana enam fase                         | Persiapan Fase 3 aktif; task behavior Fase 3 dan Fase 4–6 planned                               |
+| Aturan kerja Hermes dan draft PR per fase | Disusun berdasarkan keputusan pengguna                                                          |
+| Paket/SDK yang terpasang                  | Verifikasi terbaru Node 24.16.0; pnpm 11.22.0; core 1.17.1; OpenAI adapter 1.3.5; Studio 1.3.20 |
+| Unit/integration/offline eval             | 107 unit tests dan 12 filesystem integration tests lulus; offline eval riset belum tersedia     |
+| Gateway/model smoke test                  | LIVE-01 terakhir lulus; dua percobaan sebelumnya gagal validasi replay                          |
+| Tavily live test                          | LIVE-02 lulus; satu query, lima hasil, tanpa LLM/retry                                          |
+| Docker/Studio runtime                     | Route Studio buffered/streaming diuji in-process; UI/server/Docker belum dijalankan             |
 
 ## 2. Keputusan pengguna yang telah dikumpulkan
 
@@ -55,7 +55,7 @@ Stack produk, tiga application tools, tanpa database/memory, dan scope M1 lainny
 
 - V-01: binding scope/lifecycle, generation/streaming, direct tool rejection, cancellation/deadline, dan finalization seam terbukti dengan fake model. Factory scoped Studio wajib dipakai; konfigurasi default mengkloning agent dan melewati adapter. Trace persistence sementara nonaktif pada spike; integrasi UI/trace produk tetap wajib dibuktikan Fase 5.
 - V-02: LIVE-01 terakhir membuktikan tool-call → tool-result → final response pada gateway/model terpilih. Pemeriksaan tetap exact-match. Ini bukan bukti streaming provider, Tavily, riset end-to-end, atau UI Docker.
-- V-03: integrasi Tavily dan normalisasi response fields.
+- V-03: adapter/normalisasi Tavily verified dengan fixtures dan LIVE-02 terdahulu; tidak ada live rerun pada persiapan Fase 3.
 - V-04: permission bind mount, non-root/read-only root, dan UI di Docker Desktop/WSL2.
 
 Lihat task pemilik dan kriteria di ARCHITECTURE/PLAN. Ketiadaan bukti bukan bukti fitur tidak didukung. Jangan mengganti pilihan deployment tanpa menjelaskan hasil uji.
@@ -112,20 +112,30 @@ Pada baseline dokumentasi dahulu tidak ada test, provider request, eval live, Do
 - `pnpm install --frozen-lockfile --offline && pnpm run check && git diff --check`: exit 0. Format, lint, typecheck, build, 94 unit tests, dan 11 filesystem integration tests lulus.
 - Unit tests mencakup adapter/registry, validator provenance, LIVE-02 guard, input/quota/deadline/isolasi scoped tools. Integration tests mencakup round-trip UTF-8/hash, duplicate write, traversal, symlink/junction, tampering, cancellation, dan EACCES sintetis.
 - LIVE-02: command `ALLOW_LIVE_TESTS=true pnpm exec node --env-file=.env --import tsx scripts/live.ts --case LIVE-02`; exit 0. Run ID `c6c24477-640c-4685-968e-1efb0de6534b`, endpoint Tavily search, query `Redis official documentation`, duration 2782 ms, modelCalls 0, searchCalls 1, resultCount 5, sourceCount 5, tokens null. Tidak ada secret/raw response di output.
-- Perubahan masih lokal pada `phase/02-tools`; belum commit/push/draft PR. Fase 3 belum dimulai.
+- Snapshot Fase 2 sudah commit/push pada `phase/02-tools` (`e425782`), belum di-merge. Dua temuan review tambahan ditangani pada branch Fase 3 di bawah; bukti awal 94/11 tests tidak mencakup dua regresi tersebut.
 
-## 6. Titik lanjut
+## 6. Persiapan Fase 3 — perbaikan review
 
-1. Review diff Fase 2, commit pada branch `phase/02-tools`, push, dan buat draft PR ke `master` sesuai workflow; berhenti menunggu owner review/merge.
-2. Jangan menambah test matrix atau live rerun tanpa kebutuhan. LIVE-03, research agent, Docker, dan Studio UI tetap fase berikutnya.
-3. Trace UI produk tetap gate Fase 5. Jangan mengaktifkan trace store default/model registry yang mengkloning scoped agent tanpa compatibility test baru.
+- Branch `phase/03-agent-behavior` berbasis Fase 2 `e425782`, sesuai pengecualian eksplisit pengguna. Scope perubahan hanya dua perbaikan fondasi, regression tests, dan sinkronisasi dokumentasi; P3-01–P3-04 belum dikerjakan.
+- Validator tidak lagi membuang kurung penutup yang berpasangan dalam path/query URL. Sumber sah diuji sebagai bare URL, autolink, dan Markdown link; sumber asing/lookalike tetap ditolak. Integration test membuktikan write/read-back laporan dengan URL berkurung.
+- Middleware `onToolInput` Anvia 1.17.1 berjalan sebelum schema parse; `onToolStart` justru sesudah parse. Counter attempt sekarang dimiliki middleware pada run SDK. Scope handler sintetis memakai `toolCallsTrackedByRuntime: false`, sehingga direct handler tests tetap menghitung attempt tanpa double-count pada SDK. Fixture probe juga tidak menghitung ulang counter milik runtime.
+- RED: focused suite menunjukkan 9 failures yang diharapkan (URL/round-trip dan input invalid generate/stream), tanpa production fix. GREEN: focused SDK/validator/integration/probe suite 47/47 pass. Valid search dan provider failure masing-masing tetap satu attempt; input invalid tidak memanggil provider atau filesystem.
+- `pnpm install --frozen-lockfile`: exit 0 pada Windows/git-bash, Node v24.16.0, pnpm 11.22.0. `pnpm run check && git diff --check`: exit 0; format, lint, typecheck, build, 107 unit tests, 12 integration tests. Dependency/lockfile, endpoint/model, budget, dan assertion sumber asing tidak diubah.
+- Tidak menjalankan LIVE-01/02/03, membaca secret .env, menjalankan Docker/Studio UI, atau menandai M1 selesai. Bukti live di atas merupakan riwayat, bukan live validation ulang setelah perbaikan.
+- Publikasi persiapan: belum commit/push/draft PR pada saat pencatatan bukti; diperbarui setelah operasi handoff berhasil.
 
-## 6. Riwayat blocker publikasi dokumentasi — sudah terselesaikan
+## 7. Titik lanjut
+
+1. Review perubahan persiapan pada branch `phase/03-agent-behavior`; publikasi/draft PR ke `master` mengikuti workflow, tanpa merge otomatis. Diff terhadap master juga mencakup fondasi Fase 1/2 yang belum di-merge.
+2. Mulai implementasi behavior dari P3-01 pada branch ini setelah checkpoint persiapan direview; ikuti P3-02–P3-04 dan offline eval. Pengecualian basis branch tidak berarti Fase 3 selesai atau izin otomatis menjalankan fase berikutnya.
+3. Tidak perlu live API pada Fase 3. LIVE-03 tetap Fase 6; Docker/Studio UI tetap Fase 5. Trace store default yang mengkloning scoped agent tidak boleh diaktifkan tanpa compatibility test.
+
+## 8. Riwayat blocker publikasi dokumentasi — sudah terselesaikan
 
 Pada sesi baseline, pembuatan Git tree melalui integrasi GitHub pernah ditolak HTTP 403. Ini riwayat, bukan blocker aktif: origin/master sekarang memuat merge PR dokumentasi #1 pada 858759b.
 
-Link baseline yang sudah di-merge: https://github.com/hardzal/simple-agent-research/pull/1. Belum ada PR implementasi Fase 1; tidak ada commit/push yang dijalankan pada pengecekan offline ini.
+Link baseline yang sudah di-merge: https://github.com/hardzal/simple-agent-research/pull/1. Riwayat ini tidak menggantikan status branch/PR implementasi pada bagian persiapan Fase 3.
 
-## 7. Cara memperbarui konteks
+## 9. Cara memperbarui konteks
 
 Setelah pekerjaan nyata, perbarui tanggal, fase/task aktif, commit/PR terkait, checks beserta hasilnya, blocker, dan titik lanjut. Simpan ringkasan yang dapat digunakan sesi berikutnya. Jangan menyalin seluruh requirement, menyimpan secret, atau menandai task selesai hanya karena direncanakan.

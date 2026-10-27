@@ -11,7 +11,15 @@ function linksIn(content: string): { urls: string[]; hasHtml: boolean } {
   });
   // Code and other non-link text must not smuggle unregistered URLs either.
   for (const match of content.matchAll(/https?:\/\/[^\s<>"'`[\]]+/gi)) {
-    const raw = match[0].replace(/[),.;!?]+$/, "");
+    let raw = match[0].replace(/[,.;!?]+$/, "");
+    // A Markdown closing delimiter is not part of the URL, but balanced
+    // parentheses in a path/query are. Never trim the source's own pair.
+    let extraClosings =
+      (raw.match(/\)/g)?.length ?? 0) - (raw.match(/\(/g)?.length ?? 0);
+    while (extraClosings > 0 && raw.endsWith(")")) {
+      raw = raw.slice(0, -1);
+      extraClosings--;
+    }
     if (!urls.includes(raw)) urls.push(raw);
   }
   return { urls, hasHtml };

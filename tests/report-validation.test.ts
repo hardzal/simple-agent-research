@@ -32,6 +32,35 @@ describe("initial report validation", () => {
       validateReport(valid.replace("- [S1]", "- [S2]"), sources, 65536).length,
     ).toBeGreaterThan(0);
   });
+  it.each([
+    "https://en.wikipedia.org/wiki/Redis_(software)",
+    "https://example.test/docs?topic=Redis_(database)",
+  ])("preserves balanced parentheses in registered URL %s", (url) => {
+    const registered = [{ ...sources[0]!, url }];
+    for (const reference of [url, `<${url}>`, `[Redis](${url})`]) {
+      const report = valid.replace(sources[0]!.url, reference);
+      expect(validateReport(report, registered, 65536)).toEqual([]);
+      expect(
+        validateReport(
+          report + `\nhttps://foreign.test/Redis_(software)`,
+          registered,
+          65536,
+        ),
+      ).toContain("FOREIGN_SOURCE_URL");
+    }
+  });
+  it("does not accept a foreign punctuation-bearing URL as its registered prefix", () => {
+    const url = "https://example.test/Redis_(software)";
+    const report = valid.replace(sources[0]!.url, `[Redis](${url})`);
+    const registered = [{ ...sources[0]!, url }];
+    expect(
+      validateReport(
+        report + `\n[foreign](${url}/other_(page))`,
+        registered,
+        65536,
+      ),
+    ).toContain("FOREIGN_SOURCE_URL");
+  });
   it("rejects empty, oversized UTF-8, or unattributable drafts", () => {
     expect(validateReport("", sources, 65536).length).toBeGreaterThan(0);
     expect(

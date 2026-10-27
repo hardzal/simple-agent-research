@@ -253,7 +253,7 @@ Reports root pada host adalah area development tepercaya. Container bukan isolas
 
 ## 8. Budget, error, dan finalization
 
-Setiap handler memeriksa budget sebelum dan setelah operasi asynchronous. Counter direservasi sebelum provider call; kegagalan provider tetap memakai kuota. Penolakan argumen sebelum I/O tetap tercatat sebagai tool attempt dan dibatasi turns/deadline.
+Setiap handler memeriksa budget sebelum dan setelah operasi asynchronous. Counter direservasi sebelum provider call; kegagalan provider tetap memakai kuota. Penolakan argumen sebelum I/O tetap tercatat sebagai tool attempt dan dibatasi turns/deadline. Pada boundary SDK, middleware `onToolInput` menghitung attempt sebelum schema validation; lifecycle `onToolStart` berjalan terlalu lambat untuk input invalid. `RunScope.toolCallsTrackedByRuntime` bernilai true untuk run SDK dan false pada scope sintetis direct-handler, sehingga counter tidak dihitung dua kali. Tool fixture yang terikat boundary juga memakai counter runtime.
 
 Deadline menggunakan cancellation yang diteruskan ke model/search yang mendukungnya. Jangan hanya memakai Promise.race yang meninggalkan side effect berjalan. Hasil terlambat diabaikan; run yang sudah terminal tidak dapat kembali menjadi completed. Provider yang tidak kooperatif mungkin masih menyelesaikan request remote, sehingga timeout lokal bukan bukti billing remote berhenti.
 

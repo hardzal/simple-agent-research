@@ -83,7 +83,6 @@ export async function runLiveProbe(
         execute() {
           scope.assertActive();
           if (++toolCalls > 1) throw new Error("LIVE_BUDGET");
-          scope.toolCalls++;
           return JSON.stringify({ nonce, finalResponse: `LIVE-01:${nonce}` });
         },
       }),

@@ -12,6 +12,8 @@ export type RunScope = {
   readonly runId: string;
   sdkRunId?: string;
   toolCalls: number;
+  /** SDK middleware owns attempt counting; standalone handler scopes use false. */
+  readonly toolCallsTrackedByRuntime: boolean;
   modelCalls: number;
   readonly signal: AbortSignal;
   assertActive(): void;
@@ -33,6 +35,7 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
   const inactive: RunScope = {
     runId: "inactive",
     toolCalls: 0,
+    toolCallsTrackedByRuntime: true,
     modelCalls: 0,
     signal: AbortSignal.abort(),
     assertActive() {
@@ -56,6 +59,7 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
     const scope: RunScope = {
       runId: randomUUID(),
       toolCalls: 0,
+      toolCallsTrackedByRuntime: true,
       modelCalls: 0,
       signal,
       assertActive() {
@@ -81,6 +85,10 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
             onCompletionRequest() {
               scope.assertActive();
               scope.modelCalls++;
+            },
+            onToolInput() {
+              scope.assertActive();
+              scope.toolCalls++;
             },
           },
         ],

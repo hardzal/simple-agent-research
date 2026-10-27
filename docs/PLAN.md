@@ -1,6 +1,6 @@
 # Implementation Plan — Milestone 1
 
-**Status:** Implementasi Fase 2 selesai secara lokal; checks offline dan LIVE-02 lulus; handoff/review menunggu; Fase 3 belum dimulai
+**Status:** Persiapan Fase 3 verified offline pada branch berbasis Fase 2; handoff pending; P3-01–P3-04 masih planned
 
 **Diperbarui:** 2026-10-27
 
@@ -24,14 +24,14 @@ Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika 
 
 ## 2. Peta fase
 
-| Fase | Branch                        | Hasil                                                  | Status awal                      |
-| ---- | ----------------------------- | ------------------------------------------------------ | -------------------------------- |
-| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | checks verified; handoff pending |
-| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | planned                          |
-| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | planned                          |
-| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | planned                          |
-| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | planned                          |
-| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | planned                          |
+| Fase | Branch                        | Hasil                                                  | Status saat ini                      |
+| ---- | ----------------------------- | ------------------------------------------------------ | ------------------------------------ |
+| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | verified; pushed, belum merged       |
+| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | verified; pushed, belum merged       |
+| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | persiapan verified; P3 tasks planned |
+| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | planned                              |
+| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | planned                              |
+| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | planned                              |
 
 ## 3. Fase 1 — Project foundation
 
@@ -46,7 +46,7 @@ Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika 
 
 Tool sintetis LIVE-01 hanya fixture compatibility test, bukan application tool keempat dalam research agent.
 
-Status task: P1-01 verified offline (fresh install frozen lockfile dan full check); P1-02 verified offline untuk spike scope/SDK/Studio routes; P1-03 verified offline (config, provider, logger, dan guards). LIVE-01 verified: run terakhir completed dengan dua model calls, satu tool call, dan exact nonce match. Dua percobaan sebelumnya gagal validasi replay; pada percobaan diagnostik terbukti nonce diterima tetapi format tidak persis. Tool kini memberikan finalResponse siap salin tanpa melonggarkan assertion. Setiap tambahan live run mendapat otorisasi pengguna; tidak ada automatic rerun. Rincian hasil ada di CONTEXT. Belum ada commit/draft PR implementasi atau owner review/merge; Fase 2 tetap ditahan.
+Status task: P1-01 verified offline (fresh install frozen lockfile dan full check); P1-02 verified offline untuk spike scope/SDK/Studio routes; P1-03 verified offline (config, provider, logger, dan guards). LIVE-01 verified: run terakhir completed dengan dua model calls, satu tool call, dan exact nonce match. Dua percobaan sebelumnya gagal validasi replay; pada percobaan diagnostik terbukti nonce diterima tetapi format tidak persis. Tool kini memberikan finalResponse siap salin tanpa melonggarkan assertion. Setiap tambahan live run mendapat otorisasi pengguna; tidak ada automatic rerun. Rincian hasil ada di CONTEXT. Commit Fase 1 `5f516eb` sudah tersedia di remote; belum ada PR implementasi atau merge. Pengguna mengizinkan basis Fase 2 dan persiapan Fase 3 tanpa menunggu merge; lihat dependency fase terkait.
 
 Keputusan spike Studio: factory scoped menonaktifkan session/trace stores untuk menghindari clone yang melewati adapter; buffered/streaming route terbukti offline. Trace yang dapat diinspeksi sesuai DoD tetap wajib dipenuhi dan diuji pada integrasi Fase 5; factory spike ini bukan klaim kelulusan UI/trace produk.
 
@@ -75,7 +75,7 @@ Status P2-01/P2-02/P2-03: verified offline melalui adapter/registry/validator un
 
 ## 5. Fase 3 — Research agent behavior
 
-**Dependency:** Fase 2 di-merge.
+**Dependency default:** Fase 2 di-merge. Atas instruksi pengguna 2026-10-27, branch `phase/03-agent-behavior` dibuat langsung dari `origin/phase/02-tools` pada `e425782`, tanpa menunggu merge. Pengecualian ini hanya mengubah basis/transisi branch, bukan status review/merge, requirement PRD, atau scope task fase berikutnya. Fase 1 dan 2 belum di-merge.
 
 | Task  | Pekerjaan                                                                  | Syarat selesai                                                                                        | Acuan               |
 | ----- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------- |
@@ -83,6 +83,10 @@ Status P2-01/P2-02/P2-03: verified offline melalui adapter/registry/validator un
 | P3-02 | Runner riset dan boundary policy yang sama untuk headless/Studio           | Run ID/state baru per request; tools tidak berjalan tanpa scope; hasil model tidak melewati finalizer | ARCH §4             |
 | P3-03 | Klarifikasi stateless, no-evidence behavior, dan bahasa laporan            | Pertanyaan mengakhiri request; request baru memerlukan topik lengkap; bahasa mengikuti input/override | FR-11, FR-12, FR-17 |
 | P3-04 | Offline behavior tests dengan scripted model dan search fixtures           | Tool sequence/status dapat diperiksa; tests tidak membutuhkan API key; sumber antar-run terisolasi    | EVAL-01–EVAL-03     |
+
+**Persiapan transisi verified:** dua temuan review Fase 2 diperbaiki pada branch Fase 3: ekstraksi URL mempertahankan kurung seimbang pada sumber sah, dan middleware SDK menghitung tool attempt sebelum validasi input tanpa double-count pada handler. Regression tests diuji RED → GREEN; `pnpm run check` lulus dengan 107 unit tests dan 12 integration tests. LIVE-01/02 tidak dijalankan ulang. Bukti dan status publikasi ada di CONTEXT.
+
+**Status task:** P3-01/P3-02/P3-03/P3-04 masih `planned`; persiapan branch dan perbaikan fondasi bukan implementasi research behavior. Pekerjaan berikutnya dimulai dari P3-01, lalu runner/policy dan offline behavior tests dalam scope Fase 3.
 
 **Pemeriksaan:** fake-model behavior cases faktual/eksploratif/komparatif, ambiguity tanpa search, no-result, bahasa, prompt injection, dan isolated runs.
 

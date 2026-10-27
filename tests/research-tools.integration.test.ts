@@ -24,6 +24,7 @@ function scope(signal = new AbortController().signal): RunScope {
     runId: randomUUID(),
     signal,
     toolCalls: 0,
+    toolCallsTrackedByRuntime: false,
     modelCalls: 0,
     assertActive() {
       signal.throwIfAborted();
@@ -82,6 +83,18 @@ describe("scoped research tools", () => {
     await expect(tools.webSearch({ query: "again" })).rejects.toThrow(
       "REPORT_ALREADY_VERIFIED",
     );
+  });
+  it("publishes and verifies a report with a registered parenthesized URL", async () => {
+    const { tools, search } = await fixture();
+    const url = "https://en.wikipedia.org/wiki/Redis_(software)";
+    search.mockResolvedValueOnce([
+      { title: "Redis", url, snippet: "documentation" },
+    ]);
+    await tools.webSearch({ query: "Redis" });
+    const content = report.replace("https://redis.io/docs/", `[Redis](${url})`);
+    expect(await tools.writeFile({ content })).toMatchObject({ success: true });
+    expect(await tools.readFile({})).toMatchObject({ success: true, content });
+    expect(tools.snapshot().reportVerified).toBe(true);
   });
   it("reserves failed searches before I/O, caps results, and blocks extra provider calls", async () => {
     const { tools, search } = await fixture({ maxWebSearchCalls: 1 });
