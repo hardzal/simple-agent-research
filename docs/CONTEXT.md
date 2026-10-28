@@ -4,35 +4,37 @@
 
 **Milestone aktif:** M1
 
-**Status:** Fase 1–3 merged melalui PR #2; Fase 4 verified offline, publikasi draft PR pending; Fase 5 belum dimulai
+**Status:** Fase 1–4 merged melalui PR #2/#3; Fase 5 verified offline/Podman, publikasi draft PR pending; Fase 6 planned
 
 **Repository:** https://github.com/hardzal/simple-agent-research
 
 **Base branch:** master
 
-**Branch aktif:** phase/04-report-validation
+**Branch aktif:** phase/05-docker-studio
 
 Dokumen ini menyimpan kondisi aktual dan titik lanjut. Requirement dimiliki [PRD.md](PRD.md), desain di [ARCHITECTURE.md](ARCHITECTURE.md), task di [PLAN.md](PLAN.md), dan workflow di [AGENTS.md](../AGENTS.md).
 
 ## 1. Kondisi yang telah diverifikasi
 
+State terkini Fase 5 ada di §11. Riwayat Fase 1–4 di bawah mempertahankan bukti saat eksekusi; blocker publikasi Fase 4 sudah selesai dengan merge [PR #3](https://github.com/hardzal/simple-agent-research/pull/3) pada `476821c`. Fetch sesi Fase 5 membuktikan `origin/master` memuat `3fa927b` sebagai ancestor. Podman dipilih pengguna untuk build/test; Docker Desktop belum diverifikasi.
+
 Setelah pengguna menyatakan Fase 3 sudah di-merge, `git fetch origin` membuktikan `origin/master` pada `b77fcd0` (merge PR #2) dan `16f081f` merupakan ancestor-nya. Merge ini mencakup implementasi Fase 1–3. Branch `phase/04-report-validation` dibuat dari baseline tersebut. Commit aturan per-fitur yang sebelumnya lokal dibawa sebagai `34535b7`; implementasi Fase 4 tidak ditumpuk pada PR Fase 3.
 
 Sebelum baseline dokumentasi PR #1, repository belum memiliki source aplikasi, package manifest, lockfile, Docker config, atau test suite. Kondisi tersebut bukan status implementasi saat ini.
 
-Implementasi Fase 1 mencakup package/tooling, config parser, provider factory, safe metrics logger, adapter scope, factory Studio tanpa persistence, serta guarded compatibility runner. Fase 2 menambahkan adapter Tavily, source registry, report validation/store, dan tiga scoped tools. Fase 3 kini menyediakan factory research agent, instructions, policy minimum, runner/entry point programatik, dan offline behavior cases. Docker dan UI/server Studio belum tersedia.
+Implementasi Fase 1 mencakup package/tooling, config parser, provider factory, safe metrics logger, adapter scope, factory Studio tanpa persistence, serta guarded compatibility runner. Fase 2 menambahkan adapter Tavily, source registry, report validation/store, dan tiga scoped tools. Fase 3 menyediakan factory research agent, instructions, policy minimum, runner/entry point programatik, dan offline behavior cases. Fase 4 melengkapi validator/revisi/status. Fase 5 kini menyediakan image/Compose dan UI/server Studio dengan acceptance Podman.
 
-| Area                                      | Status                                                                                      |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Requirement produk M1                     | Baseline dokumentasi sudah di-merge lewat PR #1                                             |
-| Arsitektur dan kontrak tools              | Adapter Tavily, registry, report store, validator, dan tiga scoped tools tersedia           |
-| Rencana enam fase                         | Fase 1–3 merged; Fase 4 verified offline, PR pending; Fase 5–6 planned                      |
-| Aturan kerja Hermes dan draft PR per fase | Disusun berdasarkan keputusan pengguna                                                      |
-| Paket/SDK yang terpasang                  | Verifikasi Fase 4 Node 24.14.0; pnpm 11.22.0; dependency/lockfile SDK tidak diubah          |
-| Unit/integration/offline eval             | 116 unit tests, 52 integration/boundary tests, dan 12 scripted offline behavior cases lulus |
-| Gateway/model smoke test                  | LIVE-01 terakhir lulus; dua percobaan sebelumnya gagal validasi replay                      |
-| Tavily live test                          | LIVE-02 lulus; satu query, lima hasil, tanpa LLM/retry                                      |
-| Docker/Studio runtime                     | Route Studio buffered/streaming diuji in-process; UI/server/Docker belum dijalankan         |
+| Area                                      | Status                                                                                             |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Requirement produk M1                     | Baseline dokumentasi sudah di-merge lewat PR #1                                                    |
+| Arsitektur dan kontrak tools              | Adapter Tavily, registry, report store, validator, dan tiga scoped tools tersedia                  |
+| Rencana enam fase                         | Fase 1–4 merged; Fase 5 verified offline/Podman, PR pending; Fase 6 planned                        |
+| Aturan kerja Hermes dan draft PR per fase | Disusun berdasarkan keputusan pengguna                                                             |
+| Paket/SDK yang terpasang                  | Verifikasi Fase 4 Node 24.14.0; pnpm 11.22.0; dependency/lockfile SDK tidak diubah                 |
+| Unit/integration/offline eval             | 127 unit/server tests, 52 integration/boundary tests, dan 12 scripted offline behavior cases lulus |
+| Gateway/model smoke test                  | LIVE-01 terakhir lulus; dua percobaan sebelumnya gagal validasi replay                             |
+| Tavily live test                          | LIVE-02 lulus; satu query, lima hasil, tanpa LLM/retry                                             |
+| Docker/Studio runtime                     | UI/server, image dan Compose teruji Podman; Docker Desktop belum diverifikasi                      |
 
 ## 2. Keputusan pengguna yang telah dikumpulkan
 
@@ -154,7 +156,7 @@ Pada baseline dokumentasi dahulu tidak ada test, provider request, eval live, Do
 - Review independen pada snapshot `a7fd84e` menemukan dua masalah medium. Penyebab cancellation sudah diperbaiki dalam `b9e1957`; regression terbaru tetap lulus. Temuan `textStream` kosong saat recovery dikonfirmasi RED lalu diperbaiki: text-only consumer menerima JSON terminal yang sudah melewati policy tepat sekali pada sukses maupun failure, sama dengan `.text`/`.result.text`; tidak meneruskan delta mentah. Dua regression tests baru lulus dan README/ARCHITECTURE menjelaskan semantik ini.
 - Branch sudah dipush sampai `684ec85`, tetapi command pembuatan draft PR ditolak pada approval. Follow-up `textStream` dan bukti terbaru masih lokal; tidak ada retry pembuatan PR, push tambahan, merge, atau mulai Fase 5.
 
-### Titik lanjut
+### Titik lanjut Fase 4 — historis, sudah terpenuhi lewat PR #3
 
 1. Menunggu izin pengguna untuk mempublikasikan follow-up lokal dan membuat satu draft PR Fase 4 ke `master`; setelah URL diverifikasi, status menjadi `awaiting_review`.
 2. Owner mereview/merge Fase 4. Jangan merge otomatis atau mulai Fase 5 sebelum merge dan instruksi lanjut.
@@ -169,3 +171,19 @@ Link baseline yang sudah di-merge: https://github.com/hardzal/simple-agent-resea
 ## 10. Cara memperbarui konteks
 
 Setelah pekerjaan nyata, perbarui tanggal, fase/task aktif, commit/PR terkait, checks beserta hasilnya, blocker, dan titik lanjut. Simpan ringkasan yang dapat digunakan sesi berikutnya. Jangan menyalin seluruh requirement, menyimpan secret, atau menandai task selesai hanya karena direncanakan.
+
+## 11. Bukti Fase 5
+
+- Branch `phase/05-docker-studio` berbasis merge Fase 4 `476821c`. File untracked pengguna `({tag` tidak dibaca, dihapus, atau dimasukkan commit/image; `.dockerignore` hanya mengizinkan manifest/lockfile/compiler config dan src.
+- P5-01: Dockerfile multi-stage Node 24.14.0 bookworm-slim, pnpm 11.22.0 frozen-lockfile dan runtime production deps. `compose.yaml` menetapkan UID/GID 1000, loopback 4021, reports bind mount, root read-only, tmpfs, CPU 1/memory 1 GiB/PID 128, cap-drop ALL dan no-new-privileges. Tidak ada socket engine atau privileged mode.
+- P5-02: entrypoint `node dist/studio.js` / `pnpm run studio`, UI aktif pada runtime scoped yang sama. Factory tidak mengaktifkan trace/session stores yang mengkloning agent. Debug tersedia melalui JSONL tool_call/tool_result/response dan safe metrics stdout, bukan persisted trace browser. HTTP server tests menguji UI/assets, history isolation, kuota, direct-tool rejection, provider failures, dan shutdown. Entrypoint tidak memilih fake mode dan hanya mengeluarkan kategori aman saat startup gagal.
+- P5-03: `podman build -t localhost/simple-agent-research:phase5 .` exit 0; image candidate `969b322cdb84`. `pnpm run test:container` exit 0 dengan runId `5b1bf47b-f646-4d31-94fa-3d52decefd12`: production UI, non-root, read-only root, CPU/memory, loopback, fakeResearch completed, hostRoundTrip dan preservedAfterRecreate semuanya true. Laporan host dibandingkan byte-for-byte dengan container sebelum dan setelah recreate; fixture dibersihkan. Provider fixture menolak fetch; tidak memakai API atau `.env` asli.
+- P5-04: [CONTAINERS](CONTAINERS.md) memberi perintah WSL2/Docker/Podman, ownership/bind mount troubleshooting tanpa chmod 777, local Studio, acceptance harness, dan batas sandbox. README dan ARCHITECTURE diperbarui.
+- Engine aktual: Podman 5.6.2, Compose provider Docker Compose v5.0.0. `podman compose --env-file /dev/null -f compose.yaml config --no-env-resolution --no-interpolate --quiet` exit 0 tanpa membaca/mengekspansi `.env`. Acceptance scripted memakai lifecycle `podman run` dengan flags sandbox setara. Smoke tambahan `compose up --no-build`, force-recreate, healthcheck healthy, dan down lulus pada project fixture terpisah dengan env_file reset dan CLI --env-file /dev/null; tidak membaca `.env`. Browser nyata membuka http://127.0.0.1:14021/playground, judul Anvia Studio, Connected, tanpa console/JS errors. Fixture dibersihkan. Docker Desktop/WSL2 tetap belum dijalankan, bukan dihitung pass.
+- `pnpm run check` exit 0: format, lint, typecheck, build, 127 unit/server tests, 52 integration/boundary tests, dan 12 offline behavior cases. `git diff --check` exit 0. Percobaan full gate pertama menemukan format test Studio; diperbaiki melalui Prettier lalu full gate lulus.
+- Smoke Compose pertama menemukan healthcheck inline Node terpecah oleh provider Podman menjadi sintaks `const` yang invalid (unhealthy), walaupun UI melayani 200. Root cause diperbaiki dengan file executable `dist/studio-healthcheck.js`, bukan shell quoting; rebuild/recreate menghasilkan healthy. Harness juga menguji healthcheck sukses dan port salah gagal.
+- Tidak menjalankan LIVE-01/02/03, mengubah dependency/lockfile, endpoint/model/budget, atau memulai Fase 6. Acceptance fake bukan bukti kualitas LLM live, Docker Desktop, atau M1 accepted.
+
+Publikasi draft PR belum tersedia: `gh` tidak terpasang, Git Credential Manager tidak menyediakan credential HTTPS dalam mode noninteractive, GH_TOKEN/GITHUB_TOKEN tidak tersedia, dan browser tool belum login GitHub. Tidak membaca credential files atau meminta secret di chat. Push SSH diperiksa terpisah; ketersediaan SSH tidak dianggap bukti autentikasi API. Status belum `awaiting_review` sebelum draft PR benar-benar dibuat dan diverifikasi.
+
+Titik lanjut: autentikasi GitHub untuk membuat satu draft PR Fase 5 ke master; owner mereview dan merge sebelum Fase 6. Tidak merge otomatis.
