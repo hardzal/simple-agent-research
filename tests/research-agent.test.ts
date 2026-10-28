@@ -17,6 +17,34 @@ const user = (value: string) => ({
   content: [{ type: "text" as const, text: value }],
 });
 describe("research runtime boundary", () => {
+  it("completes three searches then write/read/final within five model attempts", async () => {
+    const f = await fixture({
+      choose: (_request, step) => {
+        if (step < 3)
+          return tool("webSearch", { query: "Redis official documentation" });
+        if (step === 3)
+          return [
+            ...tool("writeFile", { content: report() }),
+            ...tool("readFile"),
+          ];
+        return text(decision());
+      },
+    });
+    expect(await f.run("Redis")).toMatchObject({ status: "completed" });
+    expect(f.search).toHaveBeenCalledTimes(3);
+    expect(f.write).toHaveBeenCalledTimes(1);
+    expect(f.read).toHaveBeenCalledTimes(1);
+    expect(f.requests).toHaveLength(5);
+    expect(f.write.mock.invocationCallOrder[0]).toBeLessThan(
+      f.read.mock.invocationCallOrder[0]!,
+    );
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({
+      web_search_calls: 3,
+      model_calls: 5,
+      tool_calls: 5,
+      report_verified: true,
+    });
+  });
   it("preserves user cancellation when a non-cooperative model outlives the deadline", async () => {
     const controller = new AbortController();
     const f = await fixture({
