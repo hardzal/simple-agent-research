@@ -1,4 +1,5 @@
 import { request } from "node:http";
+import { Studio } from "@anvia/studio";
 import { createServer } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -85,6 +86,7 @@ async function server(options: Parameters<typeof fixture>[0] = {}) {
   const port = await freePort();
   const controller = new AbortController();
   const studio = createScopedStudio(f.agent, { ui: true });
+  const serve = vi.spyOn(studio, "serve");
   const closed = serveResearchStudio(
     studio,
     { ...config, studioPort: port },
@@ -97,7 +99,7 @@ async function server(options: Parameters<typeof fixture>[0] = {}) {
     await closed;
   });
   await listening(port);
-  return { ...f, port, studio, controller, closed };
+  return { ...f, port, studio, serve, controller, closed };
 }
 const user = (value: string) => ({
   role: "user",
@@ -121,6 +123,9 @@ describe("production Studio server", () => {
     ]);
     await studio.shutdown();
     const s = await server();
+    expect(s.serve).toHaveBeenCalledWith(
+      expect.objectContaining({ hostname: "127.0.0.1" }),
+    );
     const status = JSON.parse((await http(s.port, "/status")).body);
     expect(status.storage).toEqual({});
     expect(status.counts.agents).toBe(1);
@@ -273,7 +278,7 @@ describe("production Studio server", () => {
     const f = await fixture();
     const occupied = createServer();
     await new Promise<void>((resolve) =>
-      occupied.listen(0, "0.0.0.0", resolve),
+      occupied.listen(0, "127.0.0.1", resolve),
     );
     cleanups.push(
       () => new Promise<void>((resolve) => occupied.close(() => resolve())),
@@ -294,25 +299,33 @@ describe("production Studio server", () => {
     expect(process.listenerCount("SIGTERM")).toBe(before);
   });
 
-  it("connects SIGTERM to graceful shutdown and removes its handlers", async () => {
-    const f = await fixture();
-    const port = await freePort();
-    const before = process.listenerCount("SIGTERM");
-    const closed = runStudio({
-      OPENAI_API_KEY: "fixture",
-      TAVILY_API_KEY: "fixture",
-      REPORTS_DIR: f.root,
-      STUDIO_PORT: String(port),
-      NODE_ENV: "production",
-    });
-    cleanups.push(async () => {
-      if (process.listenerCount("SIGTERM") > before) process.emit("SIGTERM");
-      await closed;
-    });
-    await listening(port);
-    process.emit("SIGTERM");
-    expect(await closed).toBe(0);
-    expect(process.listenerCount("SIGTERM")).toBe(before);
-    await expect(http(port, "/status")).rejects.toThrow();
-  });
+  it.each([undefined, "0.0.0.0"])(
+    "binds STUDIO_HOST=%s and shuts down on SIGTERM",
+    async (host) => {
+      const f = await fixture();
+      const port = await freePort();
+      const before = process.listenerCount("SIGTERM");
+      const serve = vi.spyOn(Studio.prototype, "serve");
+      const closed = runStudio({
+        OPENAI_API_KEY: "fixture",
+        TAVILY_API_KEY: "fixture",
+        REPORTS_DIR: f.root,
+        STUDIO_PORT: String(port),
+        NODE_ENV: "production",
+        STUDIO_HOST: host,
+      });
+      cleanups.push(async () => {
+        if (process.listenerCount("SIGTERM") > before) process.emit("SIGTERM");
+        await closed;
+      });
+      await listening(port);
+      expect(serve).toHaveBeenCalledWith(
+        expect.objectContaining({ hostname: host ?? "127.0.0.1" }),
+      );
+      process.emit("SIGTERM");
+      expect(await closed).toBe(0);
+      expect(process.listenerCount("SIGTERM")).toBe(before);
+      await expect(http(port, "/status")).rejects.toThrow();
+    },
+  );
 });

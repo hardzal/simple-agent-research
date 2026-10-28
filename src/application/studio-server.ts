@@ -18,15 +18,16 @@ export async function createResearchStudio(
  * Resolves after graceful shutdown, rejects on bind/start/shutdown failure.
  * SDK serve awaits listening and owns cleanup, unlike fire-and-forget start.
  * Readiness: GET /status (Accept: application/json); UI: GET /playground.
- * Keep the SDK's loopback Host/Origin guard: publish only to host loopback.
+ * Host/Origin guards are not authentication: standalone binds loopback.
  */
 export function serveResearchStudio(
   studio: Studio,
   config: Pick<AppConfig, "studioPort">,
   signal?: AbortSignal,
+  hostname: "127.0.0.1" | "0.0.0.0" = "127.0.0.1",
 ): Promise<void> {
   return studio.serve({
-    hostname: "0.0.0.0",
+    hostname,
     port: config.studioPort,
     log: false,
     shutdownTimeoutMs: 5000,

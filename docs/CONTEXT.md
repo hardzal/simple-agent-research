@@ -31,7 +31,7 @@ Implementasi Fase 1 mencakup package/tooling, config parser, provider factory, s
 | Rencana enam fase                         | Fase 1–4 merged; Fase 5 verified offline/Podman, PR pending; Fase 6 planned                        |
 | Aturan kerja Hermes dan draft PR per fase | Disusun berdasarkan keputusan pengguna                                                             |
 | Paket/SDK yang terpasang                  | Verifikasi Fase 4 Node 24.14.0; pnpm 11.22.0; dependency/lockfile SDK tidak diubah                 |
-| Unit/integration/offline eval             | 127 unit/server tests, 52 integration/boundary tests, dan 12 scripted offline behavior cases lulus |
+| Unit/integration/offline eval             | 128 unit/server tests, 52 integration/boundary tests, dan 12 scripted offline behavior cases lulus |
 | Gateway/model smoke test                  | LIVE-01 terakhir lulus; dua percobaan sebelumnya gagal validasi replay                             |
 | Tavily live test                          | LIVE-02 lulus; satu query, lima hasil, tanpa LLM/retry                                             |
 | Docker/Studio runtime                     | UI/server, image dan Compose teruji Podman; Docker Desktop belum diverifikasi                      |
@@ -183,6 +183,12 @@ Setelah pekerjaan nyata, perbarui tanggal, fase/task aktif, commit/PR terkait, c
 - `pnpm run check` exit 0: format, lint, typecheck, build, 127 unit/server tests, 52 integration/boundary tests, dan 12 offline behavior cases. `git diff --check` exit 0. Percobaan full gate pertama menemukan format test Studio; diperbaiki melalui Prettier lalu full gate lulus.
 - Smoke Compose pertama menemukan healthcheck inline Node terpecah oleh provider Podman menjadi sintaks `const` yang invalid (unhealthy), walaupun UI melayani 200. Root cause diperbaiki dengan file executable `dist/studio-healthcheck.js`, bukan shell quoting; rebuild/recreate menghasilkan healthy. Harness juga menguji healthcheck sukses dan port salah gagal.
 - Tidak menjalankan LIVE-01/02/03, mengubah dependency/lockfile, endpoint/model/budget, atau memulai Fase 6. Acceptance fake bukan bukti kualitas LLM live, Docker Desktop, atau M1 accepted.
+
+Review independen Fase 5 menemukan satu Medium: standalone tanpa autentikasi ikut bind wildcard. Follow-up mengubah default `serveResearchStudio` dan entrypoint menjadi loopback, dengan `STUDIO_HOST=0.0.0.0` eksplisit pada image/Compose saja. Regression RED membuktikan default sebelumnya wildcard dan override belum diterapkan; GREEN membuktikan default loopback serta opt-in wildcard, dengan 12 server tests lulus. Bind-conflict fixture memakai alamat loopback yang sama seperti server agar konflik port nyata pada Windows. Image dibangun ulang (`8b13567cf98a`); acceptance Podman lulus kembali, runId `4cb966a8-150a-4197-bdad-6637b6d8b108`.
+
+Full gate setelah follow-up: `pnpm run check` exit 0 (128 unit/server, 52 integration/boundary, 12 offline behavior cases); Compose config tanpa env asli dan `git diff --check` exit 0. Tidak ada API live.
+
+Batas bukti review: resource inspect membuktikan konfigurasi CPU/memory, bukan stress enforcement. Cap-drop, no-new-privileges, PID/tmpfs dikonfigurasi, belum diasert terpisah. Harness menggunakan `rm --force`; graceful SIGTERM POSIX belum dibuktikan khusus. Smoke Compose/UI/healthcheck terpisah tercatat di atas, bukan berasal dari harness `run`.
 
 Publikasi draft PR belum tersedia: `gh` tidak terpasang, Git Credential Manager tidak menyediakan credential HTTPS dalam mode noninteractive, GH_TOKEN/GITHUB_TOKEN tidak tersedia, dan browser tool belum login GitHub. Tidak membaca credential files atau meminta secret di chat. Push SSH branch berhasil, remote head diverifikasi sama dengan lokal. Tiga commit implementasi/handoff: `4481ba8`, `32d1a45`, dan `5bba95c`. Lookup publik open PR head/base mengembalikan array kosong; belum ada draft PR Fase 5. Ketersediaan SSH tidak dianggap bukti autentikasi API. Status belum `awaiting_review` sebelum draft PR benar-benar dibuat dan diverifikasi.
 

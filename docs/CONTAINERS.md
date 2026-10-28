@@ -43,6 +43,8 @@ pnpm install --frozen-lockfile
 pnpm run studio
 ```
 
+Standalone secara default bind `127.0.0.1`, termasuk pada `NODE_ENV=production`. Hanya nilai eksplisit `STUDIO_HOST=0.0.0.0` membuka seluruh antarmuka; image dan Compose menetapkannya untuk routing container, dengan published port host tetap loopback. Jangan set wildcard pada host tanpa proteksi jaringan: Host/Origin guard SDK bukan autentikasi.
+
 Gunakan playground/request baru untuk topik independen. Boundary tetap membuang history selain pesan user terakhir; UI history bukan product memory. Jangan mengganti factory scoped dengan Studio default karena SDK dapat mengkloning agent dan melewati policy.
 
 ## Acceptance tanpa API asli

@@ -17,7 +17,12 @@ export async function runStudio(
   try {
     const config = parseConfig(env);
     const studio = await createResearchStudio(config);
-    await serveResearchStudio(studio, config, controller.signal);
+    await serveResearchStudio(
+      studio,
+      config,
+      controller.signal,
+      env.STUDIO_HOST === "0.0.0.0" ? "0.0.0.0" : "127.0.0.1",
+    );
     return 0;
   } catch {
     // Config, filesystem and bind errors can contain credential/path payloads.

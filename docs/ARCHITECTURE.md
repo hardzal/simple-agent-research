@@ -292,7 +292,7 @@ Jalankan perintah proyek dari shell WSL2 di direktori repository. Gunakan Docker
 - `./reports` di-mount ke `/app/reports` dan tidak dimasukkan Git.
 - Awal limit container: 1 CPU dan memory 1 GiB; ini limit container, bukan kuota per run.
 - Coba read-only root filesystem dengan tmpfs untuk lokasi sementara; laporan tetap writable. Catat bila SDK memerlukan penyesuaian yang sempit.
-- Studio bind ke `0.0.0.0` di dalam container; publish host hanya `127.0.0.1:4021:4021`.
+- Studio standalone default bind `127.0.0.1`; image/Compose secara eksplisit menetapkan `STUDIO_HOST=0.0.0.0` di dalam container. Publish host hanya `127.0.0.1:4021:4021`. Host/Origin guard bukan autentikasi.
 - Browser membuka http://localhost:4021. Jangan memublikasikan Studio ke jaringan umum.
 - Konfigurasi requests mengakses gateway terpilih dan Tavily; tidak ada tool arbitrary fetch atau shell. Compose standar sendiri tidak menerapkan domain egress allowlist.
 - Atur ownership/UID reports dengan jelas; hindari menjadikan chmod 777 sebagai solusi default.

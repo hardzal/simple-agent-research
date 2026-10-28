@@ -8,7 +8,7 @@ COPY src ./src
 RUN pnpm run build && pnpm prune --prod
 
 FROM docker.io/library/node:24.14.0-bookworm-slim AS runtime
-ENV NODE_ENV=production REPORTS_DIR=/app/reports STUDIO_PORT=4021
+ENV NODE_ENV=production REPORTS_DIR=/app/reports STUDIO_PORT=4021 STUDIO_HOST=0.0.0.0
 WORKDIR /app
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
