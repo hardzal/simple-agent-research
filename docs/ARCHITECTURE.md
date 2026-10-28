@@ -313,6 +313,10 @@ Log hanya ringkasan operasional dan kategori error. API keys, authorization head
 
 Dependency yang dapat diganti dalam test: model, search provider, clock/deadline, report root/store, dan logger. Gunakan filesystem sementara untuk test store; gunakan bind mount sungguhan hanya untuk acceptance Docker.
 
+Evaluasi Fase 6 memakai export `@anvia/core/evals` pada versi yang sudah dipin, bukan command SDK yang diasumsikan tersedia. Mandatory cases menggunakan fixture runtime nyata dengan model/search scripted; supporting quality menggunakan fixture dan rubrik eksplisit, tanpa paid judge. Gate harus menolak mandatory failure, target/metric error, dan suite mandatory yang tidak ditemukan—bukan merata-ratakan hasil supporting untuk menutupi kegagalan.
+
+LIVE-03 terpisah dari ordinary checks. `scripts/live.ts --case LIVE-03` memerlukan opt-in, menolak budget di atas batas PLAN, dan menjalankan satu POST streaming pada scoped Studio lokal sementara. Harness membandingkan byte host dengan hasil application read-back, memeriksa metrics/tool events, lalu menyimpan ringkasan evidence dan snippet sumber publik terpakai di reports root. Store trace/session SDK tetap nonaktif; ringkasan acceptance bukan raw JSONL atau product memory. Server dihentikan setelah probe, tidak ada retry/fallback otomatis. Detail command dan rubric kualitas ada di [EVALUATION](EVALUATION.md); hasil aktual dimiliki CONTEXT.
+
 ## 11. Verifikasi yang masih diperlukan
 
 | ID   | Verifikasi                                                                            | Task pemilik   |

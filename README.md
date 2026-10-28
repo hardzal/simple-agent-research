@@ -15,9 +15,11 @@ Laporan mengikuti bahasa permintaan kecuali pengguna meminta bahasa lain. Setiap
 
 ## Status dan batas verifikasi
 
-Fase 1–4 sudah masuk `master` melalui [PR #2](https://github.com/hardzal/simple-agent-research/pull/2) dan [PR #3](https://github.com/hardzal/simple-agent-research/pull/3). Fase 5 menambahkan server/UI Studio, image, Compose sandbox, dan acceptance container dengan fake providers. Status review dan bukti checks terbaru selalu ada di [CONTEXT](docs/CONTEXT.md).
+Fase 1–5 sudah masuk `master` melalui [PR #2](https://github.com/hardzal/simple-agent-research/pull/2), [PR #3](https://github.com/hardzal/simple-agent-research/pull/3), dan [PR #4](https://github.com/hardzal/simple-agent-research/pull/4). Fase 6 melengkapi evaluasi executable dan guarded LIVE-03 melalui HTTP Studio. Status review, hasil live, dan keputusan acceptance terbaru ada di [CONTEXT](docs/CONTEXT.md).
 
-Tersedia **API programatik**, tiga application tools, filesystem report store, `pnpm run studio`, Dockerfile/Compose, dan test suite offline. Petunjuk setup Windows/WSL2, Podman, permission, serta acceptance ada di [CONTAINERS](docs/CONTAINERS.md). Suite acceptance M1 dan LIVE-03 tetap Fase 6; M1 dan riset end-to-end dengan provider nyata belum dinyatakan selesai.
+Tersedia **API programatik**, tiga application tools, filesystem report store, `pnpm run studio`, Dockerfile/Compose, dan test suite offline. Petunjuk deployment/permission ada di [CONTAINERS](docs/CONTAINERS.md); cara evaluasi, LIVE-03, dan review kualitas ada di [EVALUATION](docs/EVALUATION.md). Pass mekanis/fixture tidak otomatis berarti kualitas model live atau acceptance M1 sudah disetujui pemilik.
+
+Live acceptance Fase 6 saat ini **blocked**: satu LIVE-03 yang diotorisasi berhenti dengan `budget_exceeded` dan tidak memublikasikan laporan. Tidak ada automatic rerun atau kenaikan budget. Bukti lengkap dan titik lanjut ada di [CONTEXT §12](docs/CONTEXT.md#12-fase-6--evaluasi-dan-finalisasi).
 
 ## Alur dan komponen
 
@@ -52,22 +54,22 @@ pnpm run check
 
 Instalasi memerlukan registry atau cache pnpm lengkap. Checks tidak memerlukan API key, tidak membaca `.env`, dan tidak memanggil provider nyata: model/search diganti fixture, `fetch` tanpa mock diblokir, dan integration tests memakai direktori sementara yang dibersihkan.
 
-| Perintah                    | Pemeriksaan                                                     |
-| --------------------------- | --------------------------------------------------------------- |
-| `pnpm run check`            | Seluruh gate offline di bawah, berurutan.                       |
-| `pnpm run format:check`     | Format Prettier; `pnpm run format` untuk memperbaikinya.        |
-| `pnpm run lint`             | ESLint.                                                         |
-| `pnpm run typecheck`        | TypeScript strict.                                              |
-| `pnpm run build`            | Menghasilkan modul JavaScript dan entrypoint Studio di `dist/`. |
-| `pnpm run test:unit`        | Config, provider adapter, parser/validator, dan scope guards.   |
-| `pnpm run test:integration` | Filesystem, tools, runtime, dan route Studio dengan fake model. |
-| `pnpm run eval:offline`     | Scripted behavior cases; bukan penilaian kualitas LLM live.     |
+| Perintah                    | Pemeriksaan                                                             |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `pnpm run check`            | Seluruh gate offline di bawah, berurutan.                               |
+| `pnpm run format:check`     | Format Prettier; `pnpm run format` untuk memperbaikinya.                |
+| `pnpm run lint`             | ESLint.                                                                 |
+| `pnpm run typecheck`        | TypeScript strict.                                                      |
+| `pnpm run build`            | Menghasilkan modul JavaScript dan entrypoint Studio di `dist/`.         |
+| `pnpm run test:unit`        | Config, provider adapter, parser/validator, dan scope guards.           |
+| `pnpm run test:integration` | Filesystem, tools, runtime, dan route Studio dengan fake model.         |
+| `pnpm run eval:offline`     | Behavior fixtures dan Anvia mandatory/supporting evals; tanpa LLM live. |
 
 Gunakan hanya pnpm dan `pnpm-lock.yaml`; jangan membuat lockfile package manager lain.
 
 ## Membuka Studio
 
-Siapkan `.env` lokal dengan kredensial sendiri dan `REPORTS_DIR=./reports`, lalu jalankan `pnpm run studio`. Untuk container, jalankan `podman compose up --build -d` atau `docker compose up --build -d` dari WSL2 setelah menyiapkan ownership `./reports` sesuai [panduan container](docs/CONTAINERS.md). Buka http://localhost:4021/playground. Memuat UI tidak melakukan provider call; mengirim riset manual dapat menimbulkan biaya.
+Siapkan `.env` lokal dengan kredensial sendiri, lalu jalankan `REPORTS_DIR=./reports pnpm run studio` dari Git Bash/WSL. Untuk container, jalankan `podman compose up --build -d` atau `docker compose up --build -d` dari WSL2 setelah menyiapkan ownership `./reports` sesuai [panduan container](docs/CONTAINERS.md). Buka http://localhost:4021/playground. Memuat UI tidak melakukan provider call; mengirim riset manual dapat menimbulkan biaya.
 
 Debug run melalui events `tool_call`, `tool_result`, dan terminal `response` pada Playground/response JSONL, serta safe metrics stdout (`podman compose logs studio`). Session/trace database tidak diaktifkan karena cloning SDK akan melewati scoped adapter. Tidak ada persisted trace browser; simpan output JSONL contoh aman bila membutuhkan inspeksi sesudah server berhenti. Event draft bukan hasil terverifikasi.
 
@@ -142,9 +144,9 @@ ALLOW_LIVE_TESTS=true pnpm exec node --env-file=.env --import tsx scripts/live.t
 
 - **LIVE-01:** compatibility probe maksimum dua model calls dan satu tool sintetis tanpa side effect; exact-match tool-result replay. Tool probe bukan application tool keempat.
 - **LIVE-02:** satu query publik `Redis official documentation`, maksimum lima hasil, tanpa LLM/retry.
-- **LIVE-03:** riset end-to-end; baru dijalankan pada Fase 6 sesuai PLAN, bukan saat ini.
+- **LIVE-03:** satu riset Redis melalui HTTP Studio sementara pada loopback, dengan host report round-trip dan ringkasan trace. Jalankan hanya sekali per otorisasi; outcome dan review kualitas dicatat terpisah. Cara lengkap ada di [EVALUATION](docs/EVALUATION.md).
 
-LIVE-01/02 memiliki bukti terdahulu di CONTEXT; keduanya tidak dijalankan ulang pada Fase 4. Bukti probe bukan bukti kualitas laporan, UI, bind mount Docker, atau acceptance M1 lengkap.
+Untuk LIVE-03 yang sudah diotorisasi, gunakan `ALLOW_LIVE_TESTS=true REPORTS_DIR=./reports pnpm exec node --env-file=.env --import tsx scripts/live.ts --case LIVE-03`. Runner memakai port Studio yang harus bebas; jangan jalankan Studio/Compose lain pada port yang sama. LIVE-01/02 memiliki bukti terdahulu di CONTEXT dan tidak perlu diulang. Bukti probe bukan bukti kualitas laporan atau acceptance M1 lengkap; LIVE-03 lokal juga bukan verifikasi Docker Desktop.
 
 ## Peta repository dan dokumen
 
@@ -160,6 +162,7 @@ LIVE-01/02 memiliki bukti terdahulu di CONTEXT; keduanya tidak dijalankan ulang 
 | [ARCHITECTURE](docs/ARCHITECTURE.md)            | Kontrak dan mekanisme teknis.                                         |
 | [PLAN](docs/PLAN.md)                            | Task, dependency, gates, serta batas live tests per fase.             |
 | [CONTEXT](docs/CONTEXT.md)                      | State, evidence, blockers, dan titik lanjut terbaru.                  |
+| [EVALUATION](docs/EVALUATION.md)                | Cara menjalankan eval/live, membaca evidence, dan review kualitas.    |
 | [AGENTS](AGENTS.md)                             | Workflow coding agent dan handoff.                                    |
 
 Pengembangan berjalan satu branch per fase, **commit terpisah per fitur setelah checks terkait lulus**, lalu satu draft PR ke `master` ketika seluruh fase selesai. Review/merge dilakukan pemilik; fase berikutnya dimulai dari `master` yang sudah memuat fase sebelumnya.
