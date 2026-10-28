@@ -19,6 +19,8 @@ Fase 1–5 sudah masuk `master` melalui [PR #2](https://github.com/hardzal/simpl
 
 Tersedia **API programatik**, tiga application tools, filesystem report store, `pnpm run studio`, Dockerfile/Compose, dan test suite offline. Petunjuk deployment/permission ada di [CONTAINERS](docs/CONTAINERS.md); cara evaluasi, LIVE-03, dan review kualitas ada di [EVALUATION](docs/EVALUATION.md). Pass mekanis/fixture tidak otomatis berarti kualitas model live atau acceptance M1 sudah disetujui pemilik.
 
+Live acceptance Fase 6 saat ini **blocked**: satu LIVE-03 yang diotorisasi berhenti dengan `budget_exceeded` dan tidak memublikasikan laporan. Tidak ada automatic rerun atau kenaikan budget. Bukti lengkap dan titik lanjut ada di [CONTEXT §12](docs/CONTEXT.md#12-fase-6--evaluasi-dan-finalisasi).
+
 ## Alur dan komponen
 
 ```text

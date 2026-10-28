@@ -1,6 +1,6 @@
 # Implementation Plan — Milestone 1
 
-**Status:** Fase 1–4 merged melalui PR #2/#3; Fase 5 verified offline dan Podman, publikasi draft PR pending; Fase 6 planned
+**Status:** Fase 1–5 merged melalui PR #2/#3/#4; Fase 6 offline verified, live acceptance blocked pada `phase/06-evaluation`
 
 **Diperbarui:** 2026-10-28
 
@@ -24,14 +24,14 @@ Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika 
 
 ## 2. Peta fase
 
-| Fase | Branch                        | Hasil                                                  | Status saat ini             |
-| ---- | ----------------------------- | ------------------------------------------------------ | --------------------------- |
-| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | merged melalui PR #2        |
-| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | merged melalui PR #2        |
-| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | merged melalui PR #2        |
-| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | merged melalui PR #3        |
-| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | verified Podman; PR pending |
-| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | planned                     |
+| Fase | Branch                        | Hasil                                                  | Status saat ini                  |
+| ---- | ----------------------------- | ------------------------------------------------------ | -------------------------------- |
+| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | merged melalui PR #2             |
+| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | merged melalui PR #2             |
+| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | merged melalui PR #2             |
+| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | merged melalui PR #3             |
+| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | merged melalui PR #4             |
+| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | blocked: LIVE-03 budget_exceeded |
 
 Catatan riwayat: dependency dan bukti pada Fase 1–3 di bawah mencatat kondisi saat fase tersebut dikerjakan, termasuk pengecualian branch sebelum merge. Status publikasi terkini adalah tabel di atas: ketiganya sudah merged melalui PR #2.
 
@@ -149,6 +149,14 @@ Fase ini tidak menambahkan live research task. Membuka Studio tidak berarti haru
 
 **Deliverable/review:** M1 dapat direproduksi; owner memutuskan kelulusan/merge akhir.
 
+**Status P6-01:** verified. `@anvia/core/evals@1.17.1` menjalankan lima mandatory cases melalui `runEvalSuite`: 5/5 case dan 10/10 metric outcomes pass. Enam wrapper tests mencakup status/citation negative controls yang tetap gagal walau supporting pass, target/metric error, serta missing/incomplete mandatory results. `eval:offline` menolak file suite yang tidak ditemukan.
+
+**Status P6-02:** verified offline. Regression bahasa/revisi/isolation/injection/budget/filesystem tetap lulus, ditambah fixture-quality feedback tanpa paid judge. Word count bukan hard gate tunggal. Rubric manual relevance/language/citation support di EVALUATION; kualitas laporan live belum dapat dinilai.
+
+**Status LIVE-03:** blocked. Satu run yang diotorisasi telah dipakai pada `2026-10-28T08:42:08.691Z`, final status `budget_exceeded`, tanpa report/success trace. Model attempts 2, search attempts 1, successful write/read 0/0, token usage unavailable. Tidak ada rerun, fallback, atau budget increase. Evidence dan batas diagnosis di CONTEXT §12. Ini bukan pass/skipped-as-pass; perlu instruksi/otorisasi baru sebelum live tambahan.
+
+**Status P6-03:** verified untuk dokumentasi dan review DoD. README/EVALUATION/CONTEXT memisahkan offline pass, Podman acceptance, LIVE-03 failed, kualitas live blocked, dan Docker Desktop/WSL2 belum diverifikasi. M1 belum diterima; branch dipertahankan lokal karena live gate belum lulus. Tidak membuat PR seolah fase selesai atau menandai awaiting_review. Autentikasi API/browser GitHub juga belum tersedia.
+
 ## 9. Daftar live tests yang diizinkan
 
 | ID      | Fase | Operasi                                                        | Batas otomatis per task                                                  |
@@ -169,19 +177,19 @@ Bukti hasil: task ID, waktu, endpoint/model tanpa secret, command/mekanisme invo
 
 **Perintah ini adalah target implementasi, belum tersedia pada baseline dokumentasi.** Tambahkan script ketika functionality-nya benar-benar ada; jangan memakai script kosong atau pass palsu.
 
-| Perintah                          | Tersedia mulai             | Fungsi                                                   |
-| --------------------------------- | -------------------------- | -------------------------------------------------------- |
-| pnpm run lint                     | Fase 1                     | Lint kode/config                                         |
-| pnpm run format:check             | Fase 1                     | Pemeriksaan format termasuk dokumen                      |
-| pnpm run typecheck                | Fase 1                     | TypeScript tanpa emit                                    |
-| pnpm run build                    | Fase 1                     | Build modul termasuk entry point programatik riset       |
-| pnpm run test:unit                | Fase 1                     | Unit tests offline                                       |
-| pnpm run test:integration         | Fase 2                     | Integration tests offline/temp filesystem                |
-| pnpm run eval:offline             | Fase 3, dilengkapi Fase 6  | 12 scripted behavior cases; dilengkapi Anvia eval Fase 6 |
-| pnpm run check                    | Fase 1, diperluas bertahap | Seluruh checks offline yang sudah diimplementasikan      |
-| pnpm run test:live --case LIVE-01 | Fase 1                     | Live runner dengan case filter dan guard kuota           |
-| pnpm run studio                   | Fase 5                     | Development Studio                                       |
-| docker compose up --build         | Fase 5                     | Runtime lokal dan bind mount                             |
+| Perintah                          | Tersedia mulai             | Fungsi                                                                        |
+| --------------------------------- | -------------------------- | ----------------------------------------------------------------------------- |
+| pnpm run lint                     | Fase 1                     | Lint kode/config                                                              |
+| pnpm run format:check             | Fase 1                     | Pemeriksaan format termasuk dokumen                                           |
+| pnpm run typecheck                | Fase 1                     | TypeScript tanpa emit                                                         |
+| pnpm run build                    | Fase 1                     | Build modul termasuk entry point programatik riset                            |
+| pnpm run test:unit                | Fase 1                     | Unit tests offline                                                            |
+| pnpm run test:integration         | Fase 2                     | Integration tests offline/temp filesystem                                     |
+| pnpm run eval:offline             | Fase 3, dilengkapi Fase 6  | 12 behavior + 6 SDK wrapper tests; mandatory EVAL-01–05 dan negative controls |
+| pnpm run check                    | Fase 1, diperluas bertahap | Seluruh checks offline yang sudah diimplementasikan                           |
+| pnpm run test:live --case LIVE-01 | Fase 1                     | Live runner dengan case filter dan guard kuota                                |
+| pnpm run studio                   | Fase 5                     | Development Studio                                                            |
+| docker compose up --build         | Fase 5                     | Runtime lokal dan bind mount                                                  |
 
 Runner live harus menolak invocation tanpa case ID/opt-in. Tambahkan LIVE-02/03 hanya pada fase pemiliknya. README mencerminkan perintah yang sudah tersedia, bukan seluruh target masa depan.
 
