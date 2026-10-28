@@ -291,6 +291,31 @@ describe("research runtime boundary", () => {
       input_tokens: null,
     });
   });
+  it.each([false, true])(
+    "returns only policy-checked JSON through textStream, provider failure=%s",
+    async (failure) => {
+      const f = await fixture({
+        ...(failure
+          ? {
+              choose() {
+                throw new Error("PRIVATE_STREAM_PAYLOAD");
+              },
+            }
+          : {}),
+      });
+      const stream = f.agent.stream({ prompt: "Redis" });
+      const chunks = [];
+      for await (const chunk of stream.textStream) chunks.push(chunk);
+      const result = await stream.result;
+      expect(chunks).toEqual([result.text]);
+      expect(JSON.parse(chunks.join(""))).toMatchObject({
+        status: failure ? "failed" : "completed",
+      });
+      expect(await stream.text).toBe(result.text);
+      expect(chunks.join("")).not.toContain("PRIVATE_STREAM_PAYLOAD");
+      expect(f.log).toHaveBeenCalledTimes(1);
+    },
+  );
   it("maps a model error to the same safe terminal result on streaming", async () => {
     const f = await fixture({
       choose() {

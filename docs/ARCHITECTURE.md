@@ -116,7 +116,7 @@ Policy memeriksa search/write/read-back flags, terminal latch, strict AgentDecis
 
 Hook `beforeCompletion` memeriksa terminal latch dan counter model sebelum request berikutnya: jumlah model attempts dibatasi eksplisit oleh aplikasi, tidak hanya mengandalkan arti `maxTurns` SDK. Satu revisi memakai scope, counter, dan deadline awal. Penolakan kedua atau filesystem failure menghentikan model call berikutnya. Deadline/kuota menghasilkan `budget_exceeded`; pembatalan pengguna menghasilkan `failed` dengan metrics kategori `cancelled`. Provider failure bukan `insufficient_evidence`, dan draft yang sudah ditolak tidak boleh diganti labelnya menjadi no-evidence.
 
-Recovery berada pada adapter yang menangkap exception asli SDK sebelum scope ditutup. Lifecycle `onError` SDK 1.17.1 memakai snapshot error yang menghilangkan prototype; karena itu adapter tidak mengklasifikasikan `MaxTurnsError` dari snapshot tersebut. Generic compatibility probe tanpa hook recovery tetap melempar error seperti sebelumnya. P4-01–P4-04 memiliki regression tests offline; integrasi UI/trace/bind mount tetap Fase 5.
+Recovery berada pada adapter yang menangkap exception asli SDK sebelum scope ditutup. Lifecycle `onError` SDK 1.17.1 memakai snapshot error yang menghilangkan prototype; karena itu adapter tidak mengklasifikasikan `MaxTurnsError` dari snapshot tersebut. Pada research agent, `textStream` mengeluarkan JSON terminal yang sudah melewati policy tepat sekali, sama dengan `.text` dan `.result.text`, bukan delta mentah yang belum tervalidasi. Generic compatibility probe tanpa hook recovery tetap mempertahankan semantik SDK. P4-01–P4-04 memiliki regression tests offline; integrasi UI/trace/bind mount tetap Fase 5.
 
 ## 5. Model provider dan konfigurasi
 

@@ -231,7 +231,7 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
           get textStream() {
             return (async function* () {
               for await (const event of stream) {
-                if (event.type === "text_delta") yield event.delta;
+                if (event.type === "response") yield event.text;
               }
             })();
           },

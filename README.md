@@ -104,7 +104,7 @@ Semua response aplikasi memiliki `runId`, `status`, dan `message`. Hanya `comple
 
 File yang sempat ditulis sebelum kegagalan read-back/deadline dapat tetap ada di reports root; keberadaannya **bukan bukti completed**. Runtime tidak menghapus artefak pengguna atau mengklaim file tersebut terverifikasi. Finalizer tidak melakukan filesystem read tambahan tersembunyi.
 
-Untuk integrasi Studio, daftarkan `runtime.agent` melalui `createScopedStudio`, bukan `new Studio(...)` default: konfigurasi default SDK dapat mengkloning agent dan melewati scoped boundary. Session/trace persistence dinonaktifkan pada factory saat ini. Pada streaming, delta/turn events adalah draft; hanya terminal response JSON yang sudah melewati policy menjadi hasil aplikasi.
+Untuk integrasi Studio, daftarkan `runtime.agent` melalui `createScopedStudio`, bukan `new Studio(...)` default: konfigurasi default SDK dapat mengkloning agent dan melewati scoped boundary. Session/trace persistence dinonaktifkan pada factory saat ini. Pada streaming, delta/turn events adalah draft; hanya terminal response JSON yang sudah melewati policy menjadi hasil aplikasi. `agent.stream(...).textStream` menunggu terminal response lalu menghasilkan JSON tersebut tepat sekali, sama dengan `.text`/`.result.text`, termasuk saat recovery error; bukan streaming token mentah secara incremental.
 
 ## Konfigurasi dan budget
 

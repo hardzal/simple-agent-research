@@ -29,7 +29,7 @@ Implementasi Fase 1 mencakup package/tooling, config parser, provider factory, s
 | Rencana enam fase                         | Fase 1–3 merged; Fase 4 verified offline, PR pending; Fase 5–6 planned                      |
 | Aturan kerja Hermes dan draft PR per fase | Disusun berdasarkan keputusan pengguna                                                      |
 | Paket/SDK yang terpasang                  | Verifikasi Fase 4 Node 24.14.0; pnpm 11.22.0; dependency/lockfile SDK tidak diubah          |
-| Unit/integration/offline eval             | 116 unit tests, 50 integration/boundary tests, dan 12 scripted offline behavior cases lulus |
+| Unit/integration/offline eval             | 116 unit tests, 52 integration/boundary tests, dan 12 scripted offline behavior cases lulus |
 | Gateway/model smoke test                  | LIVE-01 terakhir lulus; dua percobaan sebelumnya gagal validasi replay                      |
 | Tavily live test                          | LIVE-02 lulus; satu query, lima hasil, tanpa LLM/retry                                      |
 | Docker/Studio runtime                     | Route Studio buffered/streaming diuji in-process; UI/server/Docker belum dijalankan         |
@@ -147,13 +147,16 @@ Pada baseline dokumentasi dahulu tidak ada test, provider request, eval live, Do
 - P4-03: exception asli dipetakan ke terminal response aman pada `.run`, `.generate`, stream event/result/text, dan route Studio in-process. Deadline/kuota menjadi `budget_exceeded`; cancellation menjadi `failed`/`cancelled`; provider dan filesystem failure tidak menyamar sebagai no-evidence. Path/sources hanya ada pada completed dari write/read-back tervalidasi; metrics tidak memuat exception mentah. Generic SDK probe tetap mempertahankan perilaku throw tanpa hook recovery.
 - P4-04: regression menguji deadline, late model yang mengabaikan abort, stream cancellation/abandon, terminal latch, I/O failure, dan mismatch read-back tanpa read tambahan. Alasan abort pertama dipertahankan: user cancellation tidak berubah menjadi deadline hanya karena model terlambat. Trace tiga search → write/read → final terbukti dalam lima model attempts; write/read dijalankan berurutan dengan tool concurrency satu. File yang sempat dipublikasikan sebelum kegagalan berikutnya dapat tetap ada, tetapi tidak diberikan sebagai verified report.
 - TDD: negative controls terbukti RED untuk exception mapping, model-turn overshoot, no-evidence setelah draft ditolak, cancellation cause, dan judul/citation tanpa temuan; perbaikan membuatnya GREEN tanpa melemahkan assertions. Ordinary checks tetap memakai fake/scripted model/search dan direktori sementara; tidak membaca secret `.env` atau memanggil provider nyata.
-- `pnpm install --frozen-lockfile --offline`, `pnpm run check`, dan `git diff --check` lulus. Full gate: format, lint, typecheck, build, **116 unit**, **50 integration/boundary**, dan **12 scripted behavior cases**. Built ESM smoke melalui `dist/index.js`: `needs_clarification`, satu fake model call, nol search/network; root sementara dibersihkan. README local links, shell blocks, dan sintaks contoh JavaScript juga diperiksa.
+- `pnpm install --frozen-lockfile --offline`, `pnpm run check`, dan `git diff --check` lulus. Full gate setelah follow-up review: format, lint, typecheck, build, **116 unit**, **52 integration/boundary**, dan **12 scripted behavior cases**. Built ESM smoke melalui `dist/index.js`: `needs_clarification`, satu fake model call, nol search/network; root sementara dibersihkan. README local links, shell blocks, dan sintaks contoh JavaScript juga diperiksa.
 - README diperjelas: tujuan repo, contoh intent, pipeline dan tanggung jawab tiga tools, offline setup/checks, runtime programatik, status/error semantics, lokasi report, budgets, guarded live probes, peta kode dan dokumen, serta fitur yang belum tersedia. ARCHITECTURE menjelaskan recovery dan counter boundary aktual.
 - Tidak ada dependency/lockfile, endpoint/model, atau budget produk yang dinaikkan. Tidak menjalankan ulang LIVE-01/02, LIVE-03, Docker, atau UI/server Studio. Scripted behavior bukan bukti kualitas LLM live atau acceptance M1; Fase 5/6 tetap belum dikerjakan.
 
+- Review independen pada snapshot `a7fd84e` menemukan dua masalah medium. Penyebab cancellation sudah diperbaiki dalam `b9e1957`; regression terbaru tetap lulus. Temuan `textStream` kosong saat recovery dikonfirmasi RED lalu diperbaiki: text-only consumer menerima JSON terminal yang sudah melewati policy tepat sekali pada sukses maupun failure, sama dengan `.text`/`.result.text`; tidak meneruskan delta mentah. Dua regression tests baru lulus dan README/ARCHITECTURE menjelaskan semantik ini.
+- Branch sudah dipush sampai `684ec85`, tetapi command pembuatan draft PR ditolak pada approval. Follow-up `textStream` dan bukti terbaru masih lokal; tidak ada retry pembuatan PR, push tambahan, merge, atau mulai Fase 5.
+
 ### Titik lanjut
 
-1. Publikasikan branch Fase 4 dan satu draft PR ke `master`; setelah URL diverifikasi, status menjadi `awaiting_review`.
+1. Menunggu izin pengguna untuk mempublikasikan follow-up lokal dan membuat satu draft PR Fase 4 ke `master`; setelah URL diverifikasi, status menjadi `awaiting_review`.
 2. Owner mereview/merge Fase 4. Jangan merge otomatis atau mulai Fase 5 sebelum merge dan instruksi lanjut.
 3. Setelah itu Fase 5 mengerjakan Docker/Studio UI dan trace integration; LIVE-03 tetap Fase 6. Jangan mengaktifkan trace store default yang mengkloning scoped agent tanpa compatibility test.
 
