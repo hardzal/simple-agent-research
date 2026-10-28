@@ -234,3 +234,14 @@ Review relevansi/bahasa/citation-support laporan live **blocked**, karena tidak 
 | Review dan merge pemilik                               | Fase 1–5 merged; Fase 6 belum dipublikasikan/review/merge                                |
 
 Checklist PRD tidak ditandai selesai secara otomatis. Bukti Podman tidak diam-diam mengubah requirement Docker Desktop/WSL2; acceptance M1 final tetap perlu keputusan pemilik atas batas verifikasi ini dan hasil live/review.
+
+### Audit dokumentasi sebelum review/merge Fase 6
+
+Atas permintaan pengguna, PLAN/PRD dicocokkan dengan source dan tests pada branch `phase/06-evaluation`. Fetch membuktikan `origin/master` masih pada merge Fase 5 `a39bac1`; working tree awal bersih. Pembaruan ini hanya dokumentasi, tanpa perubahan kode, budget, endpoint/model, atau requirement acceptance.
+
+- PRD kini memisahkan implementasi tersedia dari acceptance M1, memberi pemetaan FR ke source/tests, dan menandai DoD berdasarkan bukti dengan batas offline/Podman/live yang eksplisit.
+- PLAN merangkum status seluruh task enam fase dan command yang benar-benar tersedia di package.json, bukan lagi target script masa depan.
+- ARCHITECTURE menyelaraskan status Fase 5/6 dan peta modul aktual; path rencana `run-state`, `resource-limiter`, `report-validator`, dan `src/evals` diganti penjelasan ownership/source yang nyata. PRD menjelaskan guard lima total model attempts yang sudah diterapkan runtime, bukan memberi izin call keenam dari semantik SDK.
+- `pnpm run eval:offline` dijalankan ulang dan exit 0: SDK wrapper tests 6/6, mandatory cases 5/5, metric outcomes 10/10, behavior cases 12/12. Ini verifikasi offline terbaru, bukan tambahan live run atau bukti kualitas model asli.
+
+Sisa acceptance tidak berubah: LIVE-03 sukses beserta review kualitas belum tersedia, Docker Desktop/WSL2 belum diuji langsung, dan review/merge Fase 6 masih milik pemilik proyek. Tidak menjalankan ulang live probes, build/acceptance container, commit/push, atau merge dalam audit ini.
