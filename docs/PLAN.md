@@ -14,7 +14,7 @@
 
 ## 1. Aturan pelaksanaan
 
-Kerjakan satu fase aktif. Setiap fase berakhir dengan pemeriksaan yang relevan, pembaruan PLAN/CONTEXT, commit pada branch terpisah, dan draft PR ke `master`. Hentikan pekerjaan setelah menyerahkan PR; review dan merge dilakukan pemilik proyek.
+Kerjakan satu fase aktif pada branch terpisah. Sesuai [AGENTS §6](../AGENTS.md#6-git-draft-pr-dan-titik-berhenti), buat commit terpisah setiap fitur atau perubahan koheren selesai dan pemeriksaan terkait lulus, termasuk tests serta dokumentasi yang relevan; jangan menunggu akhir fase untuk commit. Setelah seluruh task fase selesai, seluruh gate fase yang tersedia lulus, dan PLAN/CONTEXT diperbarui, push branch dan buat satu draft PR ke `master` yang berisi commit-commit tersebut. Hentikan pekerjaan setelah menyerahkan PR; review dan merge dilakukan pemilik proyek.
 
 Pada instruksi lanjut, mulai dari `master` yang sudah memuat hasil fase sebelumnya. Jangan menumpuk implementasi fase berikutnya dalam PR yang masih menunggu review.
 

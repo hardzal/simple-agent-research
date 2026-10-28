@@ -72,9 +72,9 @@ Runtime endpoint/model yang dipilih dan compatibility checks ada di ARCHITECTURE
 
 1. Pastikan fase sebelumnya sudah direview dan di-merge. Mulai branch fase dari origin/master terbaru.
 2. Gunakan nama branch pada PLAN. Jangan commit/push implementasi langsung ke master.
-3. Commit hanya perubahan fase aktif, termasuk PLAN/CONTEXT dan README bila relevan.
+3. Buat commit terpisah untuk setiap fitur atau perubahan koheren yang selesai setelah pemeriksaan terkait lulus, termasuk tests dan dokumentasi yang relevan. Lakukan commit sebagai bagian pekerjaan tanpa menunggu instruksi commit ulang; jangan menunggu seluruh fase selesai atau menumpuk fitur yang tidak berkaitan dalam satu commit. Commit hanya perubahan fase aktif; jangan memasukkan perubahan pengguna yang tidak berkaitan.
 4. Sebelum handoff, periksa diff, tracked files, dan hasil checks. Jangan commit .env, credential, node_modules, build output, atau laporan generated.
-5. Push branch dan buat satu draft pull request dengan base master. Jika PR fase sudah ada, perbarui PR itu.
+5. Setelah seluruh task fase selesai, seluruh gate fase yang tersedia lulus, dan PLAN/CONTEXT diperbarui, push branch dan buat satu draft pull request dengan base master. PR fase berisi commit-commit per fitur agar dapat direview terpisah; bukan satu PR per fitur. Jika PR fase sudah ada, perbarui PR itu.
 6. PR menjelaskan masalah/perilaku yang berubah, task/requirement, pemeriksaan yang dijalankan, hasil live test bila ada, dan keterbatasan yang material.
 7. Perbarui status menjadi awaiting_review dan berikan tautan PR.
 8. Akhiri giliran. Jangan merge PR, mengubahnya menjadi ready, atau memulai fase berikutnya secara otomatis.
