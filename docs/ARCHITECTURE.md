@@ -1,6 +1,6 @@
 # Architecture — Simple Contextual Research Agent
 
-**Status:** Fase 1–4 merged melalui PR #2/#3; Fase 5 verified offline/Podman, publikasi draft PR pending
+**Status:** Fase 1–5 merged melalui PR #2/#3/#4; Fase 6 tersedia dan offline verified; live acceptance blocked
 
 **Diperbarui:** 2026-10-28
 
@@ -50,28 +50,35 @@ Runtime riset adalah komponen aplikasi, bukan agent kedua. Tidak ada queue, data
 
 ## 3. Tanggung jawab komponen
 
-| Modul yang direncanakan              | Tanggung jawab                                               |
-| ------------------------------------ | ------------------------------------------------------------ |
-| `src/config/`                        | Parse environment dan default; validasi konfigurasi          |
-| `src/providers/llm.ts`               | Membuat model Anvia dari endpoint/model terkonfigurasi       |
-| `src/providers/search-provider.ts`   | Interface search dan implementasi Tavily                     |
-| `src/agent/research.agent.ts`        | Satu factory/definisi agent dan registrasi tiga tools        |
-| `src/agent/research.instructions.ts` | Behavior research agent yang diturunkan dari PRD             |
-| `src/application/research-runner.ts` | Boundary run, parsing hasil, finalization, error mapping     |
-| `src/application/run-state.ts`       | State terisolasi per request dan lifecycle cleanup           |
-| `src/tools/`                         | Schema dan handler webSearch/writeFile/readFile              |
-| `src/services/source-registry.ts`    | ID sumber, normalisasi URL, deduplikasi                      |
-| `src/services/report-validator.ts`   | Validasi Markdown dan provenance                             |
-| `src/services/report-store.ts`       | I/O pada lokasi laporan yang dibatasi                        |
-| `src/services/resource-limiter.ts`   | Counter, deadline, cancellation, terminal latch              |
-| `src/services/run-metrics.ts`        | Metrics dan logging yang aman                                |
-| `src/schemas/`                       | Research response, keputusan model, dan kontrak hasil        |
-| `src/studio.ts`                      | Mendaftarkan runtime/agent yang sama ke Studio               |
-| `src/index.ts`                       | Entry point tipis untuk pemanggilan programatik/headless     |
-| `src/evals/`                         | Suite Anvia evals dan fixture                                |
-| `tests/`                             | Unit, integration, offline behavior, dan live tests terpisah |
+| Modul aktual                                                    | Tanggung jawab                                                               |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `src/config/`                                                   | Parse environment dan default; validasi konfigurasi                          |
+| `src/providers/llm.ts`                                          | Membuat model Anvia dari endpoint/model terkonfigurasi                       |
+| `src/providers/search-provider.ts`                              | Interface search dan implementasi Tavily                                     |
+| `src/agent/research.agent.ts`                                   | Satu factory/definisi agent dan registrasi tiga tools                        |
+| `src/agent/research.instructions.ts`                            | Behavior research agent yang diturunkan dari PRD                             |
+| `src/application/research-runner.ts`                            | Factory runtime/headless yang memakai agent yang sama                        |
+| `src/application/research-policy.ts`                            | Input stateless, parsing keputusan dan finalization                          |
+| `src/application/scoped-agent.ts`                               | Binding scope per generate/stream, lifecycle, recovery dan cleanup           |
+| `src/application/scoped-studio.ts`                              | Studio tanpa clone/session/trace stores yang melewati scope                  |
+| `src/application/studio-server.ts`                              | HTTP server, loopback/Host guard, startup dan shutdown                       |
+| `src/tools/`                                                    | Schema dan handler webSearch/writeFile/readFile                              |
+| `src/services/source-registry.ts`                               | ID sumber, normalisasi URL, deduplikasi                                      |
+| `src/services/report-validation.ts`                             | Validasi Markdown dan provenance                                             |
+| `src/services/report-store.ts`                                  | I/O pada lokasi laporan yang dibatasi                                        |
+| `src/services/run-metrics.ts`                                   | Metrics dan logging yang aman                                                |
+| `src/schemas/`                                                  | Research response, keputusan model, dan kontrak hasil                        |
+| `src/studio.ts`                                                 | Mendaftarkan runtime/agent yang sama ke Studio                               |
+| `src/index.ts`                                                  | Entry point tipis untuk pemanggilan programatik/headless                     |
+| `tests/research.evaluation.test.ts`                             | Suite SDK mandatory, quality fixture dan negative controls                   |
+| `tests/research.behavior.test.ts`, `tests/fixtures/research.ts` | Supporting behavior dan scripted fixtures                                    |
+| `src/compatibility/`, `scripts/live.ts`                         | Guarded LIVE-01/02/03 runners; terpisah dari ordinary checks                 |
+| `scripts/container-acceptance.mjs`                              | Acceptance image/UI dan host round-trip dengan fake providers                |
+| `tests/`                                                        | Unit, HTTP server, integration, behavior, eval dan live-runner offline tests |
 
 Gunakan pemisahan modul biasa dan dependency injection lewat parameter/factory. M1 tidak membutuhkan container DI, repository database, atau lapisan Clean Architecture tambahan.
+
+Tidak ada modul `run-state`, `resource-limiter`, atau `src/evals` terpisah: scope/deadline/model counters dimiliki scoped agent; guard model produk dan metrics di research agent; registry, quota tools, revision dan report flags ditutup oleh factory research tools. Suite SDK eval berada dalam tests agar ordinary checks tetap offline.
 
 ## 4. Boundary run dan state
 
@@ -104,7 +111,7 @@ Direct tool invocation tanpa scope run yang sah ditolak sebelum side effect. Uni
 
 src/application/scoped-agent.ts menyediakan adapter tipis turunan Agent: setiap generate/stream membuat instance SDK baru, UUID aplikasi, timer/AbortSignal, dan tools yang menutup scope request. Lifecycle menyimpan sdkRunId dan menjalankan callback finalization sebelum terminal outcome. Model attempts dihitung sebelum completion; cleanup juga berjalan ketika pembuatan scoped tools, provider, finalizer, atau cancellation gagal. Uji dua generation/stream overlap membuktikan identitas dan cleanup terpisah; ini bukan bukti bahwa seluruh research policy Fase 3/4 sudah tersedia.
 
-Studio 1.3.20 secara default mengkloning agent untuk trace observer; clone menghilangkan override generate/stream pada adapter. Karena itu src/application/scoped-studio.ts memakai stores.sessions=false, pipelineLogs=false, pipelineRuns=false tanpa model registry. Ini menonaktifkan trace store default dan mempertahankan objek scoped asli. Route buffered dan streaming diuji lewat Studio.app.request dengan fake model, bukan sekadar memeriksa daftar agent. Jangan mengganti factory ini dengan new Studio default atau mengaktifkan model registry/trace storage tanpa mengulang compatibility checks. Pembatasan input riset stateless kini ditegakkan Fase 3. UI/server/Docker dan trace persistence tetap task Fase 5.
+Studio 1.3.20 secara default mengkloning agent untuk trace observer; clone menghilangkan override generate/stream pada adapter. Karena itu src/application/scoped-studio.ts memakai stores.sessions=false, pipelineLogs=false, pipelineRuns=false tanpa model registry. Ini menonaktifkan trace store default dan mempertahankan objek scoped asli. Route buffered dan streaming diuji lewat Studio.app.request dengan fake model, bukan sekadar memeriksa daftar agent. Jangan mengganti factory ini dengan new Studio default atau mengaktifkan model registry/trace storage tanpa mengulang compatibility checks. Pembatasan input riset stateless ditegakkan sejak Fase 3; Fase 5 menambahkan UI/server dan debug events tanpa trace persistence. Status container dan batas bukti ada di §9 dan CONTEXT.
 
 ### Binding produk Fase 3
 
@@ -122,7 +129,7 @@ Recovery berada pada adapter yang menangkap exception asli SDK sebelum scope dit
 
 Gunakan `@anvia/openai` dengan custom `baseUrl`. Default awal yang akan diuji adalah Chat Completions (`LLM_API=chat`). Jangan menganggap URL berakhiran /v1 juga mendukung Responses API.
 
-Gateway/model ini merupakan pilihan deployment, bukan kompatibilitas yang sudah terbukti. LIVE-01 menguji tool calling, pengembalian tool result, final output, cancellation/usage yang tersedia, dan API mode yang dipilih. Jangan diam-diam mengganti model, endpoint, atau API mode jika gagal.
+Gateway/model ini merupakan pilihan deployment. LIVE-01 historis telah membuktikan tool calling, pengembalian tool result dan final output exact-match pada Chat API; cancellation diuji offline. Itu bukan bukti riset live E2E: LIVE-03 Fase 6 gagal pada deadline. Jangan diam-diam mengganti model, endpoint, atau API mode jika gagal. Usage yang tidak tersedia tetap null.
 
 Finalisasi tidak memerlukan model kedua atau LLM call tambahan di luar agent loop. Model mengusulkan keputusan akhir yang diparse dan divalidasi lokal:
 
@@ -150,7 +157,7 @@ type ResearchResponse = {
 
 Keputusan model adalah kandidat. Path, sumber, dan status akhir dibangun aplikasi dari state. Jika provider-native structured output tersedia dan lolos uji, boleh digunakan; validasi lokal tetap wajib. Jika tidak tersedia, gunakan JSON yang diparse lokal dan tolak output malformed secara aman, tanpa classification call tambahan.
 
-Konfigurasi yang harus disediakan Fase 1:
+Konfigurasi inti yang tersedia sejak Fase 1 (schema lengkap di `src/config/index.ts`):
 
 ```dotenv
 NODE_ENV=development
@@ -169,7 +176,7 @@ STUDIO_PORT=4021
 ALLOW_LIVE_TESTS=false
 ```
 
-Contoh REPORTS_DIR di atas berlaku dalam container. Untuk smoke test headless dari WSL2 sebelum Fase 5, gunakan ./reports atau direktori sementara yang writable; Compose nanti menetapkan /app/reports di dalam container.
+Contoh REPORTS_DIR di atas berlaku dalam container. Untuk runtime headless/Studio lokal, gunakan ./reports atau direktori sementara yang writable; Compose menetapkan /app/reports di dalam container.
 
 Budget defaults mengikuti PRD. Kredensial hanya ada di environment lokal; contoh file selalu kosong. Adapter config menerjemahkan nama env ke API SDK yang diverifikasi, termasuk menonaktifkan retries pada lapisan yang relevan.
 
@@ -317,16 +324,16 @@ Evaluasi Fase 6 memakai export `@anvia/core/evals` pada versi yang sudah dipin, 
 
 LIVE-03 terpisah dari ordinary checks. `scripts/live.ts --case LIVE-03` memerlukan opt-in, menolak budget di atas batas PLAN, dan menjalankan satu POST streaming pada scoped Studio lokal sementara. Harness membandingkan byte host dengan hasil application read-back, memeriksa metrics/tool events, lalu menyimpan ringkasan evidence dan snippet sumber publik terpakai di reports root. Store trace/session SDK tetap nonaktif; ringkasan acceptance bukan raw JSONL atau product memory. Server dihentikan setelah probe, tidak ada retry/fallback otomatis. Detail command dan rubric kualitas ada di [EVALUATION](EVALUATION.md); hasil aktual dimiliki CONTEXT.
 
-## 11. Verifikasi yang masih diperlukan
+## 11. Status verifikasi kontrak teknis
 
-| ID   | Verifikasi                                                                            | Task pemilik   |
-| ---- | ------------------------------------------------------------------------------------- | -------------- |
-| V-01 | Versi SDK, lifecycle, binding state dan policy pada generation/streaming/Studio       | P1-01, P1-02   |
-| V-02 | Chat API dan tool-result round-trip pada gateway/model pilihan                        | LIVE-01        |
-| V-03 | Bentuk hasil Tavily dan pemetaan source fields                                        | P2-01, LIVE-02 |
-| V-04 | Non-root, permission reports, read-only root, dan UI isolation di Docker Desktop/WSL2 | P5-01, P5-02   |
+| ID   | Verifikasi                                                                            | Task pemilik   | Bukti/status saat ini                                          |
+| ---- | ------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------- |
+| V-01 | Versi SDK, lifecycle, binding state dan policy pada generation/streaming/Studio       | P1-01, P1-02   | Verified offline; dilengkapi HTTP/UI regression Fase 5/6       |
+| V-02 | Chat API dan tool-result round-trip pada gateway/model pilihan                        | LIVE-01        | Passed historis; bukan bukti live riset E2E                    |
+| V-03 | Bentuk hasil Tavily dan pemetaan source fields                                        | P2-01, LIVE-02 | Fixtures dan LIVE-02 passed historis                           |
+| V-04 | Non-root, permission reports, read-only root, dan UI isolation di Docker Desktop/WSL2 | P5-01, P5-02   | Podman passed; Docker Desktop/WSL2 belum diverifikasi langsung |
 
-Ini merupakan verifikasi implementasi, bukan keputusan pengguna yang perlu ditanyakan ulang. Kegagalan dicatat secara konkret; jangan menandai dukungan sebagai terbukti sebelum diuji.
+Ledger hasil dan batas bukti dimiliki CONTEXT. LIVE-03 Fase 6 gagal pada deadline; live E2E dan review kualitas masih blocked, bukan kekurangan kode runner/eval. Bukti offline/Podman tidak menggantikan acceptance yang belum terpenuhi.
 
 ## 12. Referensi resmi
 

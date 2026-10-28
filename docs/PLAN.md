@@ -20,7 +20,7 @@ Pada instruksi lanjut, mulai dari `master` yang sudah memuat hasil fase sebelumn
 
 Dokumentasi awal menggunakan branch `docs/m1-agent-specifications`. Ini baseline spesifikasi, bukan bukti bahwa Fase 1 sudah dilaksanakan.
 
-Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika dependency belum tersedia. Fase yang lulus checks dapat berstatus `awaiting_review`; status `merged` hanya setelah merge benar-benar terjadi.
+Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika dependency atau acceptance belum terpenuhi. `verified offline` tidak berarti `verified live`. Fase yang lulus checks dapat berstatus `awaiting_review`; status `merged` hanya setelah merge benar-benar terjadi.
 
 ## 2. Peta fase
 
@@ -34,6 +34,22 @@ Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika 
 | 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | blocked: LIVE-03 budget_exceeded |
 
 Catatan riwayat: dependency dan bukti pada Fase 1–3 di bawah mencatat kondisi saat fase tersebut dikerjakan, termasuk pengecualian branch sebelum merge. Status publikasi terkini adalah tabel di atas: ketiganya sudah merged melalui PR #2.
+
+### Ringkasan penyelesaian sampai Fase 6
+
+| Task                 | Status implementasi/verifikasi saat ini            | Bukti utama                                                                                                      |
+| -------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| P1-01–P1-03          | verified offline, merged                           | Config/provider/scope tests dan frozen install; CONTEXT §4                                                       |
+| LIVE-01              | verified live historis, merged                     | Tool-result replay exact-match pada run terakhir; CONTEXT §4                                                     |
+| P2-01–P2-03, LIVE-02 | verified offline + LIVE-02 passed historis, merged | Adapter/registry/tools/filesystem tests; CONTEXT §5                                                              |
+| P3-01–P3-04          | verified offline, merged                           | Instructions/runtime/policy dan behavior fixtures; CONTEXT §7                                                    |
+| P4-01–P4-04          | verified offline, merged                           | Validator/revisi/error/late-result regression; CONTEXT §8                                                        |
+| P5-01–P5-04          | implementasi merged; verified offline/Podman       | UI, Compose, image, host round-trip/recreate; Docker Desktop/WSL2 belum diverifikasi; CONTEXT §11                |
+| P6-01/P6-02          | verified offline, belum merged                     | `tests/research.evaluation.test.ts` dan `tests/research.behavior.test.ts`; mandatory 5/5 serta negative controls |
+| LIVE-03              | runner tersedia; acceptance blocked                | Satu run failed `budget_exceeded`, tanpa laporan; CONTEXT §12                                                    |
+| P6-03                | dokumentasi/review DoD tersedia, belum merged      | README, EVALUATION, PRD §9, dan CONTEXT §12                                                                      |
+
+Seluruh task implementasi enam fase sudah tersedia, tetapi seluruh acceptance PRD/PLAN belum lulus. Tidak ada klaim M1 selesai hanya karena implementasi telah mencapai Fase 6. Sisa sebelum acceptance akhir: live E2E sukses dan review kualitas laporannya (perlu otorisasi baru), bukti Docker Desktop/WSL2 yang belum tersedia, serta review/merge Fase 6 oleh pemilik. Tidak ada live rerun otomatis dalam pembaruan dokumentasi ini.
 
 ## 3. Fase 1 — Project foundation
 
@@ -90,7 +106,7 @@ Status P2-01/P2-02/P2-03: verified offline melalui adapter/registry/validator un
 
 **Status task:** P3-01/P3-02/P3-03/P3-04 `verified` secara offline. Factory/instructions, runtime programatik, finalization seam, request stateless, metrics, dan scripted behavior suite tersedia. `pnpm run check` lulus: 107 unit tests, 32 integration/boundary tests, dan 12 offline behavior cases. Built ESM smoke klarifikasi lulus dengan satu fake model call, nol provider call, serta cleanup tempfile. Rencana rinci dan acceptance matrix: [phase-03-agent-behavior.md](plans/2026-10-27-phase-03-agent-behavior.md).
 
-**Batas verifikasi:** fixtures membuktikan wiring/enforcement dan pelestarian bahasa keluaran scripted, bukan kemampuan semantik LLM live. Suite Anvia eval lengkap tetap Fase 6. Fase 4 memiliki kelengkapan parser/citation, revisi end-to-end, pemetaan seluruh exception menjadi status aplikasi, dan edge cases deadline/cancellation. Pada Fase 3, invalid request ditolak sebelum run; exception transport/turn/deadline dapat tetap reject alih-alih menjadi response status. Tidak ada live API, UI/server, Docker, atau klaim DoD M1 selesai.
+**Batas verifikasi saat handoff Fase 3 (historis):** fixtures membuktikan wiring/enforcement dan pelestarian bahasa keluaran scripted, bukan kemampuan semantik LLM live. Suite Anvia eval lengkap kemudian tersedia Fase 6. Fase 4 melengkapi parser/citation, revisi end-to-end, pemetaan exception menjadi status aplikasi, dan edge cases deadline/cancellation. Pada snapshot Fase 3, invalid request ditolak sebelum run; exception transport/turn/deadline dapat tetap reject alih-alih menjadi response status. Saat handoff Fase 3 tidak ada live API, UI/server, Docker, atau klaim DoD M1 selesai; status terkini ada di ringkasan §2.
 
 **Pemeriksaan:** fake-model behavior cases faktual/eksploratif/komparatif, ambiguity tanpa search, no-result, bahasa, prompt injection, dan isolated runs.
 
@@ -173,25 +189,28 @@ Jika kredensial, akses gateway, atau akses UI tidak tersedia, catat `blocked`; j
 
 Bukti hasil: task ID, waktu, endpoint/model tanpa secret, command/mekanisme invocation, run ID, outcome, jumlah model/search calls, usage yang tersedia, durasi, dan path laporan relatif bila completed.
 
-## 10. Kontrak perintah yang akan dibuat
+## 10. Perintah yang tersedia pada Fase 6
 
-**Perintah ini adalah target implementasi, belum tersedia pada baseline dokumentasi.** Tambahkan script ketika functionality-nya benar-benar ada; jangan memakai script kosong atau pass palsu.
+Script berikut sudah tersedia di `package.json`, kecuali `docker compose` yang merupakan command engine terhadap `compose.yaml`. Seluruhnya kini memiliki implementasi; baseline dokumentasi dahulu belum menyediakannya. Ordinary `check` tidak menjalankan live probes atau acceptance container.
 
-| Perintah                          | Tersedia mulai             | Fungsi                                                                        |
-| --------------------------------- | -------------------------- | ----------------------------------------------------------------------------- |
-| pnpm run lint                     | Fase 1                     | Lint kode/config                                                              |
-| pnpm run format:check             | Fase 1                     | Pemeriksaan format termasuk dokumen                                           |
-| pnpm run typecheck                | Fase 1                     | TypeScript tanpa emit                                                         |
-| pnpm run build                    | Fase 1                     | Build modul termasuk entry point programatik riset                            |
-| pnpm run test:unit                | Fase 1                     | Unit tests offline                                                            |
-| pnpm run test:integration         | Fase 2                     | Integration tests offline/temp filesystem                                     |
-| pnpm run eval:offline             | Fase 3, dilengkapi Fase 6  | 12 behavior + 6 SDK wrapper tests; mandatory EVAL-01–05 dan negative controls |
-| pnpm run check                    | Fase 1, diperluas bertahap | Seluruh checks offline yang sudah diimplementasikan                           |
-| pnpm run test:live --case LIVE-01 | Fase 1                     | Live runner dengan case filter dan guard kuota                                |
-| pnpm run studio                   | Fase 5                     | Development Studio                                                            |
-| docker compose up --build         | Fase 5                     | Runtime lokal dan bind mount                                                  |
+| Perintah                          | Tersedia mulai             | Fungsi                                                                                 |
+| --------------------------------- | -------------------------- | -------------------------------------------------------------------------------------- |
+| pnpm run lint                     | Fase 1                     | Lint kode/config                                                                       |
+| pnpm run format:check             | Fase 1                     | Pemeriksaan format termasuk dokumen                                                    |
+| pnpm run typecheck                | Fase 1                     | TypeScript tanpa emit                                                                  |
+| pnpm run build                    | Fase 1                     | Build modul termasuk entry point programatik riset                                     |
+| pnpm run test:unit                | Fase 1                     | Unit tests offline                                                                     |
+| pnpm run test:integration         | Fase 2                     | Integration tests offline/temp filesystem                                              |
+| pnpm run eval:offline             | Fase 3, dilengkapi Fase 6  | 12 behavior + 6 SDK wrapper tests; mandatory EVAL-01–05 dan negative controls          |
+| pnpm run check                    | Fase 1, diperluas bertahap | Seluruh checks offline yang sudah diimplementasikan                                    |
+| pnpm run test:live --case LIVE-01 | Fase 1                     | Live runner dengan case filter dan guard kuota                                         |
+| pnpm run test:live --case LIVE-02 | Fase 2                     | Satu Tavily search, tanpa model; opt-in wajib                                          |
+| pnpm run test:live --case LIVE-03 | Fase 6                     | Satu riset HTTP Studio, host verification, dan safe evidence; opt-in wajib             |
+| pnpm run studio                   | Fase 5                     | Development Studio                                                                     |
+| pnpm run test:container           | Fase 5                     | Acceptance image/UI dan fake research dengan host round-trip/recreate; engine terpisah |
+| docker compose up --build         | Fase 5                     | Runtime lokal dan bind mount                                                           |
 
-Runner live harus menolak invocation tanpa case ID/opt-in. Tambahkan LIVE-02/03 hanya pada fase pemiliknya. README mencerminkan perintah yang sudah tersedia, bukan seluruh target masa depan.
+Runner live menolak invocation tanpa case ID/opt-in; LIVE-01/02/03 sudah tersedia. `test:live` tidak otomatis memuat `.env`; contoh pemuatan environment yang aman ada di README/EVALUATION. Script `studio` memuat `.env` dan mengirim prompt dapat memanggil API berbayar. Tersedianya command bukan otorisasi mengulang live test atau bukti keberhasilan semua case.
 
 ## 11. Bukti handoff setiap fase
 

@@ -2,9 +2,9 @@
 
 **Milestone:** M1 — Proof of Concept
 
-**Status:** Draft v1.1, menunggu review pemilik proyek
+**Status:** Requirement M1 v1.1; implementasi Fase 1–6 tersedia, offline verified; acceptance M1 belum lulus
 
-**Diperbarui:** 2026-10-27
+**Diperbarui:** 2026-10-28
 
 Dokumen ini memiliki requirement produk dan acceptance criteria. Desain teknis berada di [ARCHITECTURE.md](ARCHITECTURE.md), urutan implementasi di [PLAN.md](PLAN.md), kondisi aktual di [CONTEXT.md](CONTEXT.md), dan aturan coding agent di [AGENTS.md](../AGENTS.md).
 
@@ -130,26 +130,26 @@ Setelah verifikasi berhasil, agent hanya menyelesaikan respons akhir; tidak mela
 
 ## 5. Budget produk
 
-| Resource                               | Batas awal                            |
-| -------------------------------------- | ------------------------------------- |
-| Anvia `maxTurns`                       | 5                                     |
-| Web search                             | Maksimum 3 panggilan provider per run |
-| Hasil pencarian                        | Maksimum 5 per pencarian              |
-| Successful report write                | Maksimum 1                            |
-| Successful verification read           | Maksimum 1                            |
-| Revisi draft setelah penolakan pertama | Maksimum 1, dalam budget yang sama    |
-| Panjang badan laporan                  | Target 150–500 kata                   |
-| Deadline eksekusi                      | 60 detik                              |
-| Model retries                          | Dinonaktifkan                         |
-| Tool concurrency                       | 1                                     |
+| Resource                                     | Batas awal                            |
+| -------------------------------------------- | ------------------------------------- |
+| Anvia `maxTurns` dan model attempts aplikasi | 5 masing-masing                       |
+| Web search                                   | Maksimum 3 panggilan provider per run |
+| Hasil pencarian                              | Maksimum 5 per pencarian              |
+| Successful report write                      | Maksimum 1                            |
+| Successful verification read                 | Maksimum 1                            |
+| Revisi draft setelah penolakan pertama       | Maksimum 1, dalam budget yang sama    |
+| Panjang badan laporan                        | Target 150–500 kata                   |
+| Deadline eksekusi                            | 60 detik                              |
+| Model retries                                | Dinonaktifkan                         |
+| Tool concurrency                             | 1                                     |
 
 Nilai batas harus dapat dikonfigurasi. Penghitung dan deadline ditegakkan aplikasi, termasuk pada input tool yang dimanipulasi.
 
-Dalam Anvia v1, `maxTurns: 5` mengizinkan satu pemanggilan model awal dan sampai lima putaran model lanjutan. Satu putaran dapat meminta beberapa tools. Karena itu, limit turns bukan penghitung tool calls.
+Dalam Anvia v1, `maxTurns: 5` mengizinkan satu pemanggilan model awal dan sampai lima putaran model lanjutan. Runtime produk menerapkan guard tambahan: `MAX_AGENT_TURNS=5` juga membatasi total model attempts menjadi lima, termasuk call awal dan attempt yang gagal. Guard diperiksa sebelum request berikutnya; batas SDK bukan izin untuk call keenam. Satu respons model dapat meminta beberapa tools yang dieksekusi berurutan. Karena itu, limit model bukan penghitung tool calls.
 
 Pencarian provider yang sudah dimulai tetap dihitung meskipun gagal. Menghabiskan tiga pencarian tidak otomatis menghentikan proses penulisan jika budget lain masih tersedia. Request pencarian keempat ditolak sebelum memanggil provider.
 
-Budget awal tidak menjamin revisi selalu kebagian putaran. Skenario tiga pencarian, penulisan, pembacaan, dan respons akhir sudah memakai enam model calls jika tiap tool diminta di putaran terpisah.
+Budget awal tidak menjamin revisi selalu kebagian putaran. Skenario tiga pencarian, penulisan, pembacaan, dan respons akhir membutuhkan enam model calls jika tiap tool diminta terpisah, sehingga tidak muat dalam lima attempts. Regression trace yang lulus menggabungkan permintaan write/read dalam satu respons model, dengan eksekusi tools tetap berurutan; budget tidak dinaikkan.
 
 ## 6. Application response contract
 
@@ -203,18 +203,33 @@ Token usage yang tidak diberikan gateway dicatat sebagai tidak tersedia, bukan a
 
 ## 9. Definition of Done M1
 
-- [ ] FR Must terpenuhi dalam satu research agent dengan tiga application tools.
-- [ ] Lima mandatory cases executable dan lulus deterministic assertions.
-- [ ] Supporting cases kritis untuk revisi, bahasa, budget, isolation, dan filesystem lulus.
-- [ ] Laporan valid tersimpan pada host, tetap tersedia setelah container dibuat ulang.
-- [ ] Status completed berasal dari state tervalidasi dan read-back.
-- [ ] Klarifikasi diakhiri sebagai request independen.
-- [ ] Limit dan cancellation ditegakkan dalam kode.
-- [ ] Docker Compose dan Anvia Studio dapat digunakan di Windows Docker Desktop/WSL2.
-- [ ] Live integration tasks yang ditetapkan PLAN dijalankan dan hasilnya tercatat.
-- [ ] Setidaknya satu live end-to-end run berhasil melalui Studio dan trace dapat diinspeksi.
-- [ ] Setup, testing, keterbatasan, dan hasil evaluasi didokumentasikan.
-- [ ] Review dan merge setiap fase dilakukan pemilik proyek.
+Checklist berikut mencatat bukti sampai Fase 6, bukan mengubah requirement. `[x]` berarti kriteria tersebut terbukti dalam lingkup yang disebutkan; tidak otomatis berarti M1 diterima. Ledger hasil lengkap ada di [CONTEXT §12](CONTEXT.md#12-fase-6--evaluasi-dan-finalisasi).
+
+- [ ] FR Must terpenuhi dalam satu research agent dengan tiga application tools. Implementasi dan regression offline tersedia; kualitas semantik FR-02/03/05/06/07/17 pada model live belum terbukti melalui laporan LIVE-03 yang berhasil.
+- [x] Lima mandatory cases executable dan lulus deterministic assertions. `tests/research.evaluation.test.ts` menjalankan EVAL-01–05 melalui SDK: 5/5; assertion bind mount EVAL-05 dibuktikan terpisah dengan Podman, bukan Docker Desktop.
+- [x] Supporting cases kritis untuk revisi, bahasa, budget, isolation, dan filesystem lulus dengan fake/scripted dependencies.
+- [x] Laporan valid tersimpan pada host, tetap tersedia setelah container dibuat ulang; acceptance Podman dengan fake providers membuktikan byte equality dan persistensi.
+- [x] Status completed berasal dari state tervalidasi dan read-back; finalizer tidak mempercayai path/sources dari model.
+- [x] Klarifikasi diakhiri sebagai request independen; history tidak diteruskan ke run baru.
+- [x] Limit dan cancellation ditegakkan dalam kode, termasuk model attempts, quota search, deadline, dan penolakan late results.
+- [ ] Docker Compose dan Anvia Studio dapat digunakan di Windows Docker Desktop/WSL2. Image/Compose/UI terbukti dengan Podman; Docker Desktop/WSL2 belum diuji langsung.
+- [x] Live integration tasks yang ditetapkan PLAN dijalankan dan hasilnya tercatat: LIVE-01/02 lulus historis; satu LIVE-03 gagal `budget_exceeded`. Pencatatan hasil bukan kelulusan live E2E.
+- [ ] Setidaknya satu live end-to-end run berhasil melalui Studio dan trace dapat diinspeksi. Blocked: LIVE-03 berakhir tanpa laporan atau success trace; review kualitas live juga blocked.
+- [x] Setup, testing, keterbatasan, dan hasil evaluasi didokumentasikan dalam README, CONTAINERS, EVALUATION, PLAN, dan CONTEXT.
+- [ ] Review dan merge setiap fase dilakukan pemilik proyek. Fase 1–5 merged melalui PR #2/#3/#4; Fase 6 belum review/merge.
+
+### Pemetaan requirement ke implementasi Fase 6
+
+| Requirement              | Implementasi dan bukti utama                                                                                 | Batas bukti                                                                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-01–FR-07, FR-11/12/17 | `src/agent/research.instructions.ts`, `src/application/research-policy.ts`; behavior dan evaluation fixtures | Intent, relevansi, analisis, kesimpulan, dan bahasa diarahkan instructions serta diuji dengan fixtures; bukan jaminan semantik model live |
+| FR-08                    | `src/services/source-registry.ts`, `src/services/report-validation.ts`; validator tests dan EVAL-04          | ID/URL/provenance diperiksa kode; dukungan klaim oleh snippet perlu review kualitas                                                       |
+| FR-09/10/18              | `src/tools/research-tools.ts`, `src/services/report-store.ts`; integration/behavior tests dan EVAL-05        | Satu write/read, revisi, containment dan hash/byte round-trip terbukti offline; host/recreate dengan Podman                               |
+| FR-13                    | `src/application/scoped-agent.ts`, `src/agent/research.agent.ts`, `src/tools/research-tools.ts`              | Guard/counter/cancellation diuji offline; timeout lokal tidak menjamin billing remote berhenti                                            |
+| FR-14/15                 | `src/application/studio-server.ts`, `src/application/scoped-studio.ts`, `src/services/run-metrics.ts`        | HTTP/UI/debug events dan safe metrics tersedia; tanpa persisted trace browser; LIVE-03 belum berhasil                                     |
+| FR-16                    | Tidak diimplementasikan, sesuai Won't — M1                                                                   | Tidak ada persistent conversation memory; setiap request independen                                                                       |
+
+Tidak ada fase implementasi tambahan yang ditetapkan oleh audit ini. Yang tersisa adalah acceptance live, verifikasi lingkungan Docker Desktop/WSL2, serta review/merge pemilik; tambahan live run tetap memerlukan otorisasi baru sesuai PLAN.
 
 ## 10. Riwayat keputusan
 
