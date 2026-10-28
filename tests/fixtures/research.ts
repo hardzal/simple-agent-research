@@ -125,5 +125,5 @@ export async function fixture(
     { ...config, ...options.config, reportsDir: root },
     { model, searchProvider: { search }, reportStore: store, logger: { log } },
   );
-  return { ...runtime, root, requests, search, write, read, log };
+  return { ...runtime, root, model, requests, search, write, read, log };
 }
