@@ -50,7 +50,7 @@ pnpm install --frozen-lockfile
 pnpm run check
 ```
 
-Instalasi memerlukan registry atau cache pnpm lengkap. Checks tidak memerlukan API key, tidak membaca `.env`, dan tidak memanggil provider nyata: model/search diganti fixture, network test diblokir, dan integration tests memakai direktori sementara yang dibersihkan.
+Instalasi memerlukan registry atau cache pnpm lengkap. Checks tidak memerlukan API key, tidak membaca `.env`, dan tidak memanggil provider nyata: model/search diganti fixture, `fetch` tanpa mock diblokir, dan integration tests memakai direktori sementara yang dibersihkan.
 
 | Perintah                    | Pemeriksaan                                                     |
 | --------------------------- | --------------------------------------------------------------- |
@@ -123,7 +123,7 @@ Default provider: gateway kompatibel OpenAI `https://gateway.devscale.id/v1`, mo
 
 Semua langkah, termasuk revisi dan read-back, memakai budget run awal. Penolakan draft kedua menghentikan run; I/O failure bukan kesempatan revisi konten. Nilai config dan batas input/query/snippet tersedia di [.env.example](.env.example) serta [ARCHITECTURE](docs/ARCHITECTURE.md). Ini batas operasi/waktu/ukuran, **bukan jaminan token atau biaya moneter**.
 
-Laporan disimpan sebagai `<REPORTS_DIR>/<runId>.md`. Report store menolak traversal/symlink/junction, tidak menimpa file yang ada, dan mempublikasikan file dengan hardlink atomik. Reports root harus trusted terhadap concurrent hostile rename; detail batas filesystem ada di ARCHITECTURE. Metrics berisi counters/status dan kategori error aman, bukan secret, raw provider response, atau teks laporan. Usage token yang tidak dilaporkan provider dicatat `null`, bukan dikarang menjadi nol.
+Laporan disimpan sebagai `<REPORTS_DIR>/<runId>/report.md`. Report store menolak traversal/symlink/junction, tidak menimpa file yang ada, dan mempublikasikan file dengan hardlink atomik. Reports root harus trusted terhadap concurrent hostile rename; detail batas filesystem ada di ARCHITECTURE. Metrics berisi counters/status dan kategori error aman, bukan secret, raw provider response, atau teks laporan. Usage token yang tidak dilaporkan provider dicatat `null`, bukan dikarang menjadi nol.
 
 ## Guarded live tests
 

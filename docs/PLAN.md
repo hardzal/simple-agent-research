@@ -1,6 +1,6 @@
 # Implementation Plan — Milestone 1
 
-**Status:** Fase 3 P3-01–P3-04 verified offline; `awaiting_review` pada [draft PR #2](https://github.com/hardzal/simple-agent-research/pull/2); Fase 4 belum dimulai
+**Status:** Fase 1–3 merged melalui [PR #2](https://github.com/hardzal/simple-agent-research/pull/2); Fase 4 verified offline, publikasi draft PR pending; Fase 5 belum dimulai
 
 **Diperbarui:** 2026-10-28
 
@@ -24,14 +24,16 @@ Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika 
 
 ## 2. Peta fase
 
-| Fase | Branch                        | Hasil                                                  | Status saat ini                      |
-| ---- | ----------------------------- | ------------------------------------------------------ | ------------------------------------ |
-| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | verified; pushed, belum merged       |
-| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | verified; pushed, belum merged       |
-| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | P3 verified offline; awaiting_review |
-| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | planned                              |
-| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | planned                              |
-| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | planned                              |
+| Fase | Branch                        | Hasil                                                  | Status saat ini              |
+| ---- | ----------------------------- | ------------------------------------------------------ | ---------------------------- |
+| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | merged melalui PR #2         |
+| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | merged melalui PR #2         |
+| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | merged melalui PR #2         |
+| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | verified offline; PR pending |
+| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | planned                      |
+| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | planned                      |
+
+Catatan riwayat: dependency dan bukti pada Fase 1–3 di bawah mencatat kondisi saat fase tersebut dikerjakan, termasuk pengecualian branch sebelum merge. Status publikasi terkini adalah tabel di atas: ketiganya sudah merged melalui PR #2.
 
 ## 3. Fase 1 — Project foundation
 
@@ -110,6 +112,8 @@ Status P2-01/P2-02/P2-03: verified offline melalui adapter/registry/validator un
 Tambahkan scripted trace tiga search → write → read → final. Uji juga bahwa kesempatan revisi tidak menjamin tambahan turns di luar limit. Jangan menaikkan budget diam-diam agar test lulus.
 
 **Deliverable/review:** semua status dapat diperiksa deterministik; laporan hanya dinyatakan berhasil setelah round-trip sah.
+
+**Status task Fase 4:** P4-01–P4-04 verified offline. Validator memakai token Markdown untuk struktur, citation ID, dan pasangan URL; satu revisi tidak mereset scope/budget; terminal response dan safe error mapping berlaku pada generation/stream/route Studio. Aplikasi membatasi model attempts sendiri sebelum request, menolak late result, dan membersihkan stream yang dibatalkan/ditinggalkan. Trace tiga search → write/read → final terbukti dalam lima model attempts tanpa menaikkan budget. `pnpm run check` lulus: 116 unit, 50 integration/boundary, dan 12 scripted behavior cases. Built ESM smoke lulus dengan fake model tanpa network. README menjelaskan tujuan repo, runtime usage, status, budget, dan batas verifikasi. Bukti serta titik lanjut ada di [CONTEXT](CONTEXT.md#8-bukti-implementasi-fase-4).
 
 ## 7. Fase 5 — Docker dan Anvia Studio
 
