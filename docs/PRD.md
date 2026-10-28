@@ -42,26 +42,26 @@ Setiap request independen. Konteks selama satu run bersifat sementara; laporan y
 
 ## 3. Functional requirements
 
-| ID | Requirement | Prioritas |
-| --- | --- | --- |
-| FR-01 | Menerima permintaan riset bahasa natural | Must |
-| FR-02 | Mengidentifikasi intent dan konteks topik | Must |
-| FR-03 | Menyesuaikan scope dan kedalaman riset | Must |
-| FR-04 | Menggunakan web search sebelum menyampaikan temuan faktual | Must |
-| FR-05 | Menyeleksi hasil pencarian yang relevan | Must |
-| FR-06 | Melakukan analisis atau perbandingan bila dibutuhkan | Must |
-| FR-07 | Menghasilkan kesimpulan yang sesuai bukti | Must |
-| FR-08 | Menyertakan reference ID dan URL sumber yang dapat ditelusuri | Must |
-| FR-09 | Membuat laporan Markdown pada direktori run yang ditentukan aplikasi | Must |
-| FR-10 | Membaca kembali dan memverifikasi laporan | Must |
-| FR-11 | Meminta klarifikasi untuk ambiguitas material dan mengakhiri request | Must |
-| FR-12 | Mengakui kekurangan bukti tanpa mengarang temuan | Must |
-| FR-13 | Menegakkan batas eksekusi dan penggunaan tools melalui kode | Must |
-| FR-14 | Dapat dijalankan dan diinspeksi melalui Anvia Studio | Must |
-| FR-15 | Mencatat durasi, model/tool calls, dan token usage yang tersedia | Must |
-| FR-16 | Menyimpan conversation memory lintas-request | Won't — M1 |
-| FR-17 | Mengikuti bahasa permintaan atau instruksi bahasa eksplisit | Must |
-| FR-18 | Memberi satu kesempatan revisi draft yang ditolak, jika budget masih tersedia | Must |
+| ID    | Requirement                                                                   | Prioritas  |
+| ----- | ----------------------------------------------------------------------------- | ---------- |
+| FR-01 | Menerima permintaan riset bahasa natural                                      | Must       |
+| FR-02 | Mengidentifikasi intent dan konteks topik                                     | Must       |
+| FR-03 | Menyesuaikan scope dan kedalaman riset                                        | Must       |
+| FR-04 | Menggunakan web search sebelum menyampaikan temuan faktual                    | Must       |
+| FR-05 | Menyeleksi hasil pencarian yang relevan                                       | Must       |
+| FR-06 | Melakukan analisis atau perbandingan bila dibutuhkan                          | Must       |
+| FR-07 | Menghasilkan kesimpulan yang sesuai bukti                                     | Must       |
+| FR-08 | Menyertakan reference ID dan URL sumber yang dapat ditelusuri                 | Must       |
+| FR-09 | Membuat laporan Markdown pada direktori run yang ditentukan aplikasi          | Must       |
+| FR-10 | Membaca kembali dan memverifikasi laporan                                     | Must       |
+| FR-11 | Meminta klarifikasi untuk ambiguitas material dan mengakhiri request          | Must       |
+| FR-12 | Mengakui kekurangan bukti tanpa mengarang temuan                              | Must       |
+| FR-13 | Menegakkan batas eksekusi dan penggunaan tools melalui kode                   | Must       |
+| FR-14 | Dapat dijalankan dan diinspeksi melalui Anvia Studio                          | Must       |
+| FR-15 | Mencatat durasi, model/tool calls, dan token usage yang tersedia              | Must       |
+| FR-16 | Menyimpan conversation memory lintas-request                                  | Won't — M1 |
+| FR-17 | Mengikuti bahasa permintaan atau instruksi bahasa eksplisit                   | Must       |
+| FR-18 | Memberi satu kesempatan revisi draft yang ditolak, jika budget masih tersedia | Must       |
 
 ## 4. Behavior contract
 
@@ -69,11 +69,11 @@ Setiap request independen. Konteks selama satu run bersifat sementara; laporan y
 
 Agent menentukan subjek, pertanyaan yang perlu dijawab, konteks, serta kebutuhan bukti sebelum mencari. Tidak perlu membuat file rencana riset terpisah.
 
-| Jenis | Contoh | Perilaku |
-| --- | --- | --- |
-| Faktual | Apa fungsi Redis? | Definisi, fungsi, dan contoh penggunaan yang relevan |
-| Eksploratif | Research tentang Redis | Gambaran, konteks ekosistem, use case, dan keterbatasan |
-| Komparatif | Redis vs Memcached | Perbandingan sesuai kebutuhan, trade-off, dan kesimpulan bersyarat |
+| Jenis       | Contoh                 | Perilaku                                                           |
+| ----------- | ---------------------- | ------------------------------------------------------------------ |
+| Faktual     | Apa fungsi Redis?      | Definisi, fungsi, dan contoh penggunaan yang relevan               |
+| Eksploratif | Research tentang Redis | Gambaran, konteks ekosistem, use case, dan keterbatasan            |
+| Komparatif  | Redis vs Memcached     | Perbandingan sesuai kebutuhan, trade-off, dan kesimpulan bersyarat |
 
 Klasifikasi ini merupakan panduan perilaku satu agent, bukan tiga pipeline wajib.
 
@@ -130,18 +130,18 @@ Setelah verifikasi berhasil, agent hanya menyelesaikan respons akhir; tidak mela
 
 ## 5. Budget produk
 
-| Resource | Batas awal |
-| --- | --- |
-| Anvia `maxTurns` | 5 |
-| Web search | Maksimum 3 panggilan provider per run |
-| Hasil pencarian | Maksimum 5 per pencarian |
-| Successful report write | Maksimum 1 |
-| Successful verification read | Maksimum 1 |
-| Revisi draft setelah penolakan pertama | Maksimum 1, dalam budget yang sama |
-| Panjang badan laporan | Target 150–500 kata |
-| Deadline eksekusi | 60 detik |
-| Model retries | Dinonaktifkan |
-| Tool concurrency | 1 |
+| Resource                               | Batas awal                            |
+| -------------------------------------- | ------------------------------------- |
+| Anvia `maxTurns`                       | 5                                     |
+| Web search                             | Maksimum 3 panggilan provider per run |
+| Hasil pencarian                        | Maksimum 5 per pencarian              |
+| Successful report write                | Maksimum 1                            |
+| Successful verification read           | Maksimum 1                            |
+| Revisi draft setelah penolakan pertama | Maksimum 1, dalam budget yang sama    |
+| Panjang badan laporan                  | Target 150–500 kata                   |
+| Deadline eksekusi                      | 60 detik                              |
+| Model retries                          | Dinonaktifkan                         |
+| Tool concurrency                       | 1                                     |
 
 Nilai batas harus dapat dikonfigurasi. Penghitung dan deadline ditegakkan aplikasi, termasuk pada input tool yang dimanipulasi.
 
@@ -155,13 +155,13 @@ Budget awal tidak menjamin revisi selalu kebagian putaran. Skenario tiga pencari
 
 Aplikasi mengembalikan `runId`, `status`, dan `message`. Untuk hasil `completed`, sertakan `reportPath` dan `sources` yang diambil dari state tervalidasi, bukan path atau URL bebas dari model. Bentuk TypeScript dimiliki ARCHITECTURE.md.
 
-| Status | Syarat dan hasil |
-| --- | --- |
-| `completed` | Laporan valid, successful write dan read-back selesai, konten cocok |
-| `needs_clarification` | Pertanyaan material untuk pengguna; tidak ada laporan; pengguna mengirim request baru |
+| Status                  | Syarat dan hasil                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| `completed`             | Laporan valid, successful write dan read-back selesai, konten cocok                                     |
+| `needs_clarification`   | Pertanyaan material untuk pengguna; tidak ada laporan; pengguna mengirim request baru                   |
 | `insufficient_evidence` | Pencarian berhasil dilakukan, tetapi bukti relevan tetap tidak memadai; tidak ada laporan riset faktual |
-| `budget_exceeded` | Deadline/turn/operasi yang diperlukan melampaui limit; operasi tambahan dihentikan |
-| `failed` | Provider/filesystem/validasi tidak dapat diselesaikan, atau draft revisi masih ditolak |
+| `budget_exceeded`       | Deadline/turn/operasi yang diperlukan melampaui limit; operasi tambahan dihentikan                      |
+| `failed`                | Provider/filesystem/validasi tidak dapat diselesaikan, atau draft revisi masih ditolak                  |
 
 Pencarian kosong adalah hasil pencarian yang sah. Kegagalan seluruh panggilan provider tidak boleh disamarkan sebagai kekurangan bukti. Semua status non-completed tidak memublikasikan path seolah-olah laporan valid tersedia.
 
@@ -169,13 +169,13 @@ Pencarian kosong adalah hasil pencarian yang sah. Kegagalan seluruh panggilan pr
 
 ### Lima mandatory cases
 
-| ID | Skenario | Assertion minimum |
-| --- | --- | --- |
+| ID      | Skenario                                        | Assertion minimum                                                                                                    |
+| ------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | EVAL-01 | “Research tentang apa itu Redis dan fungsinya.” | Search dipanggil; jawaban relevan dan ringkas; laporan berhasil; tidak memperpanjang perbandingan yang tidak diminta |
-| EVAL-02 | “Research Apple.” tanpa konteks | `needs_clarification`; tidak search/write; meminta konteks yang membedakan interpretasi |
-| EVAL-03 | Mock search kosong/tidak relevan | `insufficient_evidence`; tidak mengarang; berhenti dalam budget; tidak memublikasikan laporan |
-| EVAL-04 | Search dengan URL fixture tertentu | Citation ID/URL konsisten; URL asing ditolak; sumber berasal dari run aktif |
-| EVAL-05 | Riset sederhana dengan sumber valid | File tidak kosong; satu successful write/read; isi sama; tersedia pada bind mount ketika diuji di Docker |
+| EVAL-02 | “Research Apple.” tanpa konteks                 | `needs_clarification`; tidak search/write; meminta konteks yang membedakan interpretasi                              |
+| EVAL-03 | Mock search kosong/tidak relevan                | `insufficient_evidence`; tidak mengarang; berhenti dalam budget; tidak memublikasikan laporan                        |
+| EVAL-04 | Search dengan URL fixture tertentu              | Citation ID/URL konsisten; URL asing ditolak; sumber berasal dari run aktif                                          |
+| EVAL-05 | Riset sederhana dengan sumber valid             | File tidak kosong; satu successful write/read; isi sama; tersedia pada bind mount ketika diuji di Docker             |
 
 ### Supporting cases
 

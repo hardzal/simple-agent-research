@@ -1,8 +1,8 @@
 # Architecture — Simple Contextual Research Agent
 
-**Status:** Draft M1, implementasi belum dimulai
+**Status:** Runtime/instructions Fase 3 verified offline; draft PR #2 awaiting_review; kelengkapan status/revisi Fase 4 dan Docker/Studio UI Fase 5 belum selesai
 
-**Diperbarui:** 2026-10-27
+**Diperbarui:** 2026-10-28
 
 **Requirement:** [PRD.md](PRD.md)
 
@@ -12,20 +12,22 @@ Dokumen ini memiliki keputusan teknis, kontrak internal, dan batas komponen. Ang
 
 ## 1. Keputusan teknis
 
-| Area | Keputusan | Asal |
-| --- | --- | --- |
-| Bahasa/framework | TypeScript strict, Anvia SDK v1 | PRD |
-| LLM | Gateway kompatibel OpenAI: https://gateway.devscale.id/v1 | Keputusan pengguna |
-| Model ID | `gpt-6-luna`, dapat dikonfigurasi | Keputusan pengguna |
-| Search | Tavily Search API melalui adapter | Keputusan pengguna; akses tersedia |
-| Development UI | Anvia Studio | PRD |
-| Host utama | Windows, Docker Desktop dengan WSL2 | Keputusan pengguna |
-| Runtime | Satu container aplikasi/Studio, Docker Compose | PRD |
-| Penyimpanan | File laporan di bind mount; state run dalam memori | PRD |
-| Coding agent | Hermes; ketentuan kerja di AGENTS.md | Keputusan pengguna |
-| Tooling awal | Node.js 24 LTS, npm, Vitest, ESLint, Prettier, Zod | Default implementasi untuk direview |
+| Area             | Keputusan                                                 | Asal                                                            |
+| ---------------- | --------------------------------------------------------- | --------------------------------------------------------------- |
+| Bahasa/framework | TypeScript strict, Anvia SDK v1                           | PRD                                                             |
+| LLM              | Gateway kompatibel OpenAI: https://gateway.devscale.id/v1 | Keputusan pengguna                                              |
+| Model ID         | `gpt-6-luna`, dapat dikonfigurasi                         | Keputusan pengguna                                              |
+| Search           | Tavily Search API melalui adapter                         | Keputusan pengguna; akses tersedia                              |
+| Development UI   | Anvia Studio                                              | PRD                                                             |
+| Host utama       | Windows, Docker Desktop dengan WSL2                       | Keputusan pengguna                                              |
+| Runtime          | Satu container aplikasi/Studio, Docker Compose            | PRD                                                             |
+| Penyimpanan      | File laporan di bind mount; state run dalam memori        | PRD                                                             |
+| Coding agent     | Hermes; ketentuan kerja di AGENTS.md                      | Keputusan pengguna                                              |
+| Tooling awal     | Node.js 24 LTS, pnpm, Vitest, ESLint, Prettier, Zod       | pnpm atas instruksi pengguna; tooling lain default implementasi |
 
-Gunakan satu lockfile `package-lock.json`. Pin versi paket Anvia v1 yang kompatibel dan versi tooling setelah verifikasi di P1-01; jangan menebak minor version atau mencampur API antar-major. Pin versi Node/image yang diuji pada Fase 1/5.
+Gunakan satu lockfile `pnpm-lock.yaml` dan `pnpm install --frozen-lockfile`. Toolchain yang diuji: Node.js 24.14.0, pnpm 11.22.0 (dipin di packageManager), TypeScript 6.0.3, Anvia core 1.17.1, provider OpenAI 1.3.5, dan Studio 1.3.20. Versi dependency dan engines dicatat di package.json. Image container baru dipin dan diuji pada Fase 5.
+
+pnpm-workspace.yaml hanya mengizinkan build script esbuild. Exemption minimum release age dibatasi pada versi tooling TypeScript ESLint terpin yang diimpor dari lockfile awal; bukan menonaktifkan supply-chain policy secara global. OpenAI SDK dipin dan dioverride ke 7.43.0 agar injected client dan adapter Anvia memakai class/type yang sama.
 
 Default implementasi dipilih untuk mengurangi setup tambahan. Perubahan kecil yang didukung hasil compatibility check dicatat; perubahan scope/perilaku produk dibahas dengan pemilik proyek.
 
@@ -48,26 +50,26 @@ Runtime riset adalah komponen aplikasi, bukan agent kedua. Tidak ada queue, data
 
 ## 3. Tanggung jawab komponen
 
-| Modul yang direncanakan | Tanggung jawab |
-| --- | --- |
-| `src/config/` | Parse environment dan default; validasi konfigurasi |
-| `src/providers/llm.ts` | Membuat model Anvia dari endpoint/model terkonfigurasi |
-| `src/providers/search-provider.ts` | Interface search dan implementasi Tavily |
-| `src/agent/research.agent.ts` | Satu factory/definisi agent dan registrasi tiga tools |
-| `src/agent/research.instructions.ts` | Behavior research agent yang diturunkan dari PRD |
-| `src/application/research-runner.ts` | Boundary run, parsing hasil, finalization, error mapping |
-| `src/application/run-state.ts` | State terisolasi per request dan lifecycle cleanup |
-| `src/tools/` | Schema dan handler webSearch/writeFile/readFile |
-| `src/services/source-registry.ts` | ID sumber, normalisasi URL, deduplikasi |
-| `src/services/report-validator.ts` | Validasi Markdown dan provenance |
-| `src/services/report-store.ts` | I/O pada lokasi laporan yang dibatasi |
-| `src/services/resource-limiter.ts` | Counter, deadline, cancellation, terminal latch |
-| `src/services/run-metrics.ts` | Metrics dan logging yang aman |
-| `src/schemas/` | Research response, keputusan model, dan kontrak hasil |
-| `src/studio.ts` | Mendaftarkan runtime/agent yang sama ke Studio |
-| `src/index.ts` | Entry point tipis untuk pemanggilan programatik/headless |
-| `src/evals/` | Suite Anvia evals dan fixture |
-| `tests/` | Unit, integration, offline behavior, dan live tests terpisah |
+| Modul yang direncanakan              | Tanggung jawab                                               |
+| ------------------------------------ | ------------------------------------------------------------ |
+| `src/config/`                        | Parse environment dan default; validasi konfigurasi          |
+| `src/providers/llm.ts`               | Membuat model Anvia dari endpoint/model terkonfigurasi       |
+| `src/providers/search-provider.ts`   | Interface search dan implementasi Tavily                     |
+| `src/agent/research.agent.ts`        | Satu factory/definisi agent dan registrasi tiga tools        |
+| `src/agent/research.instructions.ts` | Behavior research agent yang diturunkan dari PRD             |
+| `src/application/research-runner.ts` | Boundary run, parsing hasil, finalization, error mapping     |
+| `src/application/run-state.ts`       | State terisolasi per request dan lifecycle cleanup           |
+| `src/tools/`                         | Schema dan handler webSearch/writeFile/readFile              |
+| `src/services/source-registry.ts`    | ID sumber, normalisasi URL, deduplikasi                      |
+| `src/services/report-validator.ts`   | Validasi Markdown dan provenance                             |
+| `src/services/report-store.ts`       | I/O pada lokasi laporan yang dibatasi                        |
+| `src/services/resource-limiter.ts`   | Counter, deadline, cancellation, terminal latch              |
+| `src/services/run-metrics.ts`        | Metrics dan logging yang aman                                |
+| `src/schemas/`                       | Research response, keputusan model, dan kontrak hasil        |
+| `src/studio.ts`                      | Mendaftarkan runtime/agent yang sama ke Studio               |
+| `src/index.ts`                       | Entry point tipis untuk pemanggilan programatik/headless     |
+| `src/evals/`                         | Suite Anvia evals dan fixture                                |
+| `tests/`                             | Unit, integration, offline behavior, dan live tests terpisah |
 
 Gunakan pemisahan modul biasa dan dependency injection lewat parameter/factory. M1 tidak membutuhkan container DI, repository database, atau lapisan Clean Architecture tambahan.
 
@@ -97,6 +99,20 @@ Studio mengeksekusi objek runtime yang didaftarkan. Karena itu, validasi, counte
 P1-02 harus membuktikan binding context dan policy yang sama untuk generation dan streaming. Jika SDK terpasang memerlukan adapter tipis, tempatkan adapter pada boundary runtime dan uji dengan fake model. Final application response diterbitkan setelah policy checks; draft text/stream event tidak dianggap sebagai completed.
 
 Direct tool invocation tanpa scope run yang sah ditolak sebelum side effect. Unit test membuat scope sintetis secara eksplisit. Panel Tools Studio tidak boleh menjadi jalur untuk melewati budget atau akses filesystem.
+
+### Hasil spike P1-02
+
+src/application/scoped-agent.ts menyediakan adapter tipis turunan Agent: setiap generate/stream membuat instance SDK baru, UUID aplikasi, timer/AbortSignal, dan tools yang menutup scope request. Lifecycle menyimpan sdkRunId dan menjalankan callback finalization sebelum terminal outcome. Model attempts dihitung sebelum completion; cleanup juga berjalan ketika pembuatan scoped tools, provider, finalizer, atau cancellation gagal. Uji dua generation/stream overlap membuktikan identitas dan cleanup terpisah; ini bukan bukti bahwa seluruh research policy Fase 3/4 sudah tersedia.
+
+Studio 1.3.20 secara default mengkloning agent untuk trace observer; clone menghilangkan override generate/stream pada adapter. Karena itu src/application/scoped-studio.ts memakai stores.sessions=false, pipelineLogs=false, pipelineRuns=false tanpa model registry. Ini menonaktifkan trace store default dan mempertahankan objek scoped asli. Route buffered dan streaming diuji lewat Studio.app.request dengan fake model, bukan sekadar memeriksa daftar agent. Jangan mengganti factory ini dengan new Studio default atau mengaktifkan model registry/trace storage tanpa mengulang compatibility checks. Pembatasan input riset stateless kini ditegakkan Fase 3. UI/server/Docker dan trace persistence tetap task Fase 5.
+
+### Binding produk Fase 3
+
+`src/agent/research.agent.ts` menggunakan factory scoped tersebut dengan hook typed `prepareInput` dan `transformResponse`. Input menerima string atau user message berbasis teks; untuk history Studio hanya pesan terakhir yang harus user dipakai. Envelope divalidasi Zod dan panjang request dibatasi sebelum model. Session/continuation dan override policy runtime tidak diteruskan. Hook default kosong menjaga kompatibilitas probe Fase 1.
+
+State handler/usage/outcome disimpan dalam WeakMap dengan key scope request dan dihapus pada close. Middleware mengubah kandidat final non-tool menjadi JSON response aplikasi sebelum SDK membuat terminal text/output; lifecycle finalizer memeriksa hasilnya lagi. Event delta/turn tetap draft, tidak boleh dianggap completed. `.run(prompt)` memparse output boundary yang sama menjadi typed ResearchResponse, tanpa model kedua atau pembacaan file tambahan.
+
+Policy minimum memeriksa search/write/read-back flags, terminal latch, strict AgentDecision schema, dan citation sources yang dipakai. Source count tidak mencakup hasil search yang tidak dikutip. Metrics dicatat lewat safe logger, token raw Chat yang hilang tetap null. Invalid input menolak sebelum scope dibuat; exception model/turn/deadline/cancellation dapat tetap reject pada Fase 3. Pemetaan lengkap seluruh exception/status/revisi dan citation edge cases dimiliki P4-01–P4-04; integrasi UI/trace/bind mount dimiliki Fase 5.
 
 ## 5. Model provider dan konfigurasi
 
@@ -153,6 +169,8 @@ Contoh REPORTS_DIR di atas berlaku dalam container. Untuk smoke test headless da
 
 Budget defaults mengikuti PRD. Kredensial hanya ada di environment lokal; contoh file selalu kosong. Adapter config menerjemahkan nama env ke API SDK yang diverifikasi, termasuk menonaktifkan retries pada lapisan yang relevan.
 
+src/providers/llm.ts menginjeksi OpenAI client dengan baseURL terkonfigurasi, maxRetries=0, dan timeout; model Anvia tetap memakai api=chat. Agent retries=false adalah lapisan terpisah. Tests memakai fetch sintetis untuk memeriksa path /chat/completions, model, cancellation, dan satu request saja saat HTTP 429/500/503. SDK mengisi usage yang hilang dengan nol; getReportedTokenUsage membaca raw Chat usage agar metrics mencatat null bila tidak dilaporkan gateway. Tidak ada endpoint/model fallback.
+
 Guard teknis awal, sebagai default implementasi: prompt maksimum 8.000 karakter, query 500 karakter, snippet 1.500 karakter per hasil, dan laporan 65.536 byte UTF-8. Semua ukuran diperiksa sebelum operasi mahal atau I/O dan bisa dikonfigurasi. Ini bukan batas token atau jaminan biaya moneter.
 
 ## 6. Kontrak tools
@@ -173,7 +191,7 @@ type WebSearchResult = { results: Source[] };
 interface SearchProvider {
   search(
     query: string,
-    options: { maxResults: number; signal: AbortSignal }
+    options: { maxResults: number; signal: AbortSignal },
   ): Promise<Array<Omit<Source, "sourceId">>>;
 }
 ```
@@ -243,20 +261,20 @@ Reports root pada host adalah area development tepercaya. Container bukan isolas
 
 ## 8. Budget, error, dan finalization
 
-Setiap handler memeriksa budget sebelum dan setelah operasi asynchronous. Counter direservasi sebelum provider call; kegagalan provider tetap memakai kuota. Penolakan argumen sebelum I/O tetap tercatat sebagai tool attempt dan dibatasi turns/deadline.
+Setiap handler memeriksa budget sebelum dan setelah operasi asynchronous. Counter direservasi sebelum provider call; kegagalan provider tetap memakai kuota. Penolakan argumen sebelum I/O tetap tercatat sebagai tool attempt dan dibatasi turns/deadline. Pada boundary SDK, middleware `onToolInput` menghitung attempt sebelum schema validation; lifecycle `onToolStart` berjalan terlalu lambat untuk input invalid. `RunScope.toolCallsTrackedByRuntime` bernilai true untuk run SDK dan false pada scope sintetis direct-handler, sehingga counter tidak dihitung dua kali. Tool fixture yang terikat boundary juga memakai counter runtime.
 
 Deadline menggunakan cancellation yang diteruskan ke model/search yang mendukungnya. Jangan hanya memakai Promise.race yang meninggalkan side effect berjalan. Hasil terlambat diabaikan; run yang sudah terminal tidak dapat kembali menjadi completed. Provider yang tidak kooperatif mungkin masih menyelesaikan request remote, sehingga timeout lokal bukan bukti billing remote berhenti.
 
 Error tool dapat dikembalikan runtime ke model. Karena itu, hard limit dan failure latch ditegakkan handler/boundary; melempar error saja tidak dianggap menghentikan agent.
 
-| Kondisi | Keputusan aplikasi |
-| --- | --- |
-| Deadline atau kebutuhan operasi melebihi limit | budget_exceeded |
-| Penolakan draft revisi, I/O failure, output malformed, atau dependency failure yang tidak dapat diselesaikan | failed |
-| Kandidat completed dan semua flag/hash/verifikasi sah | completed |
-| Kandidat needs_clarification, tanpa search/write, pertanyaan valid | needs_clarification |
-| Kandidat insufficient_evidence setelah search berhasil, tanpa publikasi laporan | insufficient_evidence |
-| Klaim final tidak konsisten dengan state | failed |
+| Kondisi                                                                                                      | Keputusan aplikasi    |
+| ------------------------------------------------------------------------------------------------------------ | --------------------- |
+| Deadline atau kebutuhan operasi melebihi limit                                                               | budget_exceeded       |
+| Penolakan draft revisi, I/O failure, output malformed, atau dependency failure yang tidak dapat diselesaikan | failed                |
+| Kandidat completed dan semua flag/hash/verifikasi sah                                                        | completed             |
+| Kandidat needs_clarification, tanpa search/write, pertanyaan valid                                           | needs_clarification   |
+| Kandidat insufficient_evidence setelah search berhasil, tanpa publikasi laporan                              | insufficient_evidence |
+| Klaim final tidak konsisten dengan state                                                                     | failed                |
 
 Terminal latch pertama yang sah tidak ditimpa respons model berikutnya. Stop reason dan waktu kejadian disimpan agar error budget tidak tertukar dengan error layanan. Jika beberapa operasi bersaing, hasil setelah terminal latch tidak diterima.
 
@@ -287,12 +305,12 @@ Dependency yang dapat diganti dalam test: model, search provider, clock/deadline
 
 ## 11. Verifikasi yang masih diperlukan
 
-| ID | Verifikasi | Task pemilik |
-| --- | --- | --- |
-| V-01 | Versi SDK, lifecycle, binding state dan policy pada generation/streaming/Studio | P1-01, P1-02 |
-| V-02 | Chat API dan tool-result round-trip pada gateway/model pilihan | LIVE-01 |
-| V-03 | Bentuk hasil Tavily dan pemetaan source fields | P2-01, LIVE-02 |
-| V-04 | Non-root, permission reports, read-only root, dan UI isolation di Docker Desktop/WSL2 | P5-01, P5-02 |
+| ID   | Verifikasi                                                                            | Task pemilik   |
+| ---- | ------------------------------------------------------------------------------------- | -------------- |
+| V-01 | Versi SDK, lifecycle, binding state dan policy pada generation/streaming/Studio       | P1-01, P1-02   |
+| V-02 | Chat API dan tool-result round-trip pada gateway/model pilihan                        | LIVE-01        |
+| V-03 | Bentuk hasil Tavily dan pemetaan source fields                                        | P2-01, LIVE-02 |
+| V-04 | Non-root, permission reports, read-only root, dan UI isolation di Docker Desktop/WSL2 | P5-01, P5-02   |
 
 Ini merupakan verifikasi implementasi, bukan keputusan pengguna yang perlu ditanyakan ulang. Kegagalan dicatat secara konkret; jangan menandai dukungan sebagai terbukti sebelum diuji.
 

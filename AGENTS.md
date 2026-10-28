@@ -17,19 +17,19 @@ Pada awal sesi:
 3. Baca bagian [docs/PRD.md](docs/PRD.md) dan [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) yang terkait sebelum mengubah implementasi.
 4. Periksa status Git dan perubahan yang sudah ada. Jangan menghapus atau memasukkan perubahan pengguna yang tidak berkaitan.
 
-Pada baseline dokumentasi, implementasi aplikasi belum dimulai. Siapkan kode hanya ketika pemilik proyek meminta memulai fase implementasi. Jangan menyatakan perintah npm/Docker atau tests sudah tersedia sebelum file dan script-nya dibuat.
+Pada baseline dokumentasi, implementasi aplikasi belum dimulai. Siapkan kode hanya ketika pemilik proyek meminta memulai fase implementasi. Jangan menyatakan perintah pnpm/Docker atau tests sudah tersedia sebelum file dan script-nya dibuat.
 
 Hermes mendukung project context AGENTS.md. Dokumen lain tetap harus dibaca secara eksplisit; keberadaan file bukan bukti bahwa semuanya otomatis dimuat. Jalankan Hermes dari root repository. Setelah perubahan instruksi, pastikan sesi aktif membaca versi terbaru. Rujukan: [Hermes project context](https://hermes-agent.nousresearch.com/docs/user-guide/which-file-does-what).
 
 ## 2. Sumber acuan dan perubahan dokumen
 
-| Dokumen | Pemilik informasi |
-| --- | --- |
-| PRD | Scope, perilaku produk, budget, acceptance criteria |
-| ARCHITECTURE | Komponen, kontrak, provider, config, dan mekanisme teknis |
-| PLAN | Task, dependency, checks, dan daftar live tests |
-| CONTEXT | Kondisi yang sudah diamati, bukti hasil, blockers, titik lanjut |
-| AGENTS | Aturan kerja coding agent dan handoff |
+| Dokumen      | Pemilik informasi                                               |
+| ------------ | --------------------------------------------------------------- |
+| PRD          | Scope, perilaku produk, budget, acceptance criteria             |
+| ARCHITECTURE | Komponen, kontrak, provider, config, dan mekanisme teknis       |
+| PLAN         | Task, dependency, checks, dan daftar live tests                 |
+| CONTEXT      | Kondisi yang sudah diamati, bukti hasil, blockers, titik lanjut |
+| AGENTS       | Aturan kerja coding agent dan handoff                           |
 
 Instruksi pengguna yang berlaku menjadi acuan pekerjaan. PLAN/CONTEXT tidak boleh diam-diam mengubah requirement PRD. Jika menemukan kontradiksi material, jelaskan dengan lokasi dan dampaknya. Putuskan detail implementasi rutin sendiri dalam scope fase; jangan meminta konfirmasi untuk setiap keputusan kecil.
 
@@ -50,11 +50,11 @@ Tiga application tools adalah bagian produk. Tools yang tersedia bagi coding age
 
 ## 4. Konvensi implementasi dan pemeriksaan
 
-Gunakan TypeScript strict, npm dan satu package-lock.json. Nama kode/file teknis konsisten dalam bahasa Inggris; penjelasan dokumen dan handoff dapat memakai bahasa Indonesia.
+Gunakan TypeScript strict, pnpm yang dipin melalui packageManager dan satu pnpm-lock.yaml. Gunakan pnpm install --frozen-lockfile untuk install reproducible; jangan menambahkan package-lock.json atau lockfile package manager lain. Nama kode/file teknis konsisten dalam bahasa Inggris; penjelasan dokumen dan handoff dapat memakai bahasa Indonesia.
 
 Default tooling dan kontrak script berada di ARCHITECTURE/PLAN. Tambahkan script hanya saat functionality-nya ada. Sesudah implementasi, README harus memberi perintah yang benar-benar dapat dijalankan.
 
-Jalankan checks yang sesuai perubahan dan seluruh gate fase yang tersedia: format, lint, typecheck, build, unit/integration tests, dan offline eval. Perluas npm run check seiring suite tersedia. Perubahan dokumentasi saja cukup diperiksa link, konsistensi requirement/task, format/diff; tidak perlu mengklaim runtime tests lulus.
+Jalankan checks yang sesuai perubahan dan seluruh gate fase yang tersedia: format, lint, typecheck, build, unit/integration tests, dan offline eval. Perluas pnpm run check seiring suite tersedia. Perubahan dokumentasi saja cukup diperiksa link, konsistensi requirement/task, format/diff; tidak perlu mengklaim runtime tests lulus.
 
 Jika pemeriksaan gagal, perbaiki dalam scope fase lalu ulangi pemeriksaan yang relevan. Jika terhalang dependency di luar scope atau kredensial tidak tersedia, catat blocker dan bukti; jangan melaporkan pass.
 

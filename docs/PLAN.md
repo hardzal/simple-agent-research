@@ -1,8 +1,8 @@
 # Implementation Plan — Milestone 1
 
-**Status:** Dokumentasi menunggu review; seluruh fase implementasi belum dimulai
+**Status:** Fase 3 P3-01–P3-04 verified offline; `awaiting_review` pada [draft PR #2](https://github.com/hardzal/simple-agent-research/pull/2); Fase 4 belum dimulai
 
-**Diperbarui:** 2026-10-27
+**Diperbarui:** 2026-10-28
 
 **Requirement:** [PRD.md](PRD.md)
 
@@ -24,27 +24,31 @@ Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika 
 
 ## 2. Peta fase
 
-| Fase | Branch | Hasil | Status awal |
-| --- | --- | --- | --- |
-| 1 | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe | planned |
-| 2 | `phase/02-tools` | Tiga tools, source registry, report store | planned |
-| 3 | `phase/03-agent-behavior` | Alur riset adaptif dan instruksi agent | planned |
-| 4 | `phase/04-report-validation` | Validasi lengkap, revisi, dan status final | planned |
-| 5 | `phase/05-docker-studio` | Docker Desktop/WSL2 dan Studio terintegrasi | planned |
-| 6 | `phase/06-evaluation` | Regression suite, live E2E, dan dokumentasi penggunaan | planned |
+| Fase | Branch                        | Hasil                                                  | Status saat ini                      |
+| ---- | ----------------------------- | ------------------------------------------------------ | ------------------------------------ |
+| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | verified; pushed, belum merged       |
+| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | verified; pushed, belum merged       |
+| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | P3 verified offline; awaiting_review |
+| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | planned                              |
+| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | planned                              |
+| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | planned                              |
 
 ## 3. Fase 1 — Project foundation
 
 **Dependency:** PR dokumentasi telah direview dan di-merge; owner meminta memulai implementasi.
 
-| Task | Pekerjaan | Syarat selesai | Acuan |
-| --- | --- | --- | --- |
-| P1-01 | Inisialisasi Node.js 24/TypeScript strict dan npm; pin paket Anvia v1 yang kompatibel; simpan lockfile | Install reproducible; build/typecheck lulus; versi dan engines tercatat | ARCH §1, V-01 |
-| P1-02 | Spike SDK dengan fake model: scope run, lifecycle, streaming, Studio registration, cancellation, dan finalization seam | API nyata diverifikasi; dua run tidak berbagi state; adapter boundary minimal terpilih dan terdokumentasi | FR-13, FR-14, V-01 |
-| P1-03 | Environment schema, provider factory, logger aman, test runner, lint/format scripts, .gitignore, .env.example | Config invalid gagal jelas; offline tests tidak memerlukan secrets; runtime retries dinonaktifkan | FR-15, ARCH §5 |
-| LIVE-01 | Satu probe gateway/model dengan tool sintetis tanpa side effect | Tool-call → tool-result → final response bekerja; API mode dan usage tersedia/tidak tersedia dicatat | V-02 |
+| Task    | Pekerjaan                                                                                                              | Syarat selesai                                                                                            | Acuan              |
+| ------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------ |
+| P1-01   | Inisialisasi Node.js 24/TypeScript strict dan pnpm; pin paket Anvia v1 yang kompatibel; simpan pnpm-lock.yaml          | Install reproducible; build/typecheck lulus; versi dan engines tercatat                                   | ARCH §1, V-01      |
+| P1-02   | Spike SDK dengan fake model: scope run, lifecycle, streaming, Studio registration, cancellation, dan finalization seam | API nyata diverifikasi; dua run tidak berbagi state; adapter boundary minimal terpilih dan terdokumentasi | FR-13, FR-14, V-01 |
+| P1-03   | Environment schema, provider factory, logger aman, test runner, lint/format scripts, .gitignore, .env.example          | Config invalid gagal jelas; offline tests tidak memerlukan secrets; runtime retries dinonaktifkan         | FR-15, ARCH §5     |
+| LIVE-01 | Satu probe gateway/model dengan tool sintetis tanpa side effect                                                        | Tool-call → tool-result → final response bekerja; API mode dan usage tersedia/tidak tersedia dicatat      | V-02               |
 
 Tool sintetis LIVE-01 hanya fixture compatibility test, bukan application tool keempat dalam research agent.
+
+Status task: P1-01 verified offline (fresh install frozen lockfile dan full check); P1-02 verified offline untuk spike scope/SDK/Studio routes; P1-03 verified offline (config, provider, logger, dan guards). LIVE-01 verified: run terakhir completed dengan dua model calls, satu tool call, dan exact nonce match. Dua percobaan sebelumnya gagal validasi replay; pada percobaan diagnostik terbukti nonce diterima tetapi format tidak persis. Tool kini memberikan finalResponse siap salin tanpa melonggarkan assertion. Setiap tambahan live run mendapat otorisasi pengguna; tidak ada automatic rerun. Rincian hasil ada di CONTEXT. Commit Fase 1 `5f516eb` sudah tersedia di remote; belum memiliki PR khusus Fase 1 atau merge. Draft PR persiapan Fase 3 membawa fondasi ini melalui ancestry branch. Pengguna mengizinkan basis Fase 2 dan persiapan Fase 3 tanpa menunggu merge; lihat dependency fase terkait.
+
+Keputusan spike Studio: factory scoped menonaktifkan session/trace stores untuk menghindari clone yang melewati adapter; buffered/streaming route terbukti offline. Trace yang dapat diinspeksi sesuai DoD tetap wajib dipenuhi dan diuji pada integrasi Fase 5; factory spike ini bukan klaim kelulusan UI/trace produk.
 
 **Pemeriksaan:** build, typecheck, lint, format check, unit test config/state, fake SDK probe, dan LIVE-01. Uji scope dengan fake dependencies sebelum menggunakan API asli.
 
@@ -52,16 +56,18 @@ Tool sintetis LIVE-01 hanya fixture compatibility test, bukan application tool k
 
 ## 4. Fase 2 — Tools implementation
 
-**Dependency:** Fase 1 di-merge.
+**Dependency:** Fase 1 telah diverifikasi. Atas instruksi pengguna, branch `phase/02-tools` dibuat langsung dari commit Fase 1 `5f516eb` tanpa menunggu merge; pengecualian basis branch ini tidak memperluas scope fase.
 
-| Task | Pekerjaan | Syarat selesai | Acuan |
-| --- | --- | --- | --- |
-| P2-01 | SearchProvider interface, adapter Tavily, normalisasi hasil, source registry, dan webSearch schema | Limit lima hasil; duplikasi memakai ID sama; query/snippet dibatasi; empty/error dibedakan | FR-04, FR-05, FR-08, V-03 |
-| P2-02 | Report store dan validasi mekanis awal untuk writeFile/readFile | Path aplikasi; validasi sebelum tulis; satu successful write/read; hash/byte round-trip cocok | FR-09, FR-10 |
-| P2-03 | Counter/deadline bersama untuk handler dan scope test | Kuota direservasi sebelum I/O; read-before-write, write kedua, path/symlink tidak sah ditolak | FR-13 |
-| LIVE-02 | Satu pencarian Tavily menggunakan query fixture publik | Response dapat dinormalisasi; fields opsional ditangani; tidak ada kredensial di output | V-03 |
+| Task    | Pekerjaan                                                                                          | Syarat selesai                                                                                | Acuan                     |
+| ------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------- |
+| P2-01   | SearchProvider interface, adapter Tavily, normalisasi hasil, source registry, dan webSearch schema | Limit lima hasil; duplikasi memakai ID sama; query/snippet dibatasi; empty/error dibedakan    | FR-04, FR-05, FR-08, V-03 |
+| P2-02   | Report store dan validasi mekanis awal untuk writeFile/readFile                                    | Path aplikasi; validasi sebelum tulis; satu successful write/read; hash/byte round-trip cocok | FR-09, FR-10              |
+| P2-03   | Counter/deadline bersama untuk handler dan scope test                                              | Kuota direservasi sebelum I/O; read-before-write, write kedua, path/symlink tidak sah ditolak | FR-13                     |
+| LIVE-02 | Satu pencarian Tavily menggunakan query fixture publik                                             | Response dapat dinormalisasi; fields opsional ditangani; tidak ada kredensial di output       | V-03                      |
 
 Validasi dasar di P2-02 harus sudah menolak sumber asing sebelum successful write. Fase 4 memperlengkap format, status, revisi, dan edge cases; tidak menunda semua proteksi sampai fase tersebut.
+
+Status P2-01/P2-02/P2-03: verified offline melalui adapter/registry/validator unit tests serta temp-filesystem integration untuk quota/deadline, isolation, round-trip, tampering, traversal, symlink/junction, dan EACCES sintetis. LIVE-02 verified live dengan tepat satu provider call, lima hasil ternormalisasi, tanpa LLM/retry. Completion policy produk dan bind mount Docker belum diklaim.
 
 **Pemeriksaan:** handler unit tests tanpa LLM, temp-filesystem integration, duplicate/unknown source tests, quota, timeout, symlink, permission failure, dan LIVE-02.
 
@@ -69,14 +75,20 @@ Validasi dasar di P2-02 harus sudah menolak sumber asing sebelum successful writ
 
 ## 5. Fase 3 — Research agent behavior
 
-**Dependency:** Fase 2 di-merge.
+**Dependency default:** Fase 2 di-merge. Atas instruksi pengguna 2026-10-27, branch `phase/03-agent-behavior` dibuat langsung dari `origin/phase/02-tools` pada `e425782`, tanpa menunggu merge. Pengecualian ini hanya mengubah basis/transisi branch, bukan status review/merge, requirement PRD, atau scope task fase berikutnya. Fase 1 dan 2 belum di-merge. Setelah checkpoint persiapan, pengguna meminta melanjutkan implementasi P3-01–P3-04 pada branch yang sama; draft PR #2 diperbarui, bukan dibuat ulang atau di-merge otomatis.
 
-| Task | Pekerjaan | Syarat selesai | Acuan |
-| --- | --- | --- | --- |
-| P3-01 | Tulis research instructions dan registrasikan tepat tiga application tools | Intent/kedalaman adaptif; snippet sebagai bukti; tidak mengikuti instruksi web | FR-01–FR-07 |
-| P3-02 | Runner riset dan boundary policy yang sama untuk headless/Studio | Run ID/state baru per request; tools tidak berjalan tanpa scope; hasil model tidak melewati finalizer | ARCH §4 |
-| P3-03 | Klarifikasi stateless, no-evidence behavior, dan bahasa laporan | Pertanyaan mengakhiri request; request baru memerlukan topik lengkap; bahasa mengikuti input/override | FR-11, FR-12, FR-17 |
-| P3-04 | Offline behavior tests dengan scripted model dan search fixtures | Tool sequence/status dapat diperiksa; tests tidak membutuhkan API key; sumber antar-run terisolasi | EVAL-01–EVAL-03 |
+| Task  | Pekerjaan                                                                  | Syarat selesai                                                                                        | Acuan               |
+| ----- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------- |
+| P3-01 | Tulis research instructions dan registrasikan tepat tiga application tools | Intent/kedalaman adaptif; snippet sebagai bukti; tidak mengikuti instruksi web                        | FR-01–FR-07         |
+| P3-02 | Runner riset dan boundary policy yang sama untuk headless/Studio           | Run ID/state baru per request; tools tidak berjalan tanpa scope; hasil model tidak melewati finalizer | ARCH §4             |
+| P3-03 | Klarifikasi stateless, no-evidence behavior, dan bahasa laporan            | Pertanyaan mengakhiri request; request baru memerlukan topik lengkap; bahasa mengikuti input/override | FR-11, FR-12, FR-17 |
+| P3-04 | Offline behavior tests dengan scripted model dan search fixtures           | Tool sequence/status dapat diperiksa; tests tidak membutuhkan API key; sumber antar-run terisolasi    | EVAL-01–EVAL-03     |
+
+**Persiapan transisi verified:** dua temuan review Fase 2 diperbaiki pada branch Fase 3: ekstraksi URL mempertahankan kurung seimbang pada sumber sah, dan middleware SDK menghitung tool attempt sebelum validasi input tanpa double-count pada handler. Regression tests diuji RED → GREEN; `pnpm run check` lulus dengan 107 unit tests dan 12 integration tests. LIVE-01/02 tidak dijalankan ulang. Bukti dan status publikasi ada di CONTEXT.
+
+**Status task:** P3-01/P3-02/P3-03/P3-04 `verified` secara offline. Factory/instructions, runtime programatik, finalization seam, request stateless, metrics, dan scripted behavior suite tersedia. `pnpm run check` lulus: 107 unit tests, 32 integration/boundary tests, dan 12 offline behavior cases. Built ESM smoke klarifikasi lulus dengan satu fake model call, nol provider call, serta cleanup tempfile. Rencana rinci dan acceptance matrix: [phase-03-agent-behavior.md](plans/2026-10-27-phase-03-agent-behavior.md).
+
+**Batas verifikasi:** fixtures membuktikan wiring/enforcement dan pelestarian bahasa keluaran scripted, bukan kemampuan semantik LLM live. Suite Anvia eval lengkap tetap Fase 6. Fase 4 memiliki kelengkapan parser/citation, revisi end-to-end, pemetaan seluruh exception menjadi status aplikasi, dan edge cases deadline/cancellation. Pada Fase 3, invalid request ditolak sebelum run; exception transport/turn/deadline dapat tetap reject alih-alih menjadi response status. Tidak ada live API, UI/server, Docker, atau klaim DoD M1 selesai.
 
 **Pemeriksaan:** fake-model behavior cases faktual/eksploratif/komparatif, ambiguity tanpa search, no-result, bahasa, prompt injection, dan isolated runs.
 
@@ -86,12 +98,12 @@ Validasi dasar di P2-02 harus sudah menolak sumber asing sebelum successful writ
 
 **Dependency:** Fase 3 di-merge.
 
-| Task | Pekerjaan | Syarat selesai | Acuan |
-| --- | --- | --- | --- |
-| P4-01 | Lengkapi parser/validator Markdown dan citation matching | Inline/reference/autolink/bare URL diperiksa; sumber asing ditolak; negative control gagal sebagaimana mestinya | FR-08, EVAL-04 |
-| P4-02 | Implementasi satu revisi draft dalam budget yang sama | Draft awal invalid tidak menulis; revisi valid dapat berhasil; revisi invalid kedua menghentikan run | FR-18 |
-| P4-03 | Finalizer dan safe error mapping untuk seluruh status | Completed hanya dari verified state; reportPath/sources tidak dipercaya dari model; provider error bukan no-evidence | PRD §6 |
-| P4-04 | Budget/cancellation dan end-to-end offline regression | Hasil terlambat ditolak; setelah terminal tidak ada side effect baru; write/read evidence cocok | FR-09, FR-10, FR-13, EVAL-05 |
+| Task  | Pekerjaan                                                | Syarat selesai                                                                                                       | Acuan                        |
+| ----- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| P4-01 | Lengkapi parser/validator Markdown dan citation matching | Inline/reference/autolink/bare URL diperiksa; sumber asing ditolak; negative control gagal sebagaimana mestinya      | FR-08, EVAL-04               |
+| P4-02 | Implementasi satu revisi draft dalam budget yang sama    | Draft awal invalid tidak menulis; revisi valid dapat berhasil; revisi invalid kedua menghentikan run                 | FR-18                        |
+| P4-03 | Finalizer dan safe error mapping untuk seluruh status    | Completed hanya dari verified state; reportPath/sources tidak dipercaya dari model; provider error bukan no-evidence | PRD §6                       |
+| P4-04 | Budget/cancellation dan end-to-end offline regression    | Hasil terlambat ditolak; setelah terminal tidak ada side effect baru; write/read evidence cocok                      | FR-09, FR-10, FR-13, EVAL-05 |
 
 **Pemeriksaan:** unknown source ID/URL, citation tanpa pasangan, malformed final output, satu revisi berhasil/gagal/kehabisan budget, provider down vs empty search, file berubah/hilang, dan cancellation.
 
@@ -103,12 +115,12 @@ Tambahkan scripted trace tiga search → write → read → final. Uji juga bahw
 
 **Dependency:** Fase 4 di-merge.
 
-| Task | Pekerjaan | Syarat selesai | Acuan |
-| --- | --- | --- | --- |
-| P5-01 | Dockerfile, Compose v2, bind mount, non-root, dan resource limits | Build/start lokal; host publish loopback; report directory writable; tidak ada Docker socket | ARCH §9, V-04 |
-| P5-02 | Integrasikan objek runtime ke Studio dengan policy dan state yang sama | UI terbuka; fake-run policies tetap bekerja; history sesi tidak mencemari request independen; direct tools tidak bypass scope | FR-14, V-01, V-04 |
-| P5-03 | Acceptance filesystem melalui container dan host | Report fixture terlihat di ./reports; read-back cocok; tetap tersedia setelah container dibuat ulang | FR-09, FR-10, EVAL-05 |
-| P5-04 | Petunjuk Windows/WSL2 dan permission troubleshooting | Perintah memakai WSL2; port internal/host jelas; laporan/credential tidak masuk Git | DoD setup |
+| Task  | Pekerjaan                                                              | Syarat selesai                                                                                                                | Acuan                 |
+| ----- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| P5-01 | Dockerfile, Compose v2, bind mount, non-root, dan resource limits      | Build/start lokal; host publish loopback; report directory writable; tidak ada Docker socket                                  | ARCH §9, V-04         |
+| P5-02 | Integrasikan objek runtime ke Studio dengan policy dan state yang sama | UI terbuka; fake-run policies tetap bekerja; history sesi tidak mencemari request independen; direct tools tidak bypass scope | FR-14, V-01, V-04     |
+| P5-03 | Acceptance filesystem melalui container dan host                       | Report fixture terlihat di ./reports; read-back cocok; tetap tersedia setelah container dibuat ulang                          | FR-09, FR-10, EVAL-05 |
+| P5-04 | Petunjuk Windows/WSL2 dan permission troubleshooting                   | Perintah memakai WSL2; port internal/host jelas; laporan/credential tidak masuk Git                                           | DoD setup             |
 
 **Pemeriksaan:** compose config, image build, container startup, UI availability, bind-mount round-trip, non-root/permissions, dan isolated fake runs. Gunakan fake dependencies pada test harness yang terpisah dari runtime live.
 
@@ -120,12 +132,12 @@ Fase ini tidak menambahkan live research task. Membuka Studio tidak berarti haru
 
 **Dependency:** Fase 5 di-merge.
 
-| Task | Pekerjaan | Syarat selesai | Acuan |
-| --- | --- | --- | --- |
-| P6-01 | Suite executable @anvia/core/evals untuk lima mandatory cases | Status, source whitelist, file existence/round-trip, dan limits memiliki assertion kode | EVAL-01–EVAL-05 |
-| P6-02 | Regression supporting cases dan quality rubric | Bahasa, revisi, cross-run isolation, prompt injection, budget/error paths diperiksa; failures membuat suite gagal | PRD §7 |
-| LIVE-03 | Satu live research end-to-end melalui Studio | Search nyata; report valid; read-back; host file; final status; trace dapat diinspeksi | DoD M1 |
-| P6-03 | README setup/testing, hasil eval, limitations, dan review DoD | Langkah reproduce jelas; status pass/fail/blocked jujur; tokens tidak tersedia diberi tanda | FR-15, DoD M1 |
+| Task    | Pekerjaan                                                     | Syarat selesai                                                                                                    | Acuan           |
+| ------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------- |
+| P6-01   | Suite executable @anvia/core/evals untuk lima mandatory cases | Status, source whitelist, file existence/round-trip, dan limits memiliki assertion kode                           | EVAL-01–EVAL-05 |
+| P6-02   | Regression supporting cases dan quality rubric                | Bahasa, revisi, cross-run isolation, prompt injection, budget/error paths diperiksa; failures membuat suite gagal | PRD §7          |
+| LIVE-03 | Satu live research end-to-end melalui Studio                  | Search nyata; report valid; read-back; host file; final status; trace dapat diinspeksi                            | DoD M1          |
+| P6-03   | README setup/testing, hasil eval, limitations, dan review DoD | Langkah reproduce jelas; status pass/fail/blocked jujur; tokens tidak tersedia diberi tanda                       | FR-15, DoD M1   |
 
 **Pemeriksaan:** seluruh check offline yang tersedia, image/Compose acceptance, lima eval cases, supporting cases kritis, serta LIVE-03. Review manual kualitas satu report live meliputi relevansi, citation support, bahasa, dan batasan snippet.
 
@@ -133,11 +145,11 @@ Fase ini tidak menambahkan live research task. Membuka Studio tidak berarti haru
 
 ## 9. Daftar live tests yang diizinkan
 
-| ID | Fase | Operasi | Batas otomatis per task |
-| --- | --- | --- | --- |
-| LIVE-01 | 1 | Gateway LLM + satu tool fixture lokal tanpa side effect | 1 agent run; maxTurns maksimum 2; timeout maksimum 60 detik; retries off |
-| LIVE-02 | 2 | Query Tavily: “Redis official documentation” | 1 provider search; maksimum 5 hasil; tanpa LLM |
-| LIVE-03 | 6 | “Research tentang apa itu Redis dan fungsinya.” melalui Studio | 1 research run dalam semua batas PRD; tanpa retries |
+| ID      | Fase | Operasi                                                        | Batas otomatis per task                                                  |
+| ------- | ---- | -------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| LIVE-01 | 1    | Gateway LLM + satu tool fixture lokal tanpa side effect        | 1 agent run; maxTurns maksimum 2; timeout maksimum 60 detik; retries off |
+| LIVE-02 | 2    | Query Tavily: “Redis official documentation”                   | 1 provider search; maksimum 5 hasil; tanpa LLM                           |
+| LIVE-03 | 6    | “Research tentang apa itu Redis dan fungsinya.” melalui Studio | 1 research run dalam semua batas PRD; tanpa retries                      |
 
 Satu run dapat berisi beberapa HTTP/model calls; catat jumlah aktual. Batas otomatis bukan kuota panggilan gratis, dan tidak meliputi automatic rerun setelah kegagalan.
 
@@ -151,19 +163,19 @@ Bukti hasil: task ID, waktu, endpoint/model tanpa secret, command/mekanisme invo
 
 **Perintah ini adalah target implementasi, belum tersedia pada baseline dokumentasi.** Tambahkan script ketika functionality-nya benar-benar ada; jangan memakai script kosong atau pass palsu.
 
-| Perintah | Tersedia mulai | Fungsi |
-| --- | --- | --- |
-| npm run lint | Fase 1 | Lint kode/config |
-| npm run format:check | Fase 1 | Pemeriksaan format termasuk dokumen |
-| npm run typecheck | Fase 1 | TypeScript tanpa emit |
-| npm run build | Fase 1 | Build aplikasi |
-| npm run test:unit | Fase 1 | Unit tests offline |
-| npm run test:integration | Fase 2 | Integration tests offline/temp filesystem |
-| npm run eval:offline | Fase 3, dilengkapi Fase 6 | Agent behavior/eval fixtures tanpa API asli |
-| npm run check | Fase 1, diperluas bertahap | Seluruh checks offline yang sudah diimplementasikan |
-| npm run test:live -- --case LIVE-01 | Fase 1 | Live runner dengan case filter dan guard kuota |
-| npm run studio | Fase 5 | Development Studio |
-| docker compose up --build | Fase 5 | Runtime lokal dan bind mount |
+| Perintah                          | Tersedia mulai             | Fungsi                                                   |
+| --------------------------------- | -------------------------- | -------------------------------------------------------- |
+| pnpm run lint                     | Fase 1                     | Lint kode/config                                         |
+| pnpm run format:check             | Fase 1                     | Pemeriksaan format termasuk dokumen                      |
+| pnpm run typecheck                | Fase 1                     | TypeScript tanpa emit                                    |
+| pnpm run build                    | Fase 1                     | Build modul termasuk entry point programatik riset       |
+| pnpm run test:unit                | Fase 1                     | Unit tests offline                                       |
+| pnpm run test:integration         | Fase 2                     | Integration tests offline/temp filesystem                |
+| pnpm run eval:offline             | Fase 3, dilengkapi Fase 6  | 12 scripted behavior cases; dilengkapi Anvia eval Fase 6 |
+| pnpm run check                    | Fase 1, diperluas bertahap | Seluruh checks offline yang sudah diimplementasikan      |
+| pnpm run test:live --case LIVE-01 | Fase 1                     | Live runner dengan case filter dan guard kuota           |
+| pnpm run studio                   | Fase 5                     | Development Studio                                       |
+| docker compose up --build         | Fase 5                     | Runtime lokal dan bind mount                             |
 
 Runner live harus menolak invocation tanpa case ID/opt-in. Tambahkan LIVE-02/03 hanya pada fase pemiliknya. README mencerminkan perintah yang sudah tersedia, bukan seluruh target masa depan.
 
