@@ -84,7 +84,14 @@ describe("LIVE-03 guarded Studio research", () => {
           { model: f.model, searchProvider: { search: f.search } },
         ),
       ).rejects.toMatchObject({
-        evidence: { outcome: "failed", stage: "readiness" },
+        evidence: {
+          outcome: "failed",
+          stage: "readiness",
+          modelCalls: null,
+          searchCalls: null,
+          sourceCount: null,
+          validationRejections: null,
+        },
       });
       expect(posts).toBe(0);
       expect(f.requests).toHaveLength(0);
