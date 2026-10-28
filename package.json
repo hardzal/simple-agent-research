@@ -18,6 +18,8 @@
     "test:integration": "vitest run tests/report-store.test.ts tests/research-tools.integration.test.ts tests/research-agent.test.ts",
     "eval:offline": "vitest run tests/research.behavior.test.ts",
     "test:live": "tsx scripts/live.ts",
+    "studio": "pnpm run build && node --env-file=.env dist/studio.js",
+    "test:container": "node scripts/container-acceptance.mjs",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run build && pnpm run test:unit && pnpm run test:integration && pnpm run eval:offline"
   },
   "dependencies": {
