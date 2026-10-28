@@ -1,6 +1,6 @@
 # Architecture — Simple Contextual Research Agent
 
-**Status:** Runtime/instructions Fase 3 verified offline; draft PR #2 awaiting_review; kelengkapan status/revisi Fase 4 dan Docker/Studio UI Fase 5 belum selesai
+**Status:** Fase 1–3 merged melalui PR #2; validator/status/revisi Fase 4 verified offline, publikasi draft PR pending; Docker/Studio UI tetap Fase 5
 
 **Diperbarui:** 2026-10-28
 
@@ -112,7 +112,11 @@ Studio 1.3.20 secara default mengkloning agent untuk trace observer; clone mengh
 
 State handler/usage/outcome disimpan dalam WeakMap dengan key scope request dan dihapus pada close. Middleware mengubah kandidat final non-tool menjadi JSON response aplikasi sebelum SDK membuat terminal text/output; lifecycle finalizer memeriksa hasilnya lagi. Event delta/turn tetap draft, tidak boleh dianggap completed. `.run(prompt)` memparse output boundary yang sama menjadi typed ResearchResponse, tanpa model kedua atau pembacaan file tambahan.
 
-Policy minimum memeriksa search/write/read-back flags, terminal latch, strict AgentDecision schema, dan citation sources yang dipakai. Source count tidak mencakup hasil search yang tidak dikutip. Metrics dicatat lewat safe logger, token raw Chat yang hilang tetap null. Invalid input menolak sebelum scope dibuat; exception model/turn/deadline/cancellation dapat tetap reject pada Fase 3. Pemetaan lengkap seluruh exception/status/revisi dan citation edge cases dimiliki P4-01–P4-04; integrasi UI/trace/bind mount dimiliki Fase 5.
+Policy memeriksa search/write/read-back flags, terminal latch, strict AgentDecision schema, dan citation sources yang dipakai. Source count tidak mencakup hasil search yang tidak dikutip. Metrics dicatat lewat safe logger, token raw Chat yang hilang tetap null. Invalid input tetap menolak sebelum scope dibuat. Fase 4 memetakan kegagalan run menjadi response aplikasi yang sama pada generation, terminal stream event, `stream.result`, `stream.text`, dan route Studio; exception mentah tidak dijadikan final response.
+
+Hook `beforeCompletion` memeriksa terminal latch dan counter model sebelum request berikutnya: jumlah model attempts dibatasi eksplisit oleh aplikasi, tidak hanya mengandalkan arti `maxTurns` SDK. Satu revisi memakai scope, counter, dan deadline awal. Penolakan kedua atau filesystem failure menghentikan model call berikutnya. Deadline/kuota menghasilkan `budget_exceeded`; pembatalan pengguna menghasilkan `failed` dengan metrics kategori `cancelled`. Provider failure bukan `insufficient_evidence`, dan draft yang sudah ditolak tidak boleh diganti labelnya menjadi no-evidence.
+
+Recovery berada pada adapter yang menangkap exception asli SDK sebelum scope ditutup. Lifecycle `onError` SDK 1.17.1 memakai snapshot error yang menghilangkan prototype; karena itu adapter tidak mengklasifikasikan `MaxTurnsError` dari snapshot tersebut. Pada research agent, `textStream` mengeluarkan JSON terminal yang sudah melewati policy tepat sekali, sama dengan `.text` dan `.result.text`, bukan delta mentah yang belum tervalidasi. Generic compatibility probe tanpa hook recovery tetap mempertahankan semantik SDK. P4-01–P4-04 memiliki regression tests offline; integrasi UI/trace/bind mount tetap Fase 5.
 
 ## 5. Model provider dan konfigurasi
 

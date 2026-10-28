@@ -1,70 +1,159 @@
 # Simple Contextual Research Agent
 
-Proof of concept research agent dengan TypeScript, Anvia SDK v1, Tavily, dan Docker. Agent menerima topik, melakukan pencarian web dalam budget, lalu menulis dan memverifikasi laporan Markdown dengan citation yang dapat ditelusuri.
+Proof of concept research assistant personal berbasis TypeScript, Anvia SDK v1, dan Tavily. Berikan topik dalam bahasa sehari-hari; agent menentukan kebutuhan riset, mencari bukti melalui snippet web, lalu menyimpan laporan Markdown dengan citation yang dapat ditelusuri.
 
-**Status saat ini:** P3-01–P3-04 verified offline pada `phase/03-agent-behavior`: satu factory agent, instructions, runtime programatik, policy minimum, metrics dan scripted behavior suite tersedia. Menunggu owner review pada [draft PR #2](https://github.com/hardzal/simple-agent-research/pull/2). Kelengkapan status/revisi Fase 4, UI/server Studio, dan Docker belum selesai. LIVE-01/02 adalah bukti terdahulu, tidak dijalankan ulang pada Fase 3. Evidence dan batas verifikasi ada di CONTEXT.
+Tujuan repository ini adalah membuktikan satu alur riset yang sederhana, bounded, dan dapat diuji—bukan crawler, chatbot dengan memory, atau platform multi-agent.
 
-## Dokumen proyek
+## Yang dapat dilakukan
 
-| Dokumen                                      | Isi                                                         |
-| -------------------------------------------- | ----------------------------------------------------------- |
-| [AGENTS.md](AGENTS.md)                       | Aturan kerja Hermes, testing, branch, dan draft PR per fase |
-| [docs/PRD.md](docs/PRD.md)                   | Scope M1, perilaku, budget, dan acceptance criteria         |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Komponen, kontrak tools, provider, config, dan Docker       |
-| [docs/PLAN.md](docs/PLAN.md)                 | Enam fase implementasi, task, gate, dan live tests          |
-| [docs/CONTEXT.md](docs/CONTEXT.md)           | Kondisi aktual, keputusan, blockers, dan titik lanjut       |
+- **Faktual:** “Apa itu Redis dan apa fungsinya?”
+- **Eksploratif:** “Research tentang Redis.” Agent membahas konsep, ekosistem, dan use case, bukan otomatis membuat perbandingan.
+- **Komparatif:** “Bandingkan Redis dan Memcached untuk cache aplikasi.”
+- **Klarifikasi:** topik ambigu seperti “Research Apple” diakhiri dengan pertanyaan; pengguna mengirim ulang permintaan lengkap sebagai run baru.
 
-## Lingkungan dan workflow
+Laporan mengikuti bahasa permintaan kecuali pengguna meminta bahasa lain. Setiap run berdiri sendiri: tidak ada database, RAG, conversation memory, atau state sumber yang dibagi antar-run.
 
-Target development adalah Windows dengan Docker Desktop/WSL2. Runtime memakai gateway kompatibel OpenAI dengan model gpt-6-luna, Tavily untuk search, dan Anvia Studio untuk menjalankan serta menginspeksi agent. Kredensial dikonfigurasi lokal pada fase implementasi.
+## Status dan batas verifikasi
 
-Hermes mengerjakan satu fase pada branch terpisah, menjalankan checks yang relevan, memperbarui PLAN/CONTEXT, dan menyerahkan draft PR ke master. Pemilik proyek melakukan review dan merge sebelum fase berikutnya.
+Fase 1–3 sudah masuk `master` melalui [PR #2](https://github.com/hardzal/simple-agent-research/pull/2). Fase 4 melengkapi validasi Markdown/citation, revisi draft dalam budget yang sama, dan pemetaan status/error pada runtime programatik serta route Studio in-process. Status review dan bukti checks terbaru selalu ada di [CONTEXT](docs/CONTEXT.md).
 
-PR spesifikasi sudah di-merge. Atas instruksi pengguna, phase/02-tools dibuat langsung dari commit Fase 1 5f516eb pada phase/01-project-foundation, tanpa menunggu merge Fase 1. Pada instruksi berikutnya, pengguna juga mengizinkan branch `phase/03-agent-behavior` dibuat dari Fase 2 `e425782` untuk perbaikan review dan persiapan transisi. Pengguna kemudian meminta melanjutkan P3-01–P3-04 pada branch tersebut. Fase 1/2 belum di-merge; PR #2 diperbarui pada branch yang sama. Pengecualian ini tidak mengubah scope produk, menganggap M1 selesai, atau mengizinkan Fase 4 tanpa review/merge.
+Yang tersedia adalah **API programatik**, tiga application tools, filesystem report store, dan test suite offline. Belum tersedia command `pnpm run studio`, server/UI Studio produk, Dockerfile, atau Docker Compose; integrasi tersebut milik Fase 5. Suite acceptance M1 dan LIVE-03 milik Fase 6. Jangan menganggap M1 atau integrasi riset end-to-end dengan provider nyata sudah selesai.
 
-## Pengecekan offline
+## Alur dan komponen
 
-Gunakan Node.js 24.14.0 (24 LTS) dan pnpm 11.22.0 sesuai engines/packageManager. Hanya pnpm-lock.yaml yang digunakan; jangan membuat package-lock.json. pnpm-workspace.yaml mengizinkan build script esbuild secara spesifik dan menjaga OpenAI client versi yang sama dengan adapter.
+```text
+Permintaan pengguna
+  → validasi input dan scope run baru
+  → research agent + model kompatibel OpenAI
+      → webSearch: Tavily snippets + registry sumber per-run
+      → writeFile: validasi Markdown/citation → publish laporan
+      → readFile: verifikasi byte/hash dan isi laporan
+  → finalizer aplikasi → ResearchResponse + safe metrics
+```
+
+Hanya ada tiga application tools:
+
+| Tool        | Tanggung jawab                                                                                                         |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `webSearch` | Mengambil maksimum lima hasil per pencarian; URL dinormalisasi dan diberi ID `S1`, `S2`, dan seterusnya dalam run itu. |
+| `writeFile` | Menolak draft tidak valid sebelum I/O; path laporan dibuat aplikasi, bukan dipilih model.                              |
+| `readFile`  | Membaca hanya laporan milik run aktif dan memverifikasi kembali byte/hash serta citation-nya.                          |
+
+Pencarian tidak meminta raw page atau jawaban generatif Tavily. Isi web diperlakukan sebagai bukti yang tidak tepercaya, bukan instruksi. Registry/citation checks memeriksa provenance dan struktur, **bukan membuktikan setiap klaim benar atau didukung secara semantik**; keterbatasan snippet tetap harus dinyatakan pada laporan.
+
+## Mulai dari checks offline
+
+Prasyarat: Node.js 24 LTS (`>=24.14.0 <25`) dan pnpm `11.22.0`, sesuai `engines` dan `packageManager`. Lingkungan development utama adalah Windows/Git Bash atau WSL2; Docker Desktop diperlukan nanti pada Fase 5.
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm run check
 ```
 
-check menjalankan format:check, lint, typecheck, build, test:unit, test:integration, dan eval:offline. Semuanya offline terhadap provider: fake/scripted model dan fetch sintetis; tidak memerlukan kredensial atau membaca .env. Integration/behavior suite memakai filesystem sementara dan membersihkannya. Instalasi dependency tetap memerlukan registry atau cache pnpm yang lengkap. Gunakan pnpm run format untuk memperbaiki format. pnpm run studio dan Docker Compose belum tersedia; build menghasilkan API programatik, bukan CLI interaktif atau server UI.
+Instalasi memerlukan registry atau cache pnpm lengkap. Checks tidak memerlukan API key, tidak membaca `.env`, dan tidak memanggil provider nyata: model/search diganti fixture, `fetch` tanpa mock diblokir, dan integration tests memakai direktori sementara yang dibersihkan.
 
-## Tools Fase 2
+| Perintah                    | Pemeriksaan                                                     |
+| --------------------------- | --------------------------------------------------------------- |
+| `pnpm run check`            | Seluruh gate offline di bawah, berurutan.                       |
+| `pnpm run format:check`     | Format Prettier; `pnpm run format` untuk memperbaikinya.        |
+| `pnpm run lint`             | ESLint.                                                         |
+| `pnpm run typecheck`        | TypeScript strict.                                              |
+| `pnpm run build`            | Menghasilkan modul JavaScript di `dist/`, bukan CLI/server UI.  |
+| `pnpm run test:unit`        | Config, provider adapter, parser/validator, dan scope guards.   |
+| `pnpm run test:integration` | Filesystem, tools, runtime, dan route Studio dengan fake model. |
+| `pnpm run eval:offline`     | Scripted behavior cases; bukan penilaian kualitas LLM live.     |
 
-Fase 2 menyediakan tiga tools scoped: `webSearch`, `writeFile`, dan `readFile`. Search memakai adapter Tavily bounded (maksimum lima hasil, tanpa raw page/LLM answer/retry), registry memberi ID sumber per run, dan report store memakai path aplikasi berbasis UUID, batas UTF-8/hash, hardlink tanpa overwrite, serta penolakan traversal/symlink/junction. Validator awal menolak sumber asing, URL asing, HTML mentah, dan laporan tanpa citation. Handler menegakkan satu operasi aktif, kuota sebelum I/O, deadline/cancellation, satu write, dan satu read-back. Research agent dan completion policy produk belum termasuk Fase 2.
+Gunakan hanya pnpm dan `pnpm-lock.yaml`; jangan membuat lockfile package manager lain.
 
-Perintah terpisah: `pnpm run test:unit` (107 tests), `pnpm run test:integration` (32 tests), dan `pnpm run eval:offline` (12 behavior cases). LIVE-02 menggunakan query publik `Redis official documentation`, satu provider call, maksimum lima hasil, tanpa LLM/retry; output hanya metadata aman.
+## Menggunakan runtime programatik
 
-## Runtime programatik Fase 3
+`src/index.ts` / `dist/index.js` mengekspor `parseConfig`, `createResearchRuntime`, `createResearchAgent`, `createScopedStudio`, dan tipe `ResearchResponse`.
 
-`src/index.ts` (hasil build `dist/index.js`) mengekspor `createResearchRuntime`, `createResearchAgent`, `createScopedStudio`, dan `parseConfig`. `createResearchRuntime(config, overrides)` menyediakan `{ agent, run }`. Overrides model/searchProvider/reportStore/logger mendukung fixture offline tanpa API asli. Runtime tidak memuat .env sendiri dan konstruksinya tidak membuat model/search request. Pemanggilan run tanpa overrides memakai provider nyata dari config; itu bukan command test otomatis.
+Contoh berikut memakai **provider nyata dan dapat menimbulkan biaya**. Ini penggunaan manual, bukan bagian dari checks offline atau verifikasi Fase 4. Jangan menjalankannya sebagai automatic live debugging.
 
-`run(prompt)` mengembalikan typed ResearchResponse setelah policy yang sama dengan agent.generate/stream: completed wajib search/write/read-back sah, klarifikasi mengakhiri request tanpa tools, no-evidence memerlukan pencarian sukses tanpa report. Path/sources dibuat dari state, bukan dipercaya dari output model. Untuk route Studio in-process, daftarkan runtime.agent dengan createScopedStudio; jangan memakai new Studio default yang mengkloning scoped agent.
-
-Behavior suite mencakup faktual/eksploratif/komparatif, EVAL-01–03, bahasa/override, source isolation dan injection negative control. Fixtures membuktikan wiring/enforcement, bukan kualitas LLM live. Raw stream delta/turn adalah draft; hanya terminal text/output JSON yang sudah melewati policy. Invalid request menolak sebelum run. Exception model/turn/deadline/cancellation dapat tetap reject; pemetaan seluruh status, revisi end-to-end dan citation edge cases dilengkapi Fase 4. UI/trace persistence dan bind mount tetap Fase 5; suite Anvia eval lengkap tetap Fase 6.
-
-## Guarded LIVE-01 — bukan bagian checks offline
-
-Runner dan guard-nya diuji dengan fixtures; alur tool-call/result/final response juga terbukti pada LIVE-01 nyata setelah perbaikan format probe. Jangan menjalankan tanpa instruksi live yang eksplisit. Ekspor environment secara lokal berdasarkan .env.example, tanpa menulis secret ke kode/chat/log. Script tidak otomatis memuat .env. Setelah opt-in ALLOW_LIVE_TESTS=true dan environment yang diperlukan tersedia, invocation yang didukung adalah:
+1. Salin `.env.example` menjadi `.env` jika file lokal belum ada; jangan menimpa konfigurasi yang sudah ada.
+2. Isi `OPENAI_API_KEY` dan `TAVILY_API_KEY` secara lokal. Jangan commit atau mencetak nilainya.
+3. Untuk run lokal, ubah `REPORTS_DIR` menjadi `./reports`; `/app/reports` pada contoh disiapkan untuk container nanti.
+4. Jalankan build, kemudian contoh ini melalui Git Bash/WSL:
 
 ```sh
-pnpm run test:live --case LIVE-01
+pnpm run build
+node --env-file=.env --input-type=module -e '
+import { parseConfig, createResearchRuntime } from "./dist/index.js";
+const runtime = await createResearchRuntime(parseConfig(process.env));
+const response = await runtime.run("Research tentang apa itu Redis dan fungsinya.");
+console.log(JSON.stringify(response, null, 2));
+'
 ```
 
-Runner menerima LIVE-01 dan LIVE-02 pada fase ini; case ID yang hilang/tidak didukung dan opt-in yang bukan persis true ditolak. Satu invocation adalah satu run, maksimum dua model calls dan satu tool sintetis tanpa side effect; deadline maksimum 60 detik (atau config yang lebih kecil), tanpa SDK/runtime retry atau model/endpoint fallback. Jangan melakukan automatic rerun. Runner meminta nonce tool lalu memverifikasi replay pada jawaban final, dan hanya mengeluarkan ringkasan aman; token yang tidak dilaporkan gateway bernilai null. Tool sintetis ini bukan application tool keempat. Kuota total dan penghentian tetap mengikuti PLAN.
+Konstruksi runtime tidak memanggil model/search dan tidak memuat `.env` sendiri; contoh memakai mekanisme `--env-file` Node. Run sebenarnya dimulai pada `runtime.run(...)`. Untuk pembatalan, teruskan `{ abortSignal: controller.signal }` sebagai argumen kedua. Input kosong, terlalu panjang, atau envelope tidak valid ditolak sebelum run/provider; exception ini bukan `needs_clarification`.
 
-Probe memberikan finalResponse siap salin melalui tool; model harus menyalinnya persis. Exact-match tetap ditegakkan kode. Kegagalan menghasilkan diagnostics aman (counters, usage, status, dan kecocokan nonce), tanpa teks model, nonce, raw provider error, atau secret. Untuk memuat .env langsung tanpa mencetak isinya, mekanisme yang telah diuji adalah ALLOW_LIVE_TESTS=true pnpm exec node --env-file=.env --import tsx scripts/live.ts --case LIVE-01; tetap wajib ada izin live baru, bukan automatic rerun.
+Untuk fixture offline, `createResearchRuntime(config, overrides)` menerima `model`, `searchProvider`, `reportStore`, dan `logger`. Contoh yang benar-benar dieksekusi dalam tests ada di [tests/fixtures/research.ts](tests/fixtures/research.ts).
 
-## Guarded LIVE-02
+### Hasil run
+
+Semua response aplikasi memiliki `runId`, `status`, dan `message`. Hanya `completed` memiliki `reportPath` serta `sources` yang dibangun dari state tervalidasi, bukan dipercaya dari klaim model.
+
+| Status                  | Makna                                                                                               |
+| ----------------------- | --------------------------------------------------------------------------------------------------- |
+| `completed`             | Search sukses, laporan valid ditulis, dan read-back berhasil; path serta sumber laporan disertakan. |
+| `needs_clarification`   | Ambiguitas perlu dijawab pengguna; tidak ada tool yang dijalankan.                                  |
+| `insufficient_evidence` | Search berjalan sukses tetapi bukti tidak memadai; tidak ada laporan dibuat.                        |
+| `budget_exceeded`       | Kuota search/model turns atau deadline habis; tidak ada path laporan yang diklaim terverifikasi.    |
+| `failed`                | Provider/I/O/validasi/final decision gagal, atau pengguna membatalkan run; tidak ada path/sources.  |
+
+File yang sempat ditulis sebelum kegagalan read-back/deadline dapat tetap ada di reports root; keberadaannya **bukan bukti completed**. Runtime tidak menghapus artefak pengguna atau mengklaim file tersebut terverifikasi. Finalizer tidak melakukan filesystem read tambahan tersembunyi.
+
+Untuk integrasi Studio, daftarkan `runtime.agent` melalui `createScopedStudio`, bukan `new Studio(...)` default: konfigurasi default SDK dapat mengkloning agent dan melewati scoped boundary. Session/trace persistence dinonaktifkan pada factory saat ini. Pada streaming, delta/turn events adalah draft; hanya terminal response JSON yang sudah melewati policy menjadi hasil aplikasi. `agent.stream(...).textStream` menunggu terminal response lalu menghasilkan JSON tersebut tepat sekali, sama dengan `.text`/`.result.text`, termasuk saat recovery error; bukan streaming token mentah secara incremental.
+
+## Konfigurasi dan budget
+
+Default provider: gateway kompatibel OpenAI `https://gateway.devscale.id/v1`, model `gpt-6-luna`, API mode Chat Completions (`LLM_API=chat`), serta Tavily Search API. Tidak ada fallback endpoint/model atau automatic retry untuk menyembunyikan kegagalan integrasi.
+
+| Batas default         | Nilai                           |
+| --------------------- | ------------------------------- |
+| Search per run        | 3 calls, termasuk yang gagal    |
+| Model turns per run   | 5 attempts, termasuk yang gagal |
+| Deadline seluruh run  | 60 detik                        |
+| Revisi draft          | 1 revisi setelah draft ditolak  |
+| Successful write/read | Masing-masing 1 per run         |
+| Tool concurrency      | 1                               |
+| Hasil per search      | Maksimum 5                      |
+| Ukuran laporan UTF-8  | 65.536 byte                     |
+
+Semua langkah, termasuk revisi dan read-back, memakai budget run awal. Penolakan draft kedua menghentikan run; I/O failure bukan kesempatan revisi konten. Nilai config dan batas input/query/snippet tersedia di [.env.example](.env.example) serta [ARCHITECTURE](docs/ARCHITECTURE.md). Ini batas operasi/waktu/ukuran, **bukan jaminan token atau biaya moneter**.
+
+Laporan disimpan sebagai `<REPORTS_DIR>/<runId>/report.md`. Report store menolak traversal/symlink/junction, tidak menimpa file yang ada, dan mempublikasikan file dengan hardlink atomik. Reports root harus trusted terhadap concurrent hostile rename; detail batas filesystem ada di ARCHITECTURE. Metrics berisi counters/status dan kategori error aman, bukan secret, raw provider response, atau teks laporan. Usage token yang tidak dilaporkan provider dicatat `null`, bukan dikarang menjadi nol.
+
+## Guarded live tests
+
+Live probes terpisah dari penggunaan runtime dan ordinary checks. Wajib izin sesuai fase, `ALLOW_LIVE_TESTS=true`, kredensial lokal, dan case ID eksplisit. Jangan automatic rerun, menambah live debugging, atau mengganti model/endpoint di luar [batas PLAN](docs/PLAN.md#9-daftar-live-tests-yang-diizinkan).
 
 ```sh
+ALLOW_LIVE_TESTS=true pnpm exec node --env-file=.env --import tsx scripts/live.ts --case LIVE-01
 ALLOW_LIVE_TESTS=true pnpm exec node --env-file=.env --import tsx scripts/live.ts --case LIVE-02
 ```
 
-Satu invocation LIVE-02 melakukan satu query publik `Redis official documentation`, maksimum lima hasil, tanpa LLM dan tanpa retry. Output hanya metadata aman; raw response, snippet, dan secret tidak dicetak. LIVE-02 terakhir lulus dengan satu search call, lima hasil, lima source IDs, dan durasi sekitar 2,8 detik. Jangan rerun otomatis.
+- **LIVE-01:** compatibility probe maksimum dua model calls dan satu tool sintetis tanpa side effect; exact-match tool-result replay. Tool probe bukan application tool keempat.
+- **LIVE-02:** satu query publik `Redis official documentation`, maksimum lima hasil, tanpa LLM/retry.
+- **LIVE-03:** riset end-to-end; baru dijalankan pada Fase 6 sesuai PLAN, bukan saat ini.
 
-Spike Studio memakai factory scoped tanpa session/trace persistence agar SDK tidak mengkloning dan melewati boundary. Buffered/streaming route sudah diuji in-process; inspeksi UI/trace produk tetap wajib dibuktikan pada Fase 5. LIVE-01/02 bukan uji riset end-to-end. Report filesystem diuji headless pada Windows; UI dan bind mount Docker belum diuji.
+LIVE-01/02 memiliki bukti terdahulu di CONTEXT; keduanya tidak dijalankan ulang pada Fase 4. Bukti probe bukan bukti kualitas laporan, UI, bind mount Docker, atau acceptance M1 lengkap.
+
+## Peta repository dan dokumen
+
+| Lokasi / dokumen                                | Pemilik tanggung jawab                                                |
+| ----------------------------------------------- | --------------------------------------------------------------------- |
+| `src/agent/`                                    | Definisi research agent, instructions, dan binding policy/metrics.    |
+| `src/application/`                              | Scope, lifecycle, runtime programatik, finalization, dan Studio seam. |
+| `src/tools/`                                    | Tiga tools, kuota, revisi, serta completion guards.                   |
+| `src/services/`                                 | Source registry, report validation/store, dan safe metrics.           |
+| `src/providers/`, `src/config/`, `src/schemas/` | Adapter provider, config, serta kontrak typed.                        |
+| `tests/`, `scripts/live.ts`                     | Offline fixtures/suites dan guarded live probes yang terpisah.        |
+| [PRD](docs/PRD.md)                              | Scope produk, perilaku, budget, acceptance criteria.                  |
+| [ARCHITECTURE](docs/ARCHITECTURE.md)            | Kontrak dan mekanisme teknis.                                         |
+| [PLAN](docs/PLAN.md)                            | Task, dependency, gates, serta batas live tests per fase.             |
+| [CONTEXT](docs/CONTEXT.md)                      | State, evidence, blockers, dan titik lanjut terbaru.                  |
+| [AGENTS](AGENTS.md)                             | Workflow coding agent dan handoff.                                    |
+
+Pengembangan berjalan satu branch per fase, **commit terpisah per fitur setelah checks terkait lulus**, lalu satu draft PR ke `master` ketika seluruh fase selesai. Review/merge dilakukan pemilik; fase berikutnya dimulai dari `master` yang sudah memuat fase sebelumnya.
