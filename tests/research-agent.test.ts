@@ -1,4 +1,5 @@
 import type { AgentRunOptions } from "@anvia/core/agent";
+import { setTimeout as delay } from "node:timers/promises";
 import { describe, expect, it } from "vitest";
 import { createScopedStudio } from "../src/application/scoped-studio.js";
 import {
@@ -16,6 +17,42 @@ const user = (value: string) => ({
   content: [{ type: "text" as const, text: value }],
 });
 describe("research runtime boundary", () => {
+  it("rejects a late model response even when the model ignores the abort signal", async () => {
+    let release!: () => void;
+    const late = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const f = await fixture({
+      config: { maxExecutionMs: 10 },
+      beforeCompletion: async () => {
+        await delay(40);
+        release();
+      },
+    });
+    const result = await f.run("Redis");
+    await late;
+    expect(result).toMatchObject({ status: "budget_exceeded" });
+    expect(result.reportPath).toBeUndefined();
+    expect(f.requests).toHaveLength(1);
+    expect(f.search).not.toHaveBeenCalled();
+    expect(f.write).not.toHaveBeenCalled();
+    expect(f.read).not.toHaveBeenCalled();
+    expect(f.log).toHaveBeenCalledTimes(1);
+  });
+  it("cleans an abandoned product stream without exposing a raw SDK cancellation", async () => {
+    const f = await fixture();
+    const stream = f.agent.stream({ prompt: "Redis" });
+    for await (const event of stream) {
+      expect(event).toBeDefined();
+      break;
+    }
+    const result = await stream.result;
+    expect(JSON.parse(result.text)).toMatchObject({ status: "failed" });
+    expect(f.log).toHaveBeenCalledTimes(1);
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({ error_type: "cancelled" });
+    expect(f.write).not.toHaveBeenCalled();
+    expect(f.read).not.toHaveBeenCalled();
+  });
   it("revises one rejected draft within the same run and performs only one write/read", async () => {
     const f = await fixture({
       steps: [
