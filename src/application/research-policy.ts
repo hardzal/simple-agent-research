@@ -54,7 +54,7 @@ export function finalizeResearch(
   const fail = (): ResearchResponse => ({
     runId,
     status: "failed",
-    message: "Research could not be verified. No valid report is published.",
+    message: "Research could not be verified. No verified report is available.",
   });
   if (state.status === "budget_exceeded")
     return {
@@ -98,6 +98,11 @@ export function finalizeResearch(
       return fail();
     return { runId, status, message };
   }
-  if (state.searchSuccesses < 1 || state.reportCreated) return fail();
+  if (
+    state.searchSuccesses < 1 ||
+    state.reportCreated ||
+    state.validationRejections > 0
+  )
+    return fail();
   return { runId, status, message };
 }

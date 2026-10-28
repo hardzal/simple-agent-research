@@ -16,6 +16,93 @@ const user = (value: string) => ({
   content: [{ type: "text" as const, text: value }],
 });
 describe("research runtime boundary", () => {
+  it("revises one rejected draft within the same run and performs only one write/read", async () => {
+    const f = await fixture({
+      steps: [
+        tool("webSearch", { query: "Redis" }),
+        tool("writeFile", { content: report("https://foreign.test/") }),
+        tool("writeFile", { content: report() }),
+        tool("readFile"),
+        text(decision()),
+      ],
+    });
+    const result = await f.run("Redis");
+    expect(result).toMatchObject({
+      status: "completed",
+      sources: [source.url],
+    });
+    expect(result.reportPath).toContain(result.runId);
+    expect(f.requests).toHaveLength(5);
+    expect(JSON.stringify(f.requests[2]?.chatHistory)).toContain(
+      '"canRevise":true',
+    );
+    expect(f.search).toHaveBeenCalledTimes(1);
+    expect(f.write).toHaveBeenCalledTimes(1);
+    expect(f.read).toHaveBeenCalledTimes(1);
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({
+      validation_rejections: 1,
+      report_verified: true,
+      error_type: null,
+    });
+  });
+  it("stops after the second invalid draft before a third model or filesystem attempt", async () => {
+    const invalid = tool("writeFile", {
+      content: report("https://foreign.test/"),
+    });
+    const f = await fixture({
+      steps: [
+        tool("webSearch", { query: "Redis" }),
+        invalid,
+        invalid,
+        tool("writeFile", { content: report() }),
+      ],
+    });
+    const result = await f.run("Redis");
+    expect(result).toMatchObject({ status: "failed" });
+    expect(result.reportPath).toBeUndefined();
+    expect(f.requests).toHaveLength(3);
+    expect(f.write).not.toHaveBeenCalled();
+    expect(f.read).not.toHaveBeenCalled();
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({
+      validation_rejections: 2,
+      error_type: "validation",
+      model_calls: 3,
+      tool_calls: 3,
+    });
+  });
+  it("does not reset the model-turn budget when revising a draft", async () => {
+    const f = await fixture({
+      config: { maxAgentTurns: 3 },
+      steps: [
+        tool("webSearch", { query: "Redis" }),
+        tool("writeFile", { content: report("https://foreign.test/") }),
+        tool("writeFile", { content: report() }),
+        tool("readFile"),
+        text(decision()),
+      ],
+    });
+    const result = await f.run("Redis");
+    expect(result).toMatchObject({ status: "budget_exceeded" });
+    expect(result.reportPath).toBeUndefined();
+    expect(f.requests).toHaveLength(3);
+    expect(f.search).toHaveBeenCalledTimes(1);
+    expect(f.write).toHaveBeenCalledTimes(1);
+    expect(f.read).not.toHaveBeenCalled();
+  });
+  it("does not reclassify a rejected report as insufficient evidence", async () => {
+    const f = await fixture({
+      steps: [
+        tool("webSearch", { query: "Redis" }),
+        tool("writeFile", { content: report("https://foreign.test/") }),
+        text(decision("insufficient_evidence", "No evidence")),
+      ],
+    });
+    expect(await f.run("Redis")).toMatchObject({ status: "failed" });
+    expect(f.write).not.toHaveBeenCalled();
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({
+      error_type: "validation",
+    });
+  });
   it("aborts a pending model at the deadline without a retry or late tool I/O", async () => {
     const f = await fixture({
       config: { maxExecutionMs: 20 },

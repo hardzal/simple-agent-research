@@ -34,6 +34,8 @@ type State = {
   errorType?: RunMetrics["error_type"];
 };
 
+class ResearchTurnLimitError extends Error {}
+
 export function createResearchAgent(dependencies: ResearchDependencies) {
   const { config } = dependencies;
   const states = new WeakMap<RunScope, State>();
@@ -63,6 +65,8 @@ export function createResearchAgent(dependencies: ResearchDependencies) {
     beforeCompletion(scope) {
       if (states.get(scope)?.handlers.snapshot().status)
         throw new Error("RESEARCH_RUN_TERMINAL");
+      if (scope.modelCalls >= config.maxAgentTurns)
+        throw new ResearchTurnLimitError("MODEL_TURN_BUDGET_EXCEEDED");
     },
     transformResponse(scope, response) {
       scope.assertActive();
@@ -115,6 +119,7 @@ export function createResearchAgent(dependencies: ResearchDependencies) {
         !cancelled &&
         (scope.abortReason === "deadline" ||
           error instanceof MaxTurnsError ||
+          error instanceof ResearchTurnLimitError ||
           snapshot.status === "budget_exceeded");
       state.errorType = cancelled
         ? "cancelled"
