@@ -67,6 +67,7 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
   function bind(settings: AgentRunOptions) {
     settings = options.prepareInput?.(settings) ?? settings;
     const controller = new AbortController();
+    const deadlineReason = Symbol("run-deadline");
     const signals = [controller.signal];
     if (settings.abortSignal) signals.push(settings.abortSignal);
     const signal = AbortSignal.any(signals);
@@ -79,9 +80,7 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
       signal,
       get abortReason() {
         if (!signal.aborted) return undefined;
-        return controller.signal.reason === "deadline"
-          ? "deadline"
-          : "cancelled";
+        return signal.reason === deadlineReason ? "deadline" : "cancelled";
       },
       assertActive() {
         if (!active) throw new Error("No active run scope");
@@ -89,7 +88,7 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
       },
     };
     const timer = setTimeout(
-      () => controller.abort("deadline"),
+      () => controller.abort(deadlineReason),
       options.maxExecutionMs,
     );
     timer.unref();

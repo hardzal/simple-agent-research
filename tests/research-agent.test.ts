@@ -17,6 +17,21 @@ const user = (value: string) => ({
   content: [{ type: "text" as const, text: value }],
 });
 describe("research runtime boundary", () => {
+  it("preserves user cancellation when a non-cooperative model outlives the deadline", async () => {
+    const controller = new AbortController();
+    const f = await fixture({
+      config: { maxExecutionMs: 15 },
+      beforeCompletion: async () => {
+        controller.abort("USER_CANCELLED");
+        await delay(35);
+      },
+    });
+    expect(
+      await f.run("Redis", { abortSignal: controller.signal }),
+    ).toMatchObject({ status: "failed" });
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({ error_type: "cancelled" });
+    expect(f.search).not.toHaveBeenCalled();
+  });
   it("rejects a late model response even when the model ignores the abort signal", async () => {
     let release!: () => void;
     const late = new Promise<void>((resolve) => {
