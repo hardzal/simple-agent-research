@@ -73,6 +73,7 @@ export async function fixture(
     hitsForQuery?: (query: string) => SearchHit[];
     rawResponse?: unknown;
     searchFails?: boolean;
+    beforeCompletion?: (signal?: AbortSignal) => Promise<void>;
     config?: Partial<typeof config>;
   } = {},
 ) {
@@ -95,6 +96,7 @@ export async function fixture(
     async completion(request, callOptions) {
       callOptions?.abortSignal?.throwIfAborted();
       requests.push(request);
+      await options.beforeCompletion?.(callOptions?.abortSignal);
       const step = request.chatHistory.filter((m) => m.role === "tool").length;
       const choice = options.choose?.(request, step) ?? steps[step];
       if (!choice) throw new Error("Unexpected model turn");

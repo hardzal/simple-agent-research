@@ -1,4 +1,5 @@
 import type { StreamingCompletionModel } from "@anvia/core/completion";
+import { MaxTurnsError, AgentRunCancelledError } from "@anvia/core/agent";
 import {
   createScopedAgent,
   type RunScope,
@@ -30,6 +31,7 @@ type State = {
   inputTokens: number | null;
   outputTokens: number | null;
   responses: number;
+  errorType?: RunMetrics["error_type"];
 };
 
 export function createResearchAgent(dependencies: ResearchDependencies) {
@@ -57,6 +59,10 @@ export function createResearchAgent(dependencies: ResearchDependencies) {
           responses: 0,
         });
       return handlers.tools;
+    },
+    beforeCompletion(scope) {
+      if (states.get(scope)?.handlers.snapshot().status)
+        throw new Error("RESEARCH_RUN_TERMINAL");
     },
     transformResponse(scope, response) {
       scope.assertActive();
@@ -97,25 +103,60 @@ export function createResearchAgent(dependencies: ResearchDependencies) {
       )
         throw new Error("UNVERIFIED_RESEARCH_OUTPUT");
     },
+    recover(scope, error) {
+      const state = states.get(scope);
+      if (!state) throw new Error("NO_ACTIVE_RESEARCH_SCOPE");
+      const snapshot = state.handlers.snapshot();
+      const cancelled =
+        scope.abortReason === "cancelled" ||
+        (error instanceof AgentRunCancelledError &&
+          scope.abortReason !== "deadline");
+      const budget =
+        !cancelled &&
+        (scope.abortReason === "deadline" ||
+          error instanceof MaxTurnsError ||
+          snapshot.status === "budget_exceeded");
+      state.errorType = cancelled
+        ? "cancelled"
+        : budget
+          ? "budget"
+          : (snapshot.errorType ??
+            (scope.modelCalls > state.responses
+              ? "model_provider"
+              : "invalid_output"));
+      state.response = {
+        runId: scope.runId,
+        status: budget ? "budget_exceeded" : "failed",
+        message: cancelled
+          ? "Research was cancelled. No verified report is available."
+          : budget
+            ? "Research exceeded its execution budget."
+            : "Research failed. No verified report is available.",
+      };
+      return JSON.stringify(state.response);
+    },
     onClose(scope) {
       const state = states.get(scope);
       if (!state) return;
       const snapshot = state.handlers.snapshot();
       const status = state.response?.status ?? "failed";
       const errorType: RunMetrics["error_type"] =
-        status === "budget_exceeded"
+        state.errorType ??
+        (status === "budget_exceeded"
           ? "budget"
           : status !== "failed"
             ? null
-            : snapshot.validationRejections
-              ? "validation"
-              : snapshot.webSearchCalls && !snapshot.searchSuccesses
-                ? "search_provider"
-                : snapshot.reportCreated && !snapshot.reportVerified
-                  ? "filesystem"
-                  : state.response
-                    ? "invalid_output"
-                    : "unknown";
+            : snapshot.errorType
+              ? snapshot.errorType
+              : snapshot.validationRejections
+                ? "validation"
+                : snapshot.webSearchCalls && !snapshot.searchSuccesses
+                  ? "search_provider"
+                  : snapshot.reportCreated && !snapshot.reportVerified
+                    ? "filesystem"
+                    : state.response
+                      ? "invalid_output"
+                      : "unknown");
       try {
         logger.log({
           runId: scope.runId,

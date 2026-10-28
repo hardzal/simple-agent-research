@@ -10,6 +10,7 @@ import {
   reportCitationIds,
   validateReport,
 } from "../services/report-validation.js";
+import type { SafeErrorCategory } from "../services/run-metrics.js";
 
 export function createResearchTools(
   scope: RunScope,
@@ -39,6 +40,7 @@ export function createResearchTools(
     | { path: string; hash: string; bytes: number; sources: string[] }
     | undefined;
   let reportVerified = false;
+  let errorType: SafeErrorCategory | null = null;
   function check() {
     if (status) throw new Error("RUN_TERMINAL");
     if (signal.aborted) {
@@ -116,7 +118,10 @@ export function createResearchTools(
       if (issues.length) {
         validationRejections++;
         const canRevise = validationRejections <= config.maxReportRevisions;
-        if (!canRevise) status = "failed";
+        if (!canRevise) {
+          status = "failed";
+          errorType = "validation";
+        }
         return {
           success: false as const,
           code: "INVALID_REPORT" as const,
@@ -152,6 +157,7 @@ export function createResearchTools(
         if (status && signal.aborted) throw new Error("RUN_ABORTED");
         check();
         status = "failed";
+        errorType = "filesystem";
         throw new Error("REPORT_WRITE_FAILED");
       }
     });
@@ -181,6 +187,7 @@ export function createResearchTools(
         if (status && signal.aborted) throw new Error("RUN_ABORTED");
         check();
         status = "failed";
+        errorType = "filesystem";
         throw new Error("REPORT_VERIFICATION_FAILED");
       }
     });
@@ -190,6 +197,7 @@ export function createResearchTools(
     readFile,
     snapshot: () => ({
       status,
+      errorType,
       webSearchCalls,
       searchSuccesses,
       validationRejections,

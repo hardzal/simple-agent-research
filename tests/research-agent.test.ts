@@ -16,6 +16,154 @@ const user = (value: string) => ({
   content: [{ type: "text" as const, text: value }],
 });
 describe("research runtime boundary", () => {
+  it("aborts a pending model at the deadline without a retry or late tool I/O", async () => {
+    const f = await fixture({
+      config: { maxExecutionMs: 20 },
+      beforeCompletion: (signal) =>
+        new Promise<void>((_, reject) => {
+          signal?.addEventListener(
+            "abort",
+            () => reject(new Error("PRIVATE_TIMEOUT_PAYLOAD")),
+            { once: true },
+          );
+        }),
+    });
+    const result = await f.run("Redis");
+    expect(result).toMatchObject({ status: "budget_exceeded" });
+    expect(result.reportPath).toBeUndefined();
+    expect(f.requests).toHaveLength(1);
+    expect(f.search).not.toHaveBeenCalled();
+    expect(f.write).not.toHaveBeenCalled();
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({ error_type: "budget" });
+  });
+  it("cancels an unconsumed product stream and closes its scope once", async () => {
+    const f = await fixture();
+    const stream = f.agent.stream({ prompt: "Redis" });
+    stream.cancel("PRIVATE_REASON");
+    const result = await stream.result;
+    expect(JSON.parse(result.text)).toMatchObject({ status: "failed" });
+    expect(f.log).toHaveBeenCalledTimes(1);
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({ error_type: "cancelled" });
+    expect(f.search).not.toHaveBeenCalled();
+  });
+  it.each([false, true])(
+    "maps provider exceptions through the actual Studio route stream=%s",
+    async (stream) => {
+      const f = await fixture({
+        choose() {
+          throw new Error("PRIVATE_STUDIO_PROVIDER_ERROR");
+        },
+      });
+      const response = await createScopedStudio(f.agent).app.request(
+        "/agents/research/runs",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "messages",
+            messages: [user("Redis")],
+            stream,
+          }),
+        },
+      );
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain("failed");
+      expect(body).not.toContain("PRIVATE_STUDIO_PROVIDER_ERROR");
+      expect(body).not.toContain("reportPath");
+      expect(f.log).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("classifies write I/O failure without exposing the exception or a report path", async () => {
+    const f = await fixture();
+    f.write.mockRejectedValueOnce(new Error("PRIVATE_FILESYSTEM_PATH"));
+    const result = await f.run("Redis");
+    expect(result).toMatchObject({ status: "failed" });
+    expect(result.reportPath).toBeUndefined();
+    expect(JSON.stringify(result)).not.toContain("PRIVATE_FILESYSTEM_PATH");
+    expect(f.write).toHaveBeenCalledTimes(1);
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({
+      error_type: "filesystem",
+      report_verified: false,
+    });
+  });
+  it("rejects a mismatched read-back without performing a second filesystem read", async () => {
+    const f = await fixture();
+    f.read.mockResolvedValueOnce({
+      path: "PRIVATE_PATH",
+      content: "tampered",
+      hash: "wrong",
+      bytesRead: 8,
+    });
+    const result = await f.run("Redis");
+    expect(result).toMatchObject({ status: "failed" });
+    expect(result.reportPath).toBeUndefined();
+    expect(f.write).toHaveBeenCalledTimes(1);
+    expect(f.read).toHaveBeenCalledTimes(1);
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({
+      error_type: "filesystem",
+      report_created: true,
+      report_verified: false,
+    });
+  });
+  it("maps model transport failure to a safe failed response and metrics without retry", async () => {
+    const f = await fixture({
+      choose() {
+        throw new Error("PRIVATE_PROVIDER_PAYLOAD");
+      },
+    });
+    const result = await f.run("Redis");
+    expect(result).toMatchObject({ status: "failed" });
+    expect(result.reportPath).toBeUndefined();
+    expect(JSON.stringify(result)).not.toContain("PRIVATE_PROVIDER_PAYLOAD");
+    expect(f.requests).toHaveLength(1);
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({
+      run_status: "failed",
+      error_type: "model_provider",
+      model_calls: 1,
+      input_tokens: null,
+    });
+  });
+  it("maps a model error to the same safe terminal result on streaming", async () => {
+    const f = await fixture({
+      choose() {
+        throw new Error("PRIVATE_STREAM_PAYLOAD");
+      },
+    });
+    const stream = f.agent.stream({ prompt: "Redis" });
+    const events = [];
+    for await (const event of stream) events.push(event);
+    const result = await stream.result;
+    expect(result.type).toBe("response");
+    expect(JSON.parse(result.text)).toMatchObject({ status: "failed" });
+    expect(events.filter((event) => event.type === "response")).toHaveLength(1);
+    expect(events.some((event) => event.type === "error")).toBe(false);
+    expect(JSON.stringify(events)).not.toContain("PRIVATE_STREAM_PAYLOAD");
+    expect(await stream.text).toBe(result.text);
+    expect(f.log).toHaveBeenCalledTimes(1);
+  });
+  it("maps a turn limit to budget_exceeded without publishing an unverified path", async () => {
+    const f = await fixture({ config: { maxAgentTurns: 1 } });
+    const result = await f.run("Redis");
+    expect(result).toMatchObject({ status: "budget_exceeded" });
+    expect(result.reportPath).toBeUndefined();
+    expect(f.read).not.toHaveBeenCalled();
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({ error_type: "budget" });
+  });
+  it("maps explicit cancellation before execution to failed without calling providers", async () => {
+    const f = await fixture();
+    const result = await f.run("Redis", {
+      abortSignal: AbortSignal.abort("PRIVATE_CANCEL_REASON"),
+    });
+    expect(result).toMatchObject({ status: "failed" });
+    expect(JSON.stringify(result)).not.toContain("PRIVATE_CANCEL_REASON");
+    expect(f.requests).toHaveLength(0);
+    expect(f.search).not.toHaveBeenCalled();
+    expect(f.log.mock.calls[0]?.[0]).toMatchObject({
+      error_type: "cancelled",
+      model_calls: 0,
+    });
+  });
   it("registers exactly three tools and rejects direct calls without scope", async () => {
     const f = await fixture();
     expect(f.agent.tools.map((t) => t.name)).toEqual([
