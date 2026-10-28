@@ -1,6 +1,6 @@
 # Architecture — Simple Contextual Research Agent
 
-**Status:** Fase 1–3 merged melalui PR #2; validator/status/revisi Fase 4 verified offline, publikasi draft PR pending; Docker/Studio UI tetap Fase 5
+**Status:** Fase 1–4 merged melalui PR #2/#3; Fase 5 verified offline/Podman, publikasi draft PR pending
 
 **Diperbarui:** 2026-10-28
 
@@ -25,7 +25,7 @@ Dokumen ini memiliki keputusan teknis, kontrak internal, dan batas komponen. Ang
 | Coding agent     | Hermes; ketentuan kerja di AGENTS.md                      | Keputusan pengguna                                              |
 | Tooling awal     | Node.js 24 LTS, pnpm, Vitest, ESLint, Prettier, Zod       | pnpm atas instruksi pengguna; tooling lain default implementasi |
 
-Gunakan satu lockfile `pnpm-lock.yaml` dan `pnpm install --frozen-lockfile`. Toolchain yang diuji: Node.js 24.14.0, pnpm 11.22.0 (dipin di packageManager), TypeScript 6.0.3, Anvia core 1.17.1, provider OpenAI 1.3.5, dan Studio 1.3.20. Versi dependency dan engines dicatat di package.json. Image container baru dipin dan diuji pada Fase 5.
+Gunakan satu lockfile `pnpm-lock.yaml` dan `pnpm install --frozen-lockfile`. Toolchain yang diuji: Node.js 24.14.0, pnpm 11.22.0 (dipin di packageManager), TypeScript 6.0.3, Anvia core 1.17.1, provider OpenAI 1.3.5, dan Studio 1.3.20. Versi dependency dan engines dicatat di package.json. Dockerfile memakai `node:24.14.0-bookworm-slim`, build multi-stage, frozen lockfile, dan runtime production dependencies saja.
 
 pnpm-workspace.yaml hanya mengizinkan build script esbuild. Exemption minimum release age dibatasi pada versi tooling TypeScript ESLint terpin yang diimpor dari lockfile awal; bukan menonaktifkan supply-chain policy secara global. OpenAI SDK dipin dan dioverride ke 7.43.0 agar injected client dan adapter Anvia memakai class/type yang sama.
 
@@ -286,18 +286,24 @@ Semua model retries dan automatic tool/provider retries dinonaktifkan pada M1. K
 
 ## 9. Docker Desktop/WSL2 dan Studio
 
-Jalankan perintah proyek dari shell WSL2 di direktori repository. Gunakan Docker Compose v2 dan Linux containers. Fase 5 menyediakan Dockerfile, compose config, .dockerignore, dan instruksi permission bind mount.
+Jalankan perintah proyek dari shell WSL2 di direktori repository. Gunakan Docker Compose v2-compatible dan Linux containers. Fase 5 menyediakan Dockerfile, `compose.yaml`, `.dockerignore` berbasis allowlist, dan [instruksi permission bind mount](CONTAINERS.md). Podman adalah alternatif verifikasi yang dipilih pengguna; hasilnya tidak dilaporkan sebagai Docker Desktop acceptance.
 
 - Aplikasi berjalan sebagai non-root, tanpa privileged mode dan tanpa Docker socket.
 - `./reports` di-mount ke `/app/reports` dan tidak dimasukkan Git.
 - Awal limit container: 1 CPU dan memory 1 GiB; ini limit container, bukan kuota per run.
 - Coba read-only root filesystem dengan tmpfs untuk lokasi sementara; laporan tetap writable. Catat bila SDK memerlukan penyesuaian yang sempit.
-- Studio bind ke `0.0.0.0` di dalam container; publish host hanya `127.0.0.1:4021:4021`.
+- Studio standalone default bind `127.0.0.1`; image/Compose secara eksplisit menetapkan `STUDIO_HOST=0.0.0.0` di dalam container. Publish host hanya `127.0.0.1:4021:4021`. Host/Origin guard bukan autentikasi.
 - Browser membuka http://localhost:4021. Jangan memublikasikan Studio ke jaringan umum.
 - Konfigurasi requests mengakses gateway terpilih dan Tavily; tidak ada tool arbitrary fetch atau shell. Compose standar sendiri tidak menerapkan domain egress allowlist.
 - Atur ownership/UID reports dengan jelas; hindari menjadikan chmod 777 sebagai solusi default.
 
 Tidak memasang memory adapter untuk research agent. Untuk demonstrasi request independen, gunakan session/playground baru dan pastikan boundary hanya menerima permintaan aktif; history UI Studio bukan product conversation memory. Hal ini diuji di P5-02.
+
+`src/studio.ts` memparse environment dan menjalankan `createResearchStudio` / `serveResearchStudio`; factory memakai `createResearchRuntime` yang sama dengan headless. UI diaktifkan melalui opsi pada factory scoped; session/trace/pipeline stores tetap nonaktif agar SDK tidak mengkloning agent. Entrypoint tidak memuat `.env` sendiri; command lokal memakai `node --env-file=.env`, container menerima environment dari Compose. Startup failure hanya mengeluarkan `STUDIO_STARTUP_FAILED`; SIGTERM/SIGINT memicu graceful shutdown.
+
+Debug tersedia melalui event JSONL `tool_call`, `tool_result`, dan terminal `response` pada request streaming Playground, serta metrics aman stdout. Tidak ada database/persisted trace browser; event dapat diperiksa selama run dan disimpan manual untuk contoh aman. Ini menggantikan kebutuhan trace persistence spike, bukan mengaktifkan default store yang terbukti melewati scope. Hanya terminal response yang policy-checked; delta/turn/tool events merupakan debug draft. UI dan assets, history isolation, direct tools, quota, dan provider-failure mapping diuji melalui server HTTP nyata dengan fake dependencies.
+
+Sandbox Compose menggunakan read-only root, reports bind mount, `/tmp` tmpfs 64 MiB, UID/GID 1000, CPU 1, memory 1 GiB, PID 128, cap-drop ALL, dan no-new-privileges. Harness acceptance container terpisah menyuntikkan fake dependencies; server produksi tidak memiliki fake-mode environment. Harness memeriksa image produksi lalu HTTP fake-run, host/container byte equality, serta persistensi setelah recreate. Pengujian `run` sandbox dan validasi Compose dicatat sebagai bukti terpisah.
 
 ## 10. Observability dan test seams
 

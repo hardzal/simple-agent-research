@@ -1,6 +1,6 @@
 # Implementation Plan — Milestone 1
 
-**Status:** Fase 1–3 merged melalui [PR #2](https://github.com/hardzal/simple-agent-research/pull/2); Fase 4 verified offline, publikasi draft PR pending; Fase 5 belum dimulai
+**Status:** Fase 1–4 merged melalui PR #2/#3; Fase 5 verified offline dan Podman, publikasi draft PR pending; Fase 6 planned
 
 **Diperbarui:** 2026-10-28
 
@@ -24,14 +24,14 @@ Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika 
 
 ## 2. Peta fase
 
-| Fase | Branch                        | Hasil                                                  | Status saat ini              |
-| ---- | ----------------------------- | ------------------------------------------------------ | ---------------------------- |
-| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | merged melalui PR #2         |
-| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | merged melalui PR #2         |
-| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | merged melalui PR #2         |
-| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | verified offline; PR pending |
-| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | planned                      |
-| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | planned                      |
+| Fase | Branch                        | Hasil                                                  | Status saat ini             |
+| ---- | ----------------------------- | ------------------------------------------------------ | --------------------------- |
+| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | merged melalui PR #2        |
+| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | merged melalui PR #2        |
+| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | merged melalui PR #2        |
+| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | merged melalui PR #3        |
+| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | verified Podman; PR pending |
+| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | planned                     |
 
 Catatan riwayat: dependency dan bukti pada Fase 1–3 di bawah mencatat kondisi saat fase tersebut dikerjakan, termasuk pengecualian branch sebelum merge. Status publikasi terkini adalah tabel di atas: ketiganya sudah merged melalui PR #2.
 
@@ -50,7 +50,7 @@ Tool sintetis LIVE-01 hanya fixture compatibility test, bukan application tool k
 
 Status task: P1-01 verified offline (fresh install frozen lockfile dan full check); P1-02 verified offline untuk spike scope/SDK/Studio routes; P1-03 verified offline (config, provider, logger, dan guards). LIVE-01 verified: run terakhir completed dengan dua model calls, satu tool call, dan exact nonce match. Dua percobaan sebelumnya gagal validasi replay; pada percobaan diagnostik terbukti nonce diterima tetapi format tidak persis. Tool kini memberikan finalResponse siap salin tanpa melonggarkan assertion. Setiap tambahan live run mendapat otorisasi pengguna; tidak ada automatic rerun. Rincian hasil ada di CONTEXT. Commit Fase 1 `5f516eb` sudah tersedia di remote; belum memiliki PR khusus Fase 1 atau merge. Draft PR persiapan Fase 3 membawa fondasi ini melalui ancestry branch. Pengguna mengizinkan basis Fase 2 dan persiapan Fase 3 tanpa menunggu merge; lihat dependency fase terkait.
 
-Keputusan spike Studio: factory scoped menonaktifkan session/trace stores untuk menghindari clone yang melewati adapter; buffered/streaming route terbukti offline. Trace yang dapat diinspeksi sesuai DoD tetap wajib dipenuhi dan diuji pada integrasi Fase 5; factory spike ini bukan klaim kelulusan UI/trace produk.
+Keputusan spike Studio: factory scoped menonaktifkan session/trace stores untuk menghindari clone yang melewati adapter; buffered/streaming route terbukti offline. Kebutuhan debug/trace yang dapat diinspeksi dipenuhi pada Fase 5 melalui live tool/response JSONL dan metrics tanpa persistence/cloning; bukti UI/server ada di CONTEXT. Factory spike awal sendiri bukan bukti kelulusan UI/trace produk.
 
 **Pemeriksaan:** build, typecheck, lint, format check, unit test config/state, fake SDK probe, dan LIVE-01. Uji scope dengan fake dependencies sebelum menggunakan API asli.
 
@@ -113,11 +113,11 @@ Tambahkan scripted trace tiga search → write → read → final. Uji juga bahw
 
 **Deliverable/review:** semua status dapat diperiksa deterministik; laporan hanya dinyatakan berhasil setelah round-trip sah.
 
-**Status task Fase 4:** P4-01–P4-04 verified offline. Validator memakai token Markdown untuk struktur, citation ID, dan pasangan URL; satu revisi tidak mereset scope/budget; terminal response dan safe error mapping berlaku pada generation/stream/route Studio. Aplikasi membatasi model attempts sendiri sebelum request, menolak late result, dan membersihkan stream yang dibatalkan/ditinggalkan. Trace tiga search → write/read → final terbukti dalam lima model attempts tanpa menaikkan budget. `pnpm run check` setelah follow-up review lulus: 116 unit, 52 integration/boundary, dan 12 scripted behavior cases. Built ESM smoke lulus dengan fake model tanpa network. README menjelaskan tujuan repo, runtime usage, status, budget, dan batas verifikasi. Follow-up `textStream` masih lokal; publikasi tertahan approval. Bukti serta titik lanjut ada di [CONTEXT](CONTEXT.md#8-bukti-implementasi-fase-4).
+**Status task Fase 4:** P4-01–P4-04 verified offline. Validator memakai token Markdown untuk struktur, citation ID, dan pasangan URL; satu revisi tidak mereset scope/budget; terminal response dan safe error mapping berlaku pada generation/stream/route Studio. Aplikasi membatasi model attempts sendiri sebelum request, menolak late result, dan membersihkan stream yang dibatalkan/ditinggalkan. Trace tiga search → write/read → final terbukti dalam lima model attempts tanpa menaikkan budget. `pnpm run check` setelah follow-up review lulus: 116 unit, 52 integration/boundary, dan 12 scripted behavior cases. Built ESM smoke lulus dengan fake model tanpa network. README menjelaskan tujuan repo, runtime usage, status, budget, dan batas verifikasi. Catatan publikasi lama sudah terselesaikan: follow-up `textStream` ikut merged melalui PR #3 pada `476821c`. Bukti historis ada di [CONTEXT](CONTEXT.md#8-bukti-implementasi-fase-4).
 
 ## 7. Fase 5 — Docker dan Anvia Studio
 
-**Dependency:** Fase 4 di-merge.
+**Dependency:** Terpenuhi: `origin/master` pada `476821c` (merge PR #3), `3fa927b` ancestor terverifikasi melalui fetch. Branch Fase 5 dimulai dari baseline tersebut.
 
 | Task  | Pekerjaan                                                              | Syarat selesai                                                                                                                | Acuan                 |
 | ----- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------- |
@@ -131,6 +131,8 @@ Tambahkan scripted trace tiga search → write → read → final. Uji juga bahw
 Fase ini tidak menambahkan live research task. Membuka Studio tidak berarti harus menjalankan LLM/Tavily. Live research melalui Studio dilaksanakan pada LIVE-03.
 
 **Deliverable/review:** runtime dapat diuji di Docker Desktop/WSL2 dan trace/debug surfaces tersedia.
+
+**Status P5-01–P5-04:** verified offline dan melalui Podman 5.6.2; bukan verifikasi Docker Desktop. Image multi-stage `node:24.14.0-bookworm-slim` berhasil dibangun. Validasi Compose melalui provider Docker Compose v5.0.0 lulus tanpa membaca `.env`. Container produksi berhasil melayani UI; harness fake research melalui HTTP Studio membuktikan non-root, root read-only, CPU/memory limit, publish loopback, host/container byte equality dan persistensi setelah recreate. Runtime scoped yang sama dipakai, history tidak mencemari request, direct tools ditolak, dan tool/terminal debug events tersedia tanpa clone/persistence. `pnpm run check`: 128 unit/server, 52 integration/boundary, 12 offline behavior cases lulus setelah follow-up default bind standalone loopback. Compose up/recreate/healthy/down dan UI browser juga lulus dengan override environment fixture; Docker Desktop/WSL2 belum diuji. Panduan tersedia di [CONTAINERS](CONTAINERS.md). Tidak ada LIVE-01/02/03 atau API asli. Bukti dan keterbatasan di [CONTEXT](CONTEXT.md#11-bukti-fase-5).
 
 ## 8. Fase 6 — Evaluation dan final validation
 

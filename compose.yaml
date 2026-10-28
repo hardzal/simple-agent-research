@@ -1,0 +1,36 @@
+services:
+  studio:
+    build: .
+    image: localhost/simple-agent-research:phase5
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      REPORTS_DIR: /app/reports
+      STUDIO_PORT: "4021"
+      STUDIO_HOST: "0.0.0.0"
+    ports:
+      - "127.0.0.1:4021:4021"
+    volumes:
+      - ./reports:/app/reports
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    cpus: 1
+    mem_limit: 1g
+    pids_limit: 128
+    init: true
+    stop_grace_period: 10s
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - dist/studio-healthcheck.js
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s

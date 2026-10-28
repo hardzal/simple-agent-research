@@ -15,9 +15,9 @@ Laporan mengikuti bahasa permintaan kecuali pengguna meminta bahasa lain. Setiap
 
 ## Status dan batas verifikasi
 
-Fase 1–3 sudah masuk `master` melalui [PR #2](https://github.com/hardzal/simple-agent-research/pull/2). Fase 4 melengkapi validasi Markdown/citation, revisi draft dalam budget yang sama, dan pemetaan status/error pada runtime programatik serta route Studio in-process. Status review dan bukti checks terbaru selalu ada di [CONTEXT](docs/CONTEXT.md).
+Fase 1–4 sudah masuk `master` melalui [PR #2](https://github.com/hardzal/simple-agent-research/pull/2) dan [PR #3](https://github.com/hardzal/simple-agent-research/pull/3). Fase 5 menambahkan server/UI Studio, image, Compose sandbox, dan acceptance container dengan fake providers. Status review dan bukti checks terbaru selalu ada di [CONTEXT](docs/CONTEXT.md).
 
-Yang tersedia adalah **API programatik**, tiga application tools, filesystem report store, dan test suite offline. Belum tersedia command `pnpm run studio`, server/UI Studio produk, Dockerfile, atau Docker Compose; integrasi tersebut milik Fase 5. Suite acceptance M1 dan LIVE-03 milik Fase 6. Jangan menganggap M1 atau integrasi riset end-to-end dengan provider nyata sudah selesai.
+Tersedia **API programatik**, tiga application tools, filesystem report store, `pnpm run studio`, Dockerfile/Compose, dan test suite offline. Petunjuk setup Windows/WSL2, Podman, permission, serta acceptance ada di [CONTAINERS](docs/CONTAINERS.md). Suite acceptance M1 dan LIVE-03 tetap Fase 6; M1 dan riset end-to-end dengan provider nyata belum dinyatakan selesai.
 
 ## Alur dan komponen
 
@@ -43,7 +43,7 @@ Pencarian tidak meminta raw page atau jawaban generatif Tavily. Isi web diperlak
 
 ## Mulai dari checks offline
 
-Prasyarat: Node.js 24 LTS (`>=24.14.0 <25`) dan pnpm `11.22.0`, sesuai `engines` dan `packageManager`. Lingkungan development utama adalah Windows/Git Bash atau WSL2; Docker Desktop diperlukan nanti pada Fase 5.
+Prasyarat: Node.js 24 LTS (`>=24.14.0 <25`) dan pnpm `11.22.0`, sesuai `engines` dan `packageManager`. Lingkungan development utama adalah Windows/Git Bash atau WSL2. Container dapat memakai Podman atau Docker Desktop; bukti kedua engine dibedakan.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -58,12 +58,18 @@ Instalasi memerlukan registry atau cache pnpm lengkap. Checks tidak memerlukan A
 | `pnpm run format:check`     | Format Prettier; `pnpm run format` untuk memperbaikinya.        |
 | `pnpm run lint`             | ESLint.                                                         |
 | `pnpm run typecheck`        | TypeScript strict.                                              |
-| `pnpm run build`            | Menghasilkan modul JavaScript di `dist/`, bukan CLI/server UI.  |
+| `pnpm run build`            | Menghasilkan modul JavaScript dan entrypoint Studio di `dist/`. |
 | `pnpm run test:unit`        | Config, provider adapter, parser/validator, dan scope guards.   |
 | `pnpm run test:integration` | Filesystem, tools, runtime, dan route Studio dengan fake model. |
 | `pnpm run eval:offline`     | Scripted behavior cases; bukan penilaian kualitas LLM live.     |
 
 Gunakan hanya pnpm dan `pnpm-lock.yaml`; jangan membuat lockfile package manager lain.
+
+## Membuka Studio
+
+Siapkan `.env` lokal dengan kredensial sendiri dan `REPORTS_DIR=./reports`, lalu jalankan `pnpm run studio`. Untuk container, jalankan `podman compose up --build -d` atau `docker compose up --build -d` dari WSL2 setelah menyiapkan ownership `./reports` sesuai [panduan container](docs/CONTAINERS.md). Buka http://localhost:4021/playground. Memuat UI tidak melakukan provider call; mengirim riset manual dapat menimbulkan biaya.
+
+Debug run melalui events `tool_call`, `tool_result`, dan terminal `response` pada Playground/response JSONL, serta safe metrics stdout (`podman compose logs studio`). Session/trace database tidak diaktifkan karena cloning SDK akan melewati scoped adapter. Tidak ada persisted trace browser; simpan output JSONL contoh aman bila membutuhkan inspeksi sesudah server berhenti. Event draft bukan hasil terverifikasi.
 
 ## Menggunakan runtime programatik
 
@@ -73,7 +79,7 @@ Contoh berikut memakai **provider nyata dan dapat menimbulkan biaya**. Ini pengg
 
 1. Salin `.env.example` menjadi `.env` jika file lokal belum ada; jangan menimpa konfigurasi yang sudah ada.
 2. Isi `OPENAI_API_KEY` dan `TAVILY_API_KEY` secara lokal. Jangan commit atau mencetak nilainya.
-3. Untuk run lokal, ubah `REPORTS_DIR` menjadi `./reports`; `/app/reports` pada contoh disiapkan untuk container nanti.
+3. Untuk run lokal, ubah `REPORTS_DIR` menjadi `./reports`; `/app/reports` pada contoh dipakai dalam container.
 4. Jalankan build, kemudian contoh ini melalui Git Bash/WSL:
 
 ```sh
