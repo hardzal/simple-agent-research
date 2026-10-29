@@ -129,7 +129,7 @@ ALLOW_LIVE_TESTS=true pnpm exec node --env-file=.env --import tsx scripts/live.t
 - LIVE-02 melakukan satu query publik `Redis official documentation`, maksimum lima hasil, tanpa LLM/retry.
 - LIVE-03 menjalankan satu riset Redis melalui HTTP Studio sementara, lalu memeriksa host report round-trip dan menyimpan ringkasan trace. Command, guards, serta rubrik review ada di [EVALUATION](EVALUATION.md#live-03-tepat-satu-run-riset-melalui-http-studio).
 
-LIVE-01/02 memiliki bukti historis dan tidak perlu diulang sebagai dependency LIVE-03. Hasil dan blocker terkini ada di CONTEXT. LIVE-03 lokal bukan verifikasi Docker Desktop.
+LIVE-01/02 memiliki bukti historis dan tidak perlu diulang sebagai dependency LIVE-03. Hasil terkini ada di CONTEXT §13. Command LIVE-03 host sendiri bukan verifikasi Docker Desktop; follow-up yang dijalankan di image Docker dengan bind mount dibedakan eksplisit dari command host.
 
 ## Peta kode dan workflow
 

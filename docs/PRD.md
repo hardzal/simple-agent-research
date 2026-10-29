@@ -2,9 +2,9 @@
 
 **Milestone:** M1 — Proof of Concept
 
-**Status:** Requirement M1 v1.1; implementasi Fase 1–6 tersedia, offline verified; acceptance M1 belum lulus
+**Status:** Requirement M1 v1.1 dengan budget acceptance terotorisasi; gate teknis offline/Docker/LIVE-03 passed; acceptance kualitas/pemilik pending
 
-**Diperbarui:** 2026-10-28
+**Diperbarui:** 2026-10-29
 
 Dokumen ini memiliki requirement produk dan acceptance criteria. Desain teknis berada di [ARCHITECTURE.md](ARCHITECTURE.md), urutan implementasi di [PLAN.md](PLAN.md), kondisi aktual di [CONTEXT.md](CONTEXT.md), dan aturan coding agent di [AGENTS.md](../AGENTS.md).
 
@@ -205,33 +205,33 @@ Token usage yang tidak diberikan gateway dicatat sebagai tidak tersedia, bukan a
 
 ## 9. Definition of Done M1
 
-Checklist berikut mencatat bukti sampai Fase 6, bukan mengubah requirement. `[x]` berarti kriteria tersebut terbukti dalam lingkup yang disebutkan; tidak otomatis berarti M1 diterima. Ledger hasil lengkap ada di [CONTEXT §12](CONTEXT.md#12-fase-6--evaluasi-dan-finalisasi).
+Checklist berikut mencatat bukti sampai follow-up acceptance. `[x]` berarti kriteria tersebut terbukti dalam lingkup yang disebutkan; tidak otomatis berarti M1 diterima. Ledger terbaru ada di [CONTEXT §13](CONTEXT.md#13-follow-up-acceptance--docker-desktopwsl2-dan-live-03); hasil gagal terdahulu tetap tercatat di §12.
 
-- [ ] FR Must terpenuhi dalam satu research agent dengan tiga application tools. Implementasi dan regression offline tersedia; kualitas semantik FR-02/03/05/06/07/17 pada model live belum terbukti melalui laporan LIVE-03 yang berhasil.
-- [x] Lima mandatory cases executable dan lulus deterministic assertions. `tests/research.evaluation.test.ts` menjalankan EVAL-01–05 melalui SDK: 5/5; assertion bind mount EVAL-05 dibuktikan terpisah dengan Podman, bukan Docker Desktop.
+- [ ] FR Must diterima pemilik dalam lingkup M1. Implementasi/regression serta satu LIVE-03 faktual sudah terbukti; review coding-agent terhadap laporan berstatus WITH_NOTES. Fakta inti didukung snippet, tetapi beberapa contoh/definisi merupakan elaborasi yang tidak eksplisit di evidence. Review manusia dan keputusan atas keterbatasan semantik masih pending; bukan klaim generalisasi seluruh topik.
+- [x] Lima mandatory cases executable dan lulus deterministic assertions. SDK EVAL-01–05: 5/5; bind mount EVAL-05 dibuktikan terpisah dengan Podman dan Docker Desktop/WSL2, bukan dinisbatkan pada unit test.
 - [x] Supporting cases kritis untuk revisi, bahasa, budget, isolation, dan filesystem lulus dengan fake/scripted dependencies.
-- [x] Laporan valid tersimpan pada host, tetap tersedia setelah container dibuat ulang; acceptance Podman dengan fake providers membuktikan byte equality dan persistensi.
+- [x] Laporan valid tersimpan pada host, tetap tersedia setelah container dibuat ulang; acceptance fake providers pada Podman dan Docker Desktop membuktikan byte equality/persistensi. LIVE-03 Docker juga membuktikan write/read-back dan bind-mounted report pada host.
 - [x] Status completed berasal dari state tervalidasi dan read-back; finalizer tidak mempercayai path/sources dari model.
 - [x] Klarifikasi diakhiri sebagai request independen; history tidak diteruskan ke run baru.
 - [x] Limit dan cancellation ditegakkan dalam kode, termasuk model attempts, quota search, deadline, dan penolakan late results.
-- [ ] Docker Compose dan Anvia Studio dapat digunakan di Windows Docker Desktop/WSL2. Image/Compose/UI terbukti dengan Podman; Docker Desktop/WSL2 belum diuji langsung.
-- [x] Live integration tasks yang ditetapkan PLAN dijalankan dan hasilnya tercatat: LIVE-01/02 lulus historis; satu LIVE-03 gagal `budget_exceeded`. Pencatatan hasil bukan kelulusan live E2E.
-- [ ] Setidaknya satu live end-to-end run berhasil melalui Studio dan trace dapat diinspeksi. Blocked: LIVE-03 berakhir tanpa laporan atau success trace; review kualitas live juga blocked.
+- [x] Docker Compose dan Anvia Studio dapat digunakan di Windows Docker Desktop/WSL2. Image terbaru, sandbox/bind mount/recreate, Compose up/recreate/healthy/down, serta browser Connected terbukti; lihat CONTEXT §13.
+- [x] Live tasks tercatat: LIVE-01/02 passed historis; kegagalan LIVE-03 terdahulu tetap failed; satu follow-up LIVE-03 Docker terotorisasi passed tanpa retry.
+- [x] Satu live end-to-end melalui HTTP Studio di Docker completed; ringkasan trace JSON, metrics, tool names, dan snippet sumber dapat diinspeksi. Ini bukan pengaktifan tab native Traces; review kualitas/persetujuan pemilik tetap terpisah.
 - [x] Setup, testing, keterbatasan, dan hasil evaluasi didokumentasikan dalam README, CONTAINERS, EVALUATION, PLAN, dan CONTEXT.
-- [ ] Review dan merge setiap fase dilakukan pemilik proyek. Fase 1–5 merged melalui PR #2/#3/#4; Fase 6 belum review/merge.
+- [x] Review dan merge Fase 1–6 dilakukan pemilik melalui PR #2–#5, dokumentasi melalui PR #6. Follow-up acceptance ini belum di-merge dan keputusan penerimaan M1 tetap milik pemilik.
 
 ### Pemetaan requirement ke implementasi Fase 6
 
-| Requirement              | Implementasi dan bukti utama                                                                                 | Batas bukti                                                                                                                               |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| FR-01–FR-07, FR-11/12/17 | `src/agent/research.instructions.ts`, `src/application/research-policy.ts`; behavior dan evaluation fixtures | Intent, relevansi, analisis, kesimpulan, dan bahasa diarahkan instructions serta diuji dengan fixtures; bukan jaminan semantik model live |
-| FR-08                    | `src/services/source-registry.ts`, `src/services/report-validation.ts`; validator tests dan EVAL-04          | ID/URL/provenance diperiksa kode; dukungan klaim oleh snippet perlu review kualitas                                                       |
-| FR-09/10/18              | `src/tools/research-tools.ts`, `src/services/report-store.ts`; integration/behavior tests dan EVAL-05        | Satu write/read, revisi, containment dan hash/byte round-trip terbukti offline; host/recreate dengan Podman                               |
-| FR-13                    | `src/application/scoped-agent.ts`, `src/agent/research.agent.ts`, `src/tools/research-tools.ts`              | Guard/counter/cancellation diuji offline; timeout lokal tidak menjamin billing remote berhenti                                            |
-| FR-14/15                 | `src/application/studio-server.ts`, `src/application/scoped-studio.ts`, `src/services/run-metrics.ts`        | HTTP/UI/debug events dan safe metrics tersedia; tanpa persisted trace browser; LIVE-03 belum berhasil                                     |
-| FR-16                    | Tidak diimplementasikan, sesuai Won't — M1                                                                   | Tidak ada persistent conversation memory; setiap request independen                                                                       |
+| Requirement              | Implementasi dan bukti utama                                                                                 | Batas bukti                                                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-01–FR-07, FR-11/12/17 | `src/agent/research.instructions.ts`, `src/application/research-policy.ts`; behavior dan evaluation fixtures | Fixtures serta satu factual LIVE-03 mendukung perilaku; review kualitas WITH_NOTES/owner pending, bukan jaminan generalisasi model    |
+| FR-08                    | `src/services/source-registry.ts`, `src/services/report-validation.ts`; validator tests dan EVAL-04          | ID/URL/provenance diperiksa kode; dukungan klaim oleh snippet perlu review kualitas                                                   |
+| FR-09/10/18              | `src/tools/research-tools.ts`, `src/services/report-store.ts`; integration/behavior tests dan EVAL-05        | Satu write/read, revisi, containment dan byte round-trip offline; host/recreate pada Podman dan Docker Desktop; LIVE-03 Docker passed |
+| FR-13                    | `src/application/scoped-agent.ts`, `src/agent/research.agent.ts`, `src/tools/research-tools.ts`              | Guard/counter/cancellation diuji offline; timeout lokal tidak menjamin billing remote berhenti                                        |
+| FR-14/15                 | `src/application/studio-server.ts`, `src/application/scoped-studio.ts`, `src/services/run-metrics.ts`        | HTTP/UI/debug events dan safe metrics tersedia; LIVE-03 Docker completed dengan trace export; tanpa native persisted trace browser    |
+| FR-16                    | Tidak diimplementasikan, sesuai Won't — M1                                                                   | Tidak ada persistent conversation memory; setiap request independen                                                                   |
 
-Tidak ada fase implementasi tambahan yang ditetapkan oleh audit ini. Yang tersisa adalah acceptance live, verifikasi lingkungan Docker Desktop/WSL2, serta review/merge pemilik; tambahan live run tetap memerlukan otorisasi baru sesuai PLAN.
+Gate teknis live dan Docker Desktop/WSL2 sudah terbukti pada follow-up terotorisasi. Yang tersisa adalah review manusia atas catatan kualitas, acceptance akhir pemilik, dan review/merge follow-up. Pengaktifan native Traces/Evals merupakan pekerjaan terpisah yang belum selesai; tidak dinyatakan aktif melalui bukti trace export ini. Tambahan live run memerlukan otorisasi baru sesuai PLAN.
 
 ## 10. Riwayat keputusan
 

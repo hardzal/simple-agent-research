@@ -1,8 +1,8 @@
 # Implementation Plan — Milestone 1
 
-**Status:** Fase 1–5 merged melalui PR #2/#3/#4; Fase 6 offline verified, live acceptance blocked pada `phase/06-evaluation`
+**Status:** Fase 1–6 merged melalui PR #2–#5; follow-up teknis LIVE-03/Docker passed pada `fix/m1-live-acceptance`; review kualitas dan penerimaan pemilik pending
 
-**Diperbarui:** 2026-10-28
+**Diperbarui:** 2026-10-29
 
 **Requirement:** [PRD.md](PRD.md)
 
@@ -24,32 +24,32 @@ Status task: `planned` → `in_progress` → `verified`; gunakan `blocked` jika 
 
 ## 2. Peta fase
 
-| Fase | Branch                        | Hasil                                                  | Status saat ini                  |
-| ---- | ----------------------------- | ------------------------------------------------------ | -------------------------------- |
-| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | merged melalui PR #2             |
-| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | merged melalui PR #2             |
-| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | merged melalui PR #2             |
-| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | merged melalui PR #3             |
-| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | merged melalui PR #4             |
-| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | blocked: LIVE-03 budget_exceeded |
+| Fase | Branch                        | Hasil                                                  | Status saat ini      |
+| ---- | ----------------------------- | ------------------------------------------------------ | -------------------- |
+| 1    | `phase/01-project-foundation` | SDK/tooling/config dan compatibility probe             | merged melalui PR #2 |
+| 2    | `phase/02-tools`              | Tiga tools, source registry, report store              | merged melalui PR #2 |
+| 3    | `phase/03-agent-behavior`     | Alur riset adaptif dan instruksi agent                 | merged melalui PR #2 |
+| 4    | `phase/04-report-validation`  | Validasi lengkap, revisi, dan status final             | merged melalui PR #3 |
+| 5    | `phase/05-docker-studio`      | Docker Desktop/WSL2 dan Studio terintegrasi            | merged melalui PR #4 |
+| 6    | `phase/06-evaluation`         | Regression suite, live E2E, dan dokumentasi penggunaan | merged melalui PR #5 |
 
 Catatan riwayat: dependency dan bukti pada Fase 1–3 di bawah mencatat kondisi saat fase tersebut dikerjakan, termasuk pengecualian branch sebelum merge. Status publikasi terkini adalah tabel di atas: ketiganya sudah merged melalui PR #2.
 
 ### Ringkasan penyelesaian sampai Fase 6
 
-| Task                 | Status implementasi/verifikasi saat ini            | Bukti utama                                                                                                      |
-| -------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| P1-01–P1-03          | verified offline, merged                           | Config/provider/scope tests dan frozen install; CONTEXT §4                                                       |
-| LIVE-01              | verified live historis, merged                     | Tool-result replay exact-match pada run terakhir; CONTEXT §4                                                     |
-| P2-01–P2-03, LIVE-02 | verified offline + LIVE-02 passed historis, merged | Adapter/registry/tools/filesystem tests; CONTEXT §5                                                              |
-| P3-01–P3-04          | verified offline, merged                           | Instructions/runtime/policy dan behavior fixtures; CONTEXT §7                                                    |
-| P4-01–P4-04          | verified offline, merged                           | Validator/revisi/error/late-result regression; CONTEXT §8                                                        |
-| P5-01–P5-04          | implementasi merged; verified offline/Podman       | UI, Compose, image, host round-trip/recreate; Docker Desktop/WSL2 belum diverifikasi; CONTEXT §11                |
-| P6-01/P6-02          | verified offline, belum merged                     | `tests/research.evaluation.test.ts` dan `tests/research.behavior.test.ts`; mandatory 5/5 serta negative controls |
-| LIVE-03              | runner tersedia; acceptance blocked                | Satu run failed `budget_exceeded`, tanpa laporan; CONTEXT §12                                                    |
-| P6-03                | dokumentasi/review DoD tersedia, belum merged      | README, EVALUATION, PRD §9, dan CONTEXT §12                                                                      |
+| Task                 | Status implementasi/verifikasi saat ini                 | Bukti utama                                                                                                      |
+| -------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| P1-01–P1-03          | verified offline, merged                                | Config/provider/scope tests dan frozen install; CONTEXT §4                                                       |
+| LIVE-01              | verified live historis, merged                          | Tool-result replay exact-match pada run terakhir; CONTEXT §4                                                     |
+| P2-01–P2-03, LIVE-02 | verified offline + LIVE-02 passed historis, merged      | Adapter/registry/tools/filesystem tests; CONTEXT §5                                                              |
+| P3-01–P3-04          | verified offline, merged                                | Instructions/runtime/policy dan behavior fixtures; CONTEXT §7                                                    |
+| P4-01–P4-04          | verified offline, merged                                | Validator/revisi/error/late-result regression; CONTEXT §8                                                        |
+| P5-01–P5-04          | merged; verified offline/Podman/Docker Desktop          | UI, Compose, sandbox dan host round-trip/recreate; CONTEXT §11 dan §13                                           |
+| P6-01/P6-02          | verified offline, merged melalui PR #5                  | `tests/research.evaluation.test.ts` dan `tests/research.behavior.test.ts`; mandatory 5/5 serta negative controls |
+| LIVE-03              | follow-up executable E2E passed; kualitas owner pending | Docker HTTP Studio completed, report/trace/host round-trip; CONTEXT §13                                          |
+| P6-03                | dokumentasi merged; acceptance ledger diperbarui        | README, EVALUATION, PRD §9, dan CONTEXT §12                                                                      |
 
-Seluruh task implementasi enam fase sudah tersedia, tetapi seluruh acceptance PRD/PLAN belum lulus. Tidak ada klaim M1 selesai hanya karena implementasi telah mencapai Fase 6. Sisa sebelum acceptance akhir: live E2E sukses dan review kualitas laporannya (perlu otorisasi baru), bukti Docker Desktop/WSL2 yang belum tersedia, serta review/merge Fase 6 oleh pemilik. Tidak ada live rerun otomatis dalam pembaruan dokumentasi ini.
+Fase 1–6 sudah merged. Follow-up `fix/m1-live-acceptance` dibuat dari `origin/master` terbaru pada worktree terpisah; perubahan tracing/evals yang belum selesai tidak dibawa. Gate executable LIVE-03, Docker Desktop/WSL2, Compose dan checks offline kini passed. Review coding-agent terhadap satu laporan berstatus WITH_NOTES; review manusia, acceptance M1 akhir, dan review/merge follow-up masih pending. Bukti gagal terdahulu tidak dihapus dan tidak ada live rerun otomatis.
 
 ## 3. Fase 1 — Project foundation
 
@@ -169,9 +169,9 @@ Fase ini tidak menambahkan live research task. Membuka Studio tidak berarti haru
 
 **Status P6-02:** verified offline. Regression bahasa/revisi/isolation/injection/budget/filesystem tetap lulus, ditambah fixture-quality feedback tanpa paid judge. Word count bukan hard gate tunggal. Rubric manual relevance/language/citation support di EVALUATION; kualitas laporan live belum dapat dinilai.
 
-**Status LIVE-03:** blocked. Satu run yang diotorisasi telah dipakai pada `2026-10-28T08:42:08.691Z`, final status `budget_exceeded`, tanpa report/success trace. Model attempts 2, search attempts 1, successful write/read 0/0, token usage unavailable. Tidak ada rerun, fallback, atau budget increase. Evidence dan batas diagnosis di CONTEXT §12. Ini bukan pass/skipped-as-pass; perlu instruksi/otorisasi baru sebelum live tambahan.
+**Status LIVE-03:** executable follow-up passed. Satu run baru terotorisasi di Docker mulai `2026-10-29T14:27:59.553Z`, completed dalam sekitar 38 detik pada budget 180000 ms, 4 model calls, 1 search, write/read 1/1, host round-trip true, trace summary tersimpan. Review kualitas coding-agent WITH_NOTES; owner review pending. Kegagalan run 60 detik terdahulu tetap failed di CONTEXT §12; ledger terbaru §13. Tidak ada retry/fallback atau tambahan run otomatis.
 
-**Status P6-03:** verified untuk dokumentasi dan review DoD. README/EVALUATION/CONTEXT memisahkan offline pass, Podman acceptance, LIVE-03 failed, kualitas live blocked, dan Docker Desktop/WSL2 belum diverifikasi. M1 belum diterima; branch dipertahankan lokal karena live gate belum lulus. Tidak membuat PR seolah fase selesai atau menandai awaiting_review. Autentikasi API/browser GitHub juga belum tersedia.
+**Status P6-03:** dokumentasi Fase 6 merged melalui PR #5/#6; follow-up memperbarui ledger berdasarkan hasil offline/Docker/live yang benar-benar diamati. M1 belum diterima penuh: catatan kualitas memerlukan review manusia dan keputusan pemilik. Publikasi follow-up serta draft PR dilaporkan terpisah; ketiadaan autentikasi PR bukan alasan untuk mengubah bukti teknis atau merge otomatis.
 
 ## 9. Daftar live tests yang diizinkan
 

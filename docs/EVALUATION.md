@@ -1,6 +1,6 @@
 # Evaluasi dan acceptance M1
 
-Requirement tetap dimiliki [PRD §7–9](PRD.md#7-evaluasi-dan-acceptance-criteria); bukti eksekusi terbaru dan keputusan acceptance ada di [CONTEXT §12](CONTEXT.md#12-fase-6--evaluasi-dan-finalisasi). Dokumen ini menjelaskan cara menjalankan dan membaca hasil, bukan mengubah kriteria produk.
+Requirement tetap dimiliki [PRD §7–9](PRD.md#7-evaluasi-dan-acceptance-criteria); bukti eksekusi terbaru dan keputusan acceptance ada di [CONTEXT §13](CONTEXT.md#13-follow-up-acceptance--docker-desktopwsl2-dan-live-03). Dokumen ini menjelaskan cara menjalankan dan membaca hasil, bukan mengubah kriteria produk.
 
 ## Offline: tanpa API key atau biaya provider
 
@@ -52,7 +52,7 @@ Runner memuat config yang sama, membuat scoped Studio sementara pada loopback, m
 
 Exit nonzero berarti blocked/failure, bukan skipped-as-pass. Failure evidence membedakan tahap startup/readiness, research, verification, host report, atau trace; mencatat status/counters/category yang tersedia tanpa raw error. Jangan rerun otomatis setelah kegagalan. Catat hasil sebenarnya di CONTEXT dan minta otorisasi baru jika ingin menghabiskan satu live run tambahan.
 
-LIVE-03 ini memakai Studio lokal dan filesystem host. Isolasi container, bind mount, dan persistensi recreate dibuktikan oleh acceptance container terpisah; hasil lokal bukan bukti Docker Desktop.
+Command host di atas memakai Studio lokal dan filesystem host; hasilnya sendiri bukan bukti Docker Desktop. Follow-up §13 menjalankan fungsi harness yang sama dari image Docker terbaru, dengan provider environment pengguna, opt-in/case eksplisit, sandbox, dan reports bind mount. Satu POST tetap dikirim ke HTTP Studio sementara di dalam container; write/read-back dibandingkan dengan file bind mount, lalu file dan trace diverifikasi lagi dari Windows host. Acceptance fake container terpisah membuktikan persistensi recreate. Native trace/session store tetap nonaktif.
 
 ## Container acceptance terpisah
 

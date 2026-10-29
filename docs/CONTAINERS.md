@@ -2,7 +2,7 @@
 
 ## Windows / WSL2
 
-Gunakan Linux containers dan shell WSL2 dari root repository. Docker Desktop dengan integrasi distro WSL2 adalah target konfigurasi; Podman merupakan alternatif build/test yang disetujui untuk proyek ini. Hasil Podman tidak membuktikan Docker Desktop sudah diuji.
+Gunakan Linux containers dan shell WSL2 dari root repository. Docker Desktop dengan integrasi distro WSL2 adalah target konfigurasi; Podman merupakan alternatif build/test yang disetujui untuk proyek ini. Hasil Podman historis tidak membuktikan Docker Desktop sudah diuji. Follow-up pada [CONTEXT §13](CONTEXT.md#13-follow-up-acceptance--docker-desktopwsl2-dan-live-03) kini mencatat verifikasi langsung Docker Desktop dengan kernel WSL2, Compose dan satu LIVE-03 Docker.
 
 1. Siapkan `.env` dari `.env.example` hanya jika belum ada, lalu isi kredensial secara lokal. Jangan mencetak atau mengirim nilainya. `REPORTS_DIR` di Compose selalu `/app/reports`.
 2. Buat direktori host milik UID/GID container (default Node: `1000:1000`):
@@ -58,7 +58,19 @@ pnpm run test:container
 node scripts/container-acceptance.mjs docker
 ```
 
-Harness menggunakan nama container unik, port loopback dinamis, dan direktori `reports/acceptance-*` miliknya sendiri. Container/direktori fixture tersebut dibersihkan sesudah test; laporan pengguna tidak dihapus. Test menjalankan entrypoint produksi untuk readiness/UI, memeriksa non-root/read-only root/CPU/memory, lalu menjalankan fake research melalui HTTP Studio, membandingkan byte laporan pada host/container, dan membuat ulang container untuk menguji persistensi. Ini bukan live research atau bukti kualitas LLM. Harness memakai `run` dengan sandbox flags yang sama. Smoke Compose up/recreate/healthy/down tambahan sudah dijalankan pada project fixture terpisah tanpa `.env` asli; lihat bukti di CONTEXT. Docker Desktop tetap belum diverifikasi.
+Harness menggunakan nama container unik, port loopback dinamis, dan direktori `reports/acceptance-*` miliknya sendiri. Container/direktori fixture tersebut dibersihkan sesudah test; laporan pengguna tidak dihapus. Test menjalankan entrypoint produksi untuk readiness/UI, memeriksa non-root/read-only root/CPU/memory, lalu menjalankan fake research melalui HTTP Studio, membandingkan byte laporan pada host/container, dan membuat ulang container untuk menguji persistensi. Ini bukan live research atau bukti kualitas LLM. Harness memakai `run` dengan sandbox flags yang sama. Smoke Compose up/recreate/healthy/down tambahan sudah dijalankan pada project fixture terpisah tanpa `.env` asli; lihat bukti di CONTEXT. Docker Desktop/WSL2, Compose up/recreate/healthy/down, serta UI browser kini passed pada follow-up §13. CPU/memory diperiksa melalui engine configuration, bukan stress test.
+
+## Proxy LLM pada Windows host
+
+Jika provider OpenAI-compatible berjalan di Windows host, gunakan alamat host dari container, bukan loopback container. Konfigurasi pengguna pada acceptance ini:
+
+```dotenv
+OPENAI_BASE_URL=http://host.docker.internal:20128/v1
+LLM_MODEL=cx/gpt-6.1-sol
+MAX_EXECUTION_MS=180000
+```
+
+Untuk runner langsung di Windows host, proxy yang sama memakai `http://localhost:20128/v1`. Jangan mengganti endpoint secara otomatis; pilih konfigurasi sesuai tempat proses berjalan. `MAX_EXECUTION_MS` harus huruf besar dan memakai milidetik. Setelah `.env` berubah, recreate service agar environment baru dimuat; restart saja tidak memperbarui environment container. Perubahan env saja tidak memerlukan rebuild image. HTTP 200 `/status` membuktikan readiness Studio, bukan provider; periksa metadata `/models` dari dalam container sebelum paid run.
 
 ## Batas sandbox
 
