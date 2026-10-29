@@ -130,20 +130,22 @@ Setelah verifikasi berhasil, agent hanya menyelesaikan respons akhir; tidak mela
 
 ## 5. Budget produk
 
-| Resource                                     | Batas awal                            |
-| -------------------------------------------- | ------------------------------------- |
-| Anvia `maxTurns` dan model attempts aplikasi | 5 masing-masing                       |
-| Web search                                   | Maksimum 3 panggilan provider per run |
-| Hasil pencarian                              | Maksimum 5 per pencarian              |
-| Successful report write                      | Maksimum 1                            |
-| Successful verification read                 | Maksimum 1                            |
-| Revisi draft setelah penolakan pertama       | Maksimum 1, dalam budget yang sama    |
-| Panjang badan laporan                        | Target 150–500 kata                   |
-| Deadline eksekusi                            | 60 detik                              |
-| Model retries                                | Dinonaktifkan                         |
-| Tool concurrency                             | 1                                     |
+| Resource                                     | Batas awal                                                   |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| Anvia `maxTurns` dan model attempts aplikasi | 5 masing-masing                                              |
+| Web search                                   | Maksimum 3 panggilan provider per run                        |
+| Hasil pencarian                              | Maksimum 5 per pencarian                                     |
+| Successful report write                      | Maksimum 1                                                   |
+| Successful verification read                 | Maksimum 1                                                   |
+| Revisi draft setelah penolakan pertama       | Maksimum 1, dalam budget yang sama                           |
+| Panjang badan laporan                        | Target 150–500 kata                                          |
+| Deadline eksekusi                            | Default 60 detik; acceptance terotorisasi maksimum 180 detik |
+| Model retries                                | Dinonaktifkan                                                |
+| Tool concurrency                             | 1                                                            |
 
 Nilai batas harus dapat dikonfigurasi. Penghitung dan deadline ditegakkan aplikasi, termasuk pada input tool yang dimanipulasi.
+
+Pada follow-up acceptance, pengguna secara eksplisit menyetujui `MAX_EXECUTION_MS=180000` (3 menit) dan satu LIVE-03 tambahan. Batas LIVE-03 diselaraskan menjadi maksimum 180 detik; default parser tetap 60 detik dan konfigurasi yang lebih kecil tetap dihormati. Kuota lima total model attempts dan tiga search calls tidak berubah. Hasil deadline 60 detik terdahulu tetap failed, bukan dianggap lulus setelah perubahan budget.
 
 Dalam Anvia v1, `maxTurns: 5` mengizinkan satu pemanggilan model awal dan sampai lima putaran model lanjutan. Runtime produk menerapkan guard tambahan: `MAX_AGENT_TURNS=5` juga membatasi total model attempts menjadi lima, termasuk call awal dan attempt yang gagal. Guard diperiksa sebelum request berikutnya; batas SDK bukan izin untuk call keenam. Satu respons model dapat meminta beberapa tools yang dieksekusi berurutan. Karena itu, limit model bukan penghitung tool calls.
 

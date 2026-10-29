@@ -73,7 +73,7 @@ export async function runLiveResearch(
   if (
     config.maxAgentTurns > 5 ||
     config.maxWebSearchCalls > 3 ||
-    config.maxExecutionMs > 60000
+    config.maxExecutionMs > 180000
   )
     throw new Error("LIVE_BUDGET");
   const startedAt = new Date().toISOString();
@@ -93,6 +93,9 @@ export async function runLiveResearch(
     endpoint: config.openaiBaseUrl,
     model: config.llmModel,
     api: config.llmApi,
+    maxExecutionMs: config.maxExecutionMs,
+    maxModelAttempts: config.maxAgentTurns,
+    maxSearchCalls: config.maxWebSearchCalls,
     runId,
     finalStatus: finalStatus ?? metrics?.run_status ?? null,
     modelCalls: metrics?.model_calls ?? null,

@@ -41,7 +41,7 @@ ALLOW_LIVE_TESTS=true REPORTS_DIR=./reports pnpm exec node --env-file=.env --imp
 Runner memuat config yang sama, membuat scoped Studio sementara pada loopback, menunggu readiness tanpa provider call, lalu mengirim **satu** request streaming untuk topik publik tetap: “Research tentang apa itu Redis dan fungsinya.” Setelah selesai/gagal, Studio dihentikan. Tidak perlu menyalakan `pnpm run studio` atau Compose bersamaan untuk case ini.
 
 - Case ID dan opt-in wajib; kredensial/config invalid ditolak sebelum provider call.
-- Budget lebih besar dari 5 model attempts, 3 search calls, atau 60 detik ditolak; budget yang lebih kecil tetap dihormati. Tidak ada transport retry atau automatic rerun.
+- Budget lebih besar dari 5 model attempts, 3 search calls, atau 180 detik ditolak; budget yang lebih kecil tetap dihormati. Default parser tetap 60 detik; acceptance 3 menit memerlukan `MAX_EXECUTION_MS=180000` dan otorisasi baru sesuai PRD §5. Evidence mencatat `maxExecutionMs`, `maxModelAttempts`, dan `maxSearchCalls` efektif. Tidak ada transport retry atau automatic rerun.
 - Endpoint/model berasal dari config yang sama; runner tidak menggantinya atau memilih fallback.
 - Hasil sukses memerlukan terminal response `completed`, search yang sukses, satu write dan read-back, metrics satu run, ketiga tool events, serta byte laporan host yang sama dengan konten read-back tervalidasi.
 - Host read oleh harness adalah pemeriksaan acceptance di luar application tool; tidak menambah kuota `readFile` milik agent.

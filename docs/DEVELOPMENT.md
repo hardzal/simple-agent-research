@@ -87,16 +87,16 @@ Pada streaming, delta/turn/tool events adalah draft. Hanya terminal response JSO
 
 Default provider adalah gateway kompatibel OpenAI `https://gateway.devscale.id/v1`, model `gpt-6-luna`, Chat Completions (`LLM_API=chat`), serta Tavily Search API. Tidak ada fallback endpoint/model atau automatic retry.
 
-| Batas default         | Nilai                                               |
-| --------------------- | --------------------------------------------------- |
-| Search per run        | 3 panggilan, termasuk yang gagal                    |
-| Model per run         | 5 total attempts, termasuk call awal dan yang gagal |
-| Deadline run          | 60 detik                                            |
-| Revisi draft          | 1 setelah draft pertama ditolak                     |
-| Successful write/read | Masing-masing 1 per run                             |
-| Tool concurrency      | 1                                                   |
-| Hasil per search      | Maksimum 5                                          |
-| Ukuran laporan UTF-8  | 65.536 byte                                         |
+| Batas default         | Nilai                                                        |
+| --------------------- | ------------------------------------------------------------ |
+| Search per run        | 3 panggilan, termasuk yang gagal                             |
+| Model per run         | 5 total attempts, termasuk call awal dan yang gagal          |
+| Deadline run          | Default 60 detik; acceptance terotorisasi maksimum 180 detik |
+| Revisi draft          | 1 setelah draft pertama ditolak                              |
+| Successful write/read | Masing-masing 1 per run                                      |
+| Tool concurrency      | 1                                                            |
+| Hasil per search      | Maksimum 5                                                   |
+| Ukuran laporan UTF-8  | 65.536 byte                                                  |
 
 Semua langkah memakai budget run awal, termasuk revisi dan read-back. Penolakan draft kedua menghentikan run; kegagalan I/O bukan kesempatan revisi konten. Batas operasi/waktu/ukuran ini bukan jaminan token atau biaya moneter. Config dan batas input/query/snippet ada di `.env.example` dan `src/config/index.ts`.
 

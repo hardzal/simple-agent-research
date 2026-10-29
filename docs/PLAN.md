@@ -175,11 +175,13 @@ Fase ini tidak menambahkan live research task. Membuka Studio tidak berarti haru
 
 ## 9. Daftar live tests yang diizinkan
 
-| ID      | Fase | Operasi                                                        | Batas otomatis per task                                                  |
-| ------- | ---- | -------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| LIVE-01 | 1    | Gateway LLM + satu tool fixture lokal tanpa side effect        | 1 agent run; maxTurns maksimum 2; timeout maksimum 60 detik; retries off |
-| LIVE-02 | 2    | Query Tavily: “Redis official documentation”                   | 1 provider search; maksimum 5 hasil; tanpa LLM                           |
-| LIVE-03 | 6    | “Research tentang apa itu Redis dan fungsinya.” melalui Studio | 1 research run dalam semua batas PRD; tanpa retries                      |
+| ID      | Fase                     | Operasi                                                        | Batas otomatis per task                                                                     |
+| ------- | ------------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| LIVE-01 | 1                        | Gateway LLM + satu tool fixture lokal tanpa side effect        | 1 agent run; maxTurns maksimum 2; timeout maksimum 60 detik; retries off                    |
+| LIVE-02 | 2                        | Query Tavily: “Redis official documentation”                   | 1 provider search; maksimum 5 hasil; tanpa LLM                                              |
+| LIVE-03 | 6 / follow-up acceptance | “Research tentang apa itu Redis dan fungsinya.” melalui Studio | 1 research run per otorisasi; maksimum 180 detik, 5 model attempts, 3 search; tanpa retries |
+
+Follow-up acceptance saat ini mendapat otorisasi pengguna untuk satu LIVE-03 tambahan dengan `MAX_EXECUTION_MS=180000`; ini perubahan eksplisit batas waktu PRD §5, bukan rerun otomatis atau penghapusan hasil gagal terdahulu. Guard maksimum 180 detik memiliki regression batas atas serta mencatat konfigurasi efektif pada evidence. LIVE-01 tetap maksimum 60 detik.
 
 Satu run dapat berisi beberapa HTTP/model calls; catat jumlah aktual. Batas otomatis bukan kuota panggilan gratis, dan tidak meliputi automatic rerun setelah kegagalan.
 

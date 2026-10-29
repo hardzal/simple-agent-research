@@ -129,6 +129,8 @@ Recovery berada pada adapter yang menangkap exception asli SDK sebelum scope dit
 
 Gunakan `@anvia/openai` dengan custom `baseUrl`. Default awal yang akan diuji adalah Chat Completions (`LLM_API=chat`). Jangan menganggap URL berakhiran /v1 juga mendukung Responses API.
 
+Default gateway/model tetap tersedia; konfigurasi pengguna untuk follow-up acceptance memakai proxy OpenAI-compatible `http://host.docker.internal:20128/v1` dari Docker dan model `cx/gpt-6.1-sol`. Untuk eksekusi langsung di Windows host, alamat proxy adalah `http://localhost:20128/v1`; jangan menyamakan loopback container dengan host. Perubahan ini berasal dari `.env` pengguna, bukan fallback otomatis. `MAX_EXECUTION_MS=180000` diterima guard LIVE-03 maksimum 180 detik sesuai PRD §5; default parser tetap 60000 ms.
+
 Gateway/model ini merupakan pilihan deployment. LIVE-01 historis telah membuktikan tool calling, pengembalian tool result dan final output exact-match pada Chat API; cancellation diuji offline. Itu bukan bukti riset live E2E: LIVE-03 Fase 6 gagal pada deadline. Jangan diam-diam mengganti model, endpoint, atau API mode jika gagal. Usage yang tidak tersedia tetap null.
 
 Finalisasi tidak memerlukan model kedua atau LLM call tambahan di luar agent loop. Model mengusulkan keputusan akhir yang diparse dan divalidasi lokal:

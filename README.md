@@ -83,7 +83,7 @@ File yang ada di folder laporan belum tentu hasil yang berhasil. Gunakan status 
 
 - Riset menggunakan cuplikan hasil pencarian, bukan membaca seluruh isi artikel. Periksa sumber sebelum memakai laporan untuk keputusan penting.
 - Pengecekan sumber memastikan ID dan URL sesuai hasil pencarian. Pengecekan ini tidak menjamin semua kesimpulan benar.
-- Batas bawaan setiap permintaan adalah 60 detik, maksimal tiga pencarian dan lima pemanggilan model. Semua langkah, termasuk perbaikan dan penyimpanan laporan, memakai batas yang sama.
+- Batas bawaan setiap permintaan adalah 60 detik, maksimal tiga pencarian dan lima pemanggilan model. Follow-up acceptance yang diotorisasi memakai `MAX_EXECUTION_MS=180000` (3 menit); guard LIVE-03 menerima maksimum 180 detik. Semua langkah, termasuk perbaikan dan penyimpanan laporan, memakai batas yang sama.
 - Agent mendapat satu kesempatan memperbaiki draft yang ditolak, selama waktu dan jumlah pemanggilan masih tersedia. Aplikasi tidak mengulang otomatis permintaan yang gagal.
 - Proyek ini belum menyediakan riwayat percakapan permanen, login pengguna, atau layanan riset terjadwal.
 
