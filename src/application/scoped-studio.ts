@@ -1,5 +1,5 @@
 import type { Agent } from "@anvia/core/agent";
-import { Studio } from "@anvia/studio";
+import { Studio, type StudioEvalSuite } from "@anvia/studio";
 
 /**
  * Studio 1.3.20 clones agents when a trace/session store is enabled, discarding
@@ -16,10 +16,27 @@ import { Studio } from "@anvia/studio";
  */
 export function createScopedStudio(
   agent: Agent,
-  options: { ui?: boolean } = {},
+  options: {
+    ui?: boolean;
+    evals?: StudioEvalSuite[];
+    configureApp?: (app: Studio["app"]) => void;
+  } = {},
 ): Studio {
-  return new Studio([agent], {
-    ui: options.ui ?? false,
-    stores: { sessions: false, pipelineLogs: false, pipelineRuns: false },
-  });
+  return new (class extends Studio {
+    constructor() {
+      super([agent], {
+        ui: options.ui ?? false,
+        evals: options.evals ?? [],
+        stores: { sessions: false, pipelineLogs: false, pipelineRuns: false },
+      });
+      options.configureApp?.(this.app);
+    }
+    override start(serveOptions: Parameters<Studio["start"]>[0] = {}) {
+      super.start(serveOptions);
+      // Studio 1.3.20 replaces its Hono app in start(), including from serve().
+      // Re-mount only on the new public app; SDK Host/Origin guards remain intact.
+      options.configureApp?.(this.app);
+      return this;
+    }
+  })();
 }

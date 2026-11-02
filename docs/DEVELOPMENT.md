@@ -71,7 +71,7 @@ Konstruksi runtime tidak memanggil model/search dan tidak memuat `.env` sendiri.
 
 Untuk pembatalan, teruskan `{ abortSignal: controller.signal }` sebagai argumen kedua. Input kosong, terlalu panjang, atau envelope tidak valid ditolak sebelum run/provider; error input tersebut bukan `needs_clarification`.
 
-Untuk pengujian offline, `createResearchRuntime(config, overrides)` menerima `model`, `searchProvider`, `reportStore`, dan `logger`. Contoh fixtures ada di [tests/fixtures/research.ts](../tests/fixtures/research.ts).
+Untuk pengujian offline, `createResearchRuntime(config, overrides)` menerima `model`, `searchProvider`, `reportStore`, `logger`, dan callback sinkron opsional `onMetrics(snapshot)`. Contoh fixtures ada di [tests/fixtures/research.ts](../tests/fixtures/research.ts).
 
 ### Response dan streaming
 
@@ -113,6 +113,25 @@ podman compose logs studio
 Tidak ada persisted trace browser. Jika perlu memeriksa run setelah server berhenti, simpan output JSONL dari contoh publik yang aman. Jangan simpan secrets atau raw provider errors dalam logs, laporan, fixture, atau PR. Event draft bukan hasil terverifikasi.
 
 Metrics berisi durasi, counters/status, penggunaan token yang tersedia, dan kategori error aman. Token usage yang tidak dilaporkan provider dicatat `null`, bukan nol rekaan. Timeout lokal tidak membuktikan bahwa proses atau billing pada provider remote berhenti.
+
+### Monitor metrics dan eval
+
+`createResearchStudio` mendaftarkan suite offline dan monitor pada server Studio yang sama:
+
+| Route                               | Fungsi                                                           |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| `GET /research-monitor`             | Playground native dalam iframe dan panel developer metrics/evals |
+| `GET /research-monitor/state`       | Snapshot JSON allowlisted, `Cache-Control: no-store`             |
+| `GET /evals`                        | Daftar suite native SDK                                          |
+| `POST /evals/research-offline/runs` | Eksekusi eksplisit lima offline cases; body `{}`                 |
+
+Panel memakai polling 500 ms tanpa request model tambahan. `run_status: running` hanya status observasi, bukan tambahan status pada `ResearchResponse`. Application `runId` dan `sdk_run_id` ditampilkan terpisah. Saat ada attempt yang belum mempunyai response/usage, token total tetap unavailable/null.
+
+Snapshot tidak menyimpan prompt/history, query, URL sumber, konten laporan, path, raw provider payload/error, atau secret. Sink metrics yang melempar tidak mengubah policy/outcome dan tidak memicu retry. Retention per Studio dibatasi 100 research runs, 20 eval runs, TTL 30 menit sejak update terakhir, tanpa database atau persistence restart.
+
+Evals menggunakan `EvalReporter` untuk progress/outcomes per metric, dengan core eval run ID (berbeda dari HTTP envelope run ID Studio). POST native menunggu seluruh suite; panel dapat membaca snapshot selama request masih berjalan. Tombol tidak auto-run/auto-retry. `fixture-quality-review` adalah supporting fixture feedback, bukan semantic judge atau auto-score setiap chat. Lihat [EVALUATION](EVALUATION.md#evals-dan-metrics-melalui-studio).
+
+`createScopedStudio(..., { configureApp })` memasang extension melalui app publik pada constructor dan sesudah `start()`. Ini diperlukan karena Studio 1.3.20 membuat ulang Hono app di `start()`/`serve()`. Tidak mengakses private SDK fields, mengubah dependency, mengaktifkan trace/session stores, atau mengganti Host/Origin guard. Regression HTTP nyata menguji route setelah startup; `app.request` saja tidak cukup.
 
 ## Live probes
 

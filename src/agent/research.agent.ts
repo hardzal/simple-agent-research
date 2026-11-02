@@ -12,7 +12,11 @@ import type { AppConfig } from "../config/index.js";
 import type { SearchProvider } from "../providers/search-provider.js";
 import { getReportedTokenUsage } from "../providers/llm.js";
 import type { ReportStore } from "../services/report-store.js";
-import { createRunLogger, type RunMetrics } from "../services/run-metrics.js";
+import {
+  createRunLogger,
+  type RunMetrics,
+  type RunMetricsSnapshot,
+} from "../services/run-metrics.js";
 import type { ResearchResponse } from "../schemas/research.js";
 import { createResearchTools } from "../tools/research-tools.js";
 import { buildResearchInstructions } from "./research.instructions.js";
@@ -23,6 +27,7 @@ export type ResearchDependencies = {
   searchProvider: SearchProvider;
   reportStore: ReportStore;
   logger?: Pick<ReturnType<typeof createRunLogger>, "log">;
+  onMetrics?: (snapshot: RunMetricsSnapshot) => void;
 };
 type State = {
   started: number;
@@ -42,6 +47,66 @@ export function createResearchAgent(dependencies: ResearchDependencies) {
   const logger =
     dependencies.logger ??
     createRunLogger((json) => process.stderr.write(`${json}\n`));
+  function metrics(
+    scope: RunScope,
+    terminal: boolean,
+  ): RunMetricsSnapshot | undefined {
+    const state = states.get(scope);
+    if (!state) return;
+    const snapshot = state.handlers.snapshot();
+    const status = terminal ? (state.response?.status ?? "failed") : "running";
+    const errorType: RunMetrics["error_type"] = !terminal
+      ? null
+      : (state.errorType ??
+        (status === "budget_exceeded"
+          ? "budget"
+          : status !== "failed"
+            ? null
+            : (snapshot.errorType ??
+              (snapshot.validationRejections
+                ? "validation"
+                : snapshot.webSearchCalls && !snapshot.searchSuccesses
+                  ? "search_provider"
+                  : snapshot.reportCreated && !snapshot.reportVerified
+                    ? "filesystem"
+                    : state.response
+                      ? "invalid_output"
+                      : "unknown"))));
+    return {
+      runId: scope.runId,
+      sdk_run_id: scope.sdkRunId ?? null,
+      run_duration_ms: performance.now() - state.started,
+      model_calls: scope.modelCalls,
+      tool_calls: scope.toolCalls,
+      input_tokens:
+        state.responses > 0 && state.responses === scope.modelCalls
+          ? state.inputTokens
+          : null,
+      output_tokens:
+        state.responses > 0 && state.responses === scope.modelCalls
+          ? state.outputTokens
+          : null,
+      web_search_calls: snapshot.webSearchCalls,
+      source_count:
+        status === "completed" || (!terminal && snapshot.reportVerified)
+          ? snapshot.reportSources.length
+          : 0,
+      report_created: snapshot.reportCreated,
+      report_verified: snapshot.reportVerified,
+      run_status: status,
+      error_type: errorType,
+      validation_rejections: snapshot.validationRejections,
+      search_successes: snapshot.searchSuccesses,
+    };
+  }
+  function publish(snapshot: RunMetricsSnapshot | undefined) {
+    if (!snapshot) return;
+    try {
+      dependencies.onMetrics?.({ ...snapshot });
+    } catch {
+      /* Safe sink isolation. */
+    }
+  }
   return createScopedAgent({
     id: "research",
     model: dependencies.model,
@@ -51,7 +116,10 @@ export function createResearchAgent(dependencies: ResearchDependencies) {
     prepareInput: (settings) =>
       prepareResearchInput(settings, config.maxPromptChars),
     tools(scope) {
-      const handlers = createResearchTools(scope, dependencies);
+      const handlers = createResearchTools(scope, {
+        ...dependencies,
+        onProgress: () => publish(metrics(scope, false)),
+      });
       if (scope.runId !== "inactive")
         states.set(scope, {
           started: performance.now(),
@@ -60,7 +128,11 @@ export function createResearchAgent(dependencies: ResearchDependencies) {
           outputTokens: 0,
           responses: 0,
         });
+      publish(metrics(scope, false));
       return handlers.tools;
+    },
+    onProgress(scope) {
+      publish(metrics(scope, false));
     },
     beforeCompletion(scope) {
       if (states.get(scope)?.handlers.snapshot().status)
@@ -141,46 +213,15 @@ export function createResearchAgent(dependencies: ResearchDependencies) {
       return JSON.stringify(state.response);
     },
     onClose(scope) {
-      const state = states.get(scope);
-      if (!state) return;
-      const snapshot = state.handlers.snapshot();
-      const status = state.response?.status ?? "failed";
-      const errorType: RunMetrics["error_type"] =
-        state.errorType ??
-        (status === "budget_exceeded"
-          ? "budget"
-          : status !== "failed"
-            ? null
-            : snapshot.errorType
-              ? snapshot.errorType
-              : snapshot.validationRejections
-                ? "validation"
-                : snapshot.webSearchCalls && !snapshot.searchSuccesses
-                  ? "search_provider"
-                  : snapshot.reportCreated && !snapshot.reportVerified
-                    ? "filesystem"
-                    : state.response
-                      ? "invalid_output"
-                      : "unknown");
+      const snapshot = metrics(scope, true);
+      if (!snapshot) return;
+      publish(snapshot);
       try {
+        const { sdk_run_id, ...record } = snapshot;
+        void sdk_run_id; // SDK correlation belongs to monitor snapshots, not the existing log contract.
         logger.log({
-          runId: scope.runId,
-          run_duration_ms: performance.now() - state.started,
-          model_calls: scope.modelCalls,
-          tool_calls: scope.toolCalls,
-          input_tokens:
-            state.responses === scope.modelCalls ? state.inputTokens : null,
-          output_tokens:
-            state.responses === scope.modelCalls ? state.outputTokens : null,
-          web_search_calls: snapshot.webSearchCalls,
-          source_count:
-            status === "completed" ? snapshot.reportSources.length : 0,
-          report_created: snapshot.reportCreated,
-          report_verified: snapshot.reportVerified,
-          run_status: status,
-          error_type: errorType,
-          validation_rejections: snapshot.validationRejections,
-          search_successes: snapshot.searchSuccesses,
+          ...record,
+          run_status: snapshot.run_status as RunMetrics["run_status"],
         });
       } catch {
         // A logging sink cannot turn a verified outcome into a new run or retry.

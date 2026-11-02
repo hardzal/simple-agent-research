@@ -23,6 +23,7 @@ export async function createResearchRuntime(
       overrides.reportStore ??
       (await createReportStore(config.reportsDir, config.maxReportBytes)),
     ...(overrides.logger ? { logger: overrides.logger } : {}),
+    ...(overrides.onMetrics ? { onMetrics: overrides.onMetrics } : {}),
   });
   return {
     agent,

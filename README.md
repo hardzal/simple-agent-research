@@ -55,6 +55,20 @@ Membuka halaman Studio tidak memanggil layanan model atau pencarian. Mengirim pe
 
 Jika ingin menjalankannya dengan Podman atau Docker, ikuti [panduan container](docs/CONTAINERS.md). Panduan itu juga membahas izin folder laporan dan cara menghentikan container.
 
+### Metrics dan evals di Studio
+
+Buka http://localhost:4021/research-monitor untuk Playground Anvia dan panel metrics berdampingan. Panel developer ini memperbarui status, durasi, model/tool/search attempts, token usage yang tersedia, dan verifikasi laporan setiap 500 ms.
+
+Tombol **Run 5 offline cases** menjalankan suite eval native `research-offline` dan menampilkan progres serta hasil metric per case. Model/search pada suite ini scripted, tidak memakai API berbayar, dan tidak otomatis menilai chat atau kualitas LLM asli. Halaman ini adalah extension developer pada server Studio, bukan tab native Metrics/Evals yang belum tersedia pada UI Anvia 1.3.20.
+
+Jika port 4021 sudah dipakai Docker/proses lain, gunakan port berbeda dari Git Bash/WSL:
+
+```sh
+STUDIO_PORT=4022 pnpm run studio
+```
+
+Lalu buka http://localhost:4022/research-monitor. Riwayat monitor hanya dalam memori: maksimum 100 research runs, 20 eval runs, dan 30 menit sejak update terakhir; restart menghapusnya. Native trace/session stores tetap nonaktif.
+
 ## Menemukan hasil riset
 
 Jika berhasil, respons berstatus `completed` dan menyertakan lokasi laporan (`reportPath`) serta daftar sumber. Dengan konfigurasi lokal di atas, laporan tersimpan di:
@@ -87,7 +101,7 @@ File yang ada di folder laporan belum tentu hasil yang berhasil. Gunakan status 
 - Agent mendapat satu kesempatan memperbaiki draft yang ditolak, selama waktu dan jumlah pemanggilan masih tersedia. Aplikasi tidak mengulang otomatis permintaan yang gagal.
 - Proyek ini belum menyediakan riwayat percakapan permanen, login pengguna, atau layanan riset terjadwal.
 
-Container dan Studio sudah diuji menggunakan Podman serta Docker Desktop dengan kernel WSL2. Acceptance Docker mencakup UI, sandbox, bind mount, dan persistensi recreate; satu riset live juga completed. Ini bukan jaminan semua topik atau setiap run selalu berhasil. Tab native Traces/Evals belum aktif; ringkasan trace LIVE-03 dapat dibuka sebagai file JSON.
+Container dan Studio sudah diuji menggunakan Podman serta Docker Desktop dengan kernel WSL2. Acceptance Docker mencakup UI, sandbox, bind mount, dan persistensi recreate; satu riset live juga completed. Ini bukan jaminan semua topik atau setiap run selalu berhasil. Native trace store tetap nonaktif; ringkasan trace LIVE-03 dapat dibuka sebagai file JSON. Suite eval kini tersedia melalui API native dan panel developer `/research-monitor`, bukan tab Evals bawaan.
 
 ## Memeriksa proyek tanpa API key
 

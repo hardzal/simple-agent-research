@@ -17,6 +17,18 @@ Suite evaluasi memakai `@anvia/core/evals` dari dependency yang dipin. Lima krit
 
 Fixture behavior mencakup permintaan faktual, eksploratif, komparatif, ambigu, dan bukti kurang. Fixture dan rubric adalah regression check kontrak aplikasi; bukan pengukuran kemampuan reasoning atau generalisasi model asli.
 
+## Evals dan metrics melalui Studio
+
+Jalankan Studio seperti README, lalu buka `/research-monitor` pada port yang sama. Halaman developer ini menggabungkan Playground native dengan metrics riset dan hasil eval. Refresh berjalan setiap 500 ms; perubahan metric disimpan selama server hidup, maksimum 100 research runs/20 eval runs dengan TTL 30 menit sejak update terakhir.
+
+Tombol **Run 5 offline cases** memakai route native `POST /evals/research-offline/runs` dengan body `{}`. Suite yang sama diekspor `src/evaluation/offline-research.ts` dan dipakai `pnpm run eval:offline`, tanpa import Vitest dari runtime. `GET /evals` dapat dipakai untuk memeriksa registrasi; `GET /research-monitor/state` menyediakan snapshot aman.
+
+Reporter mencatat eval core run ID, status running/passed/failed, progres metric/case, native case totals dan score boolean/numerik. Mandatory failure serta target/metric errors tidak ditutupi supporting score. Observed eval core run ID berbeda dari envelope run ID HTTP Studio. API native menunggu hasil akhir; polling monitor berjalan independen selama POST tersebut.
+
+Suite ini selalu memakai scripted model, fake search, dan filesystem sementara yang dibersihkan. Menjalankannya tidak memanggil LLM/Tavily asli, meskipun Playground pada halaman yang sama dikonfigurasi dengan provider nyata. Membuka halaman juga tidak memanggil provider. Mengirim prompt melalui Playground tetap merupakan penggunaan API nyata dan dapat berbayar.
+
+Ini bukan penilaian kualitas setiap chat, bukan LLM-as-judge, dan bukan bukti kualitas model asli. UI Anvia 1.3.20 tidak menyediakan halaman Evals/Metrics native; monitor ini extension developer pada server Studio, sedangkan native Traces/session stores tetap nonaktif. Restart menghapus history monitor. Tidak ada perubahan acceptance PRD atau paid rerun tersirat.
+
 ## Supporting quality: tetap perlu review manusia
 
 Periksa laporan terhadap permintaan dan snippet sumber yang tersedia:

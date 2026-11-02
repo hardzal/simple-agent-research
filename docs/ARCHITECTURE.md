@@ -50,35 +50,35 @@ Runtime riset adalah komponen aplikasi, bukan agent kedua. Tidak ada queue, data
 
 ## 3. Tanggung jawab komponen
 
-| Modul aktual                                                    | Tanggung jawab                                                               |
-| --------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `src/config/`                                                   | Parse environment dan default; validasi konfigurasi                          |
-| `src/providers/llm.ts`                                          | Membuat model Anvia dari endpoint/model terkonfigurasi                       |
-| `src/providers/search-provider.ts`                              | Interface search dan implementasi Tavily                                     |
-| `src/agent/research.agent.ts`                                   | Satu factory/definisi agent dan registrasi tiga tools                        |
-| `src/agent/research.instructions.ts`                            | Behavior research agent yang diturunkan dari PRD                             |
-| `src/application/research-runner.ts`                            | Factory runtime/headless yang memakai agent yang sama                        |
-| `src/application/research-policy.ts`                            | Input stateless, parsing keputusan dan finalization                          |
-| `src/application/scoped-agent.ts`                               | Binding scope per generate/stream, lifecycle, recovery dan cleanup           |
-| `src/application/scoped-studio.ts`                              | Studio tanpa clone/session/trace stores yang melewati scope                  |
-| `src/application/studio-server.ts`                              | HTTP server, loopback/Host guard, startup dan shutdown                       |
-| `src/tools/`                                                    | Schema dan handler webSearch/writeFile/readFile                              |
-| `src/services/source-registry.ts`                               | ID sumber, normalisasi URL, deduplikasi                                      |
-| `src/services/report-validation.ts`                             | Validasi Markdown dan provenance                                             |
-| `src/services/report-store.ts`                                  | I/O pada lokasi laporan yang dibatasi                                        |
-| `src/services/run-metrics.ts`                                   | Metrics dan logging yang aman                                                |
-| `src/schemas/`                                                  | Research response, keputusan model, dan kontrak hasil                        |
-| `src/studio.ts`                                                 | Mendaftarkan runtime/agent yang sama ke Studio                               |
-| `src/index.ts`                                                  | Entry point tipis untuk pemanggilan programatik/headless                     |
-| `tests/research.evaluation.test.ts`                             | Suite SDK mandatory, quality fixture dan negative controls                   |
-| `tests/research.behavior.test.ts`, `tests/fixtures/research.ts` | Supporting behavior dan scripted fixtures                                    |
-| `src/compatibility/`, `scripts/live.ts`                         | Guarded LIVE-01/02/03 runners; terpisah dari ordinary checks                 |
-| `scripts/container-acceptance.mjs`                              | Acceptance image/UI dan host round-trip dengan fake providers                |
-| `tests/`                                                        | Unit, HTTP server, integration, behavior, eval dan live-runner offline tests |
+| Modul aktual                                                    | Tanggung jawab                                                                  |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `src/config/`                                                   | Parse environment dan default; validasi konfigurasi                             |
+| `src/providers/llm.ts`                                          | Membuat model Anvia dari endpoint/model terkonfigurasi                          |
+| `src/providers/search-provider.ts`                              | Interface search dan implementasi Tavily                                        |
+| `src/agent/research.agent.ts`                                   | Satu factory/definisi agent dan registrasi tiga tools                           |
+| `src/agent/research.instructions.ts`                            | Behavior research agent yang diturunkan dari PRD                                |
+| `src/application/research-runner.ts`                            | Factory runtime/headless yang memakai agent yang sama                           |
+| `src/application/research-policy.ts`                            | Input stateless, parsing keputusan dan finalization                             |
+| `src/application/scoped-agent.ts`                               | Binding scope per generate/stream, lifecycle, recovery dan cleanup              |
+| `src/application/scoped-studio.ts`                              | Studio tanpa trace/session cloning; remount public app extensions setelah start |
+| `src/application/studio-server.ts`                              | HTTP server, loopback/Host guard, startup dan shutdown                          |
+| `src/tools/`                                                    | Schema dan handler webSearch/writeFile/readFile                                 |
+| `src/services/source-registry.ts`                               | ID sumber, normalisasi URL, deduplikasi                                         |
+| `src/services/report-validation.ts`                             | Validasi Markdown dan provenance                                                |
+| `src/services/report-store.ts`                                  | I/O pada lokasi laporan yang dibatasi                                           |
+| `src/services/run-metrics.ts`                                   | Metrics dan logging yang aman                                                   |
+| `src/schemas/`                                                  | Research response, keputusan model, dan kontrak hasil                           |
+| `src/studio.ts`                                                 | Mendaftarkan runtime/agent yang sama ke Studio                                  |
+| `src/index.ts`                                                  | Entry point tipis untuk pemanggilan programatik/headless                        |
+| `tests/research.evaluation.test.ts`                             | Suite SDK mandatory, quality fixture dan negative controls                      |
+| `tests/research.behavior.test.ts`, `tests/fixtures/research.ts` | Supporting behavior dan scripted fixtures                                       |
+| `src/compatibility/`, `scripts/live.ts`                         | Guarded LIVE-01/02/03 runners; terpisah dari ordinary checks                    |
+| `scripts/container-acceptance.mjs`                              | Acceptance image/UI dan host round-trip dengan fake providers                   |
+| `tests/`                                                        | Unit, HTTP server, integration, behavior, eval dan live-runner offline tests    |
 
 Gunakan pemisahan modul biasa dan dependency injection lewat parameter/factory. M1 tidak membutuhkan container DI, repository database, atau lapisan Clean Architecture tambahan.
 
-Tidak ada modul `run-state`, `resource-limiter`, atau `src/evals` terpisah: scope/deadline/model counters dimiliki scoped agent; guard model produk dan metrics di research agent; registry, quota tools, revision dan report flags ditutup oleh factory research tools. Suite SDK eval berada dalam tests agar ordinary checks tetap offline.
+Tidak ada modul `run-state`, `resource-limiter`, atau `src/evals` terpisah: scope/deadline/model counters dimiliki scoped agent; guard model produk dan metrics di research agent; registry, quota tools, revision dan report flags ditutup oleh factory research tools. Suite SDK eval reusable berada di `src/evaluation/offline-research.ts`; tests dan Studio memakai factory yang sama dengan scripted model/search agar ordinary checks tetap offline.
 
 ## 4. Boundary run dan state
 
@@ -325,6 +325,18 @@ Dependency yang dapat diganti dalam test: model, search provider, clock/deadline
 Evaluasi Fase 6 memakai export `@anvia/core/evals` pada versi yang sudah dipin, bukan command SDK yang diasumsikan tersedia. Mandatory cases menggunakan fixture runtime nyata dengan model/search scripted; supporting quality menggunakan fixture dan rubrik eksplisit, tanpa paid judge. Gate harus menolak mandatory failure, target/metric error, dan suite mandatory yang tidak ditemukan—bukan merata-ratakan hasil supporting untuk menutupi kegagalan.
 
 LIVE-03 terpisah dari ordinary checks. `scripts/live.ts --case LIVE-03` memerlukan opt-in, menolak budget di atas batas PLAN, dan menjalankan satu POST streaming pada scoped Studio lokal sementara. Harness membandingkan byte host dengan hasil application read-back, memeriksa metrics/tool events, lalu menyimpan ringkasan evidence dan snippet sumber publik terpakai di reports root. Store trace/session SDK tetap nonaktif; ringkasan acceptance bukan raw JSONL atau product memory. Server dihentikan setelah probe, tidak ada retry/fallback otomatis. Detail command dan rubric kualitas ada di [EVALUATION](EVALUATION.md); hasil aktual dimiliki CONTEXT.
+
+### Developer monitor Studio
+
+`createResearchStudio` menghubungkan callback `onMetrics` dari runtime dengan `src/services/studio-monitor.ts`, mendaftarkan suite `research-offline` melalui opsi native `evals`, dan memasang `/research-monitor` serta `/research-monitor/state` pada app publik. Halaman developer (`src/application/studio-monitor-page.ts`) menampilkan Playground native dalam iframe dan panel metrics/eval dengan polling 500 ms. Ini bukan UI produk terpisah atau tab Metrics/Evals bawaan: bundle UI Studio 1.3.20 belum memiliki halaman tersebut.
+
+Snapshot `RunMetricsSnapshot` menambahkan status observasi `running` dan korelasi `sdk_run_id` ke metrics akhir; kontrak status `ResearchResponse` tidak berubah. Update terjadi pada start, reservasi model/tool attempts, response, search attempts/tool completion, dan finalisasi. Counters tetap dimiliki runtime; sink hanya mengamati dan tidak boleh memicu retry atau mengganti outcome. Token total belum lengkap/tidak tersedia tetap null. Application run ID, SDK run ID, dan eval core run ID tidak diasumsikan identik.
+
+Retensi per instance: maksimum 100 research runs, 20 eval runs, TTL 30 menit sejak update terakhir; eviction/defensive copies dan schema allowlist mencegah history tak terbatas serta kebocoran mutable state. Monitor tidak menyimpan prompt, history, query, URL, isi/path laporan, raw response atau exception. Semuanya ephemeral, bukan product memory atau database. Tidak ada perubahan endpoint/model, budget, transport retry, atau tiga application tools.
+
+Suite offline menghasilkan progress dan score melalui `EvalReporter` SDK. Mandatory contract failure dan evaluator/target error tetap gagal/invalid; supporting fixture feedback bukan semantic judge. Native `POST /evals/research-offline/runs` menunggu seluruh suite; monitor dapat di-poll selama eksekusi. Tidak ada automatic eval pada chat, real-model eval, atau paid judge.
+
+Studio 1.3.20 membangun ulang app pada `start()` (termasuk dari `serve()`). Factory scoped memakai subclass dengan override public `start()` untuk memanggil `configureApp` pada app baru, setelah SDK memasang Host/Origin guards. Constructor juga memasangnya untuk in-process use. Tidak ada private-map/prototype mutation atau dependency patch. Route retention sesudah startup dan guard origin diuji melalui HTTP server nyata. Trace/session stores tetap nonaktif untuk mempertahankan scoped agent.
 
 ## 11. Status verifikasi kontrak teknis
 

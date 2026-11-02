@@ -1,22 +1,22 @@
 # Project Context — Simple Contextual Research Agent
 
-**Diperbarui:** 2026-10-29
+**Diperbarui:** 2026-11-02
 
 **Milestone aktif:** M1
 
-**Status:** Fase 1–6 merged melalui PR #2–#5; follow-up LIVE-03 dan Docker Desktop/WSL2 passed; kualitas WITH_NOTES dan acceptance pemilik pending
+**Status:** Fase 1–6 dan follow-up acceptance PR #7 merged; monitor metrics/evals verified offline/UI pada branch fitur; kualitas M1 WITH_NOTES dan acceptance pemilik tetap pending
 
 **Repository:** https://github.com/hardzal/simple-agent-research
 
 **Base branch:** master
 
-**Branch aktif:** fix/m1-live-acceptance (worktree acceptance terpisah)
+**Branch aktif:** feat/studio-tracing-evals
 
 Dokumen ini menyimpan kondisi aktual dan titik lanjut. Requirement dimiliki [PRD.md](PRD.md), desain di [ARCHITECTURE.md](ARCHITECTURE.md), task di [PLAN.md](PLAN.md), dan workflow di [AGENTS.md](../AGENTS.md).
 
 ## 1. Kondisi yang telah diverifikasi
 
-State terkini ada di §13; §12 dan bagian sebelumnya merupakan riwayat bukti pada waktu pelaksanaan. Fetch terbaru membuktikan `origin/master` pada `801ee7b`, memuat merge PR #5 (Fase 6) dan #6 (dokumentasi). Fase 5 di-merge melalui [PR #4](https://github.com/hardzal/simple-agent-research/pull/4) pada `a39bac1`; fetch membuktikan commit `c2d0ce4` sebagai ancestor master. Branch Fase 6 dibuat dari `origin/master` tersebut. Riwayat bukti Fase 5 ada di §11. Riwayat Fase 1–4 di bawah mempertahankan bukti saat eksekusi; blocker publikasi Fase 4 sudah selesai dengan merge [PR #3](https://github.com/hardzal/simple-agent-research/pull/3) pada `476821c`. Fetch sesi Fase 5 membuktikan `origin/master` memuat `3fa927b` sebagai ancestor. Podman dipilih pengguna untuk build/test; Docker Desktop belum diverifikasi.
+State terkini ada di §14; §13 dan bagian sebelumnya merupakan riwayat bukti pada waktu pelaksanaan. Fetch 2026-11-02 membuktikan `origin/master` pada `63ff9ee`, memuat merge PR #5 (Fase 6), #6 (dokumentasi), dan #7 (follow-up acceptance). Fase 5 di-merge melalui [PR #4](https://github.com/hardzal/simple-agent-research/pull/4) pada `a39bac1`; fetch membuktikan commit `c2d0ce4` sebagai ancestor master. Branch Fase 6 dibuat dari `origin/master` tersebut. Riwayat bukti Fase 5 ada di §11. Riwayat Fase 1–4 di bawah mempertahankan bukti saat eksekusi; blocker publikasi Fase 4 sudah selesai dengan merge [PR #3](https://github.com/hardzal/simple-agent-research/pull/3) pada `476821c`. Fetch sesi Fase 5 membuktikan `origin/master` memuat `3fa927b` sebagai ancestor. Podman dipilih pengguna untuk build/test; Docker Desktop belum diverifikasi.
 
 Setelah pengguna menyatakan Fase 3 sudah di-merge, `git fetch origin` membuktikan `origin/master` pada `b77fcd0` (merge PR #2) dan `16f081f` merupakan ancestor-nya. Merge ini mencakup implementasi Fase 1–3. Branch `phase/04-report-validation` dibuat dari baseline tersebut. Commit aturan per-fitur yang sebelumnya lokal dibawa sebagai `34535b7`; implementasi Fase 4 tidak ditumpuk pada PR Fase 3.
 
@@ -285,3 +285,29 @@ Status: **gate executable/offline/Docker passed; kualitas WITH_NOTES, review man
 - PRD §9 menandai gate live/trace export dan Docker Desktop/WSL2 verified. FR Must acceptance tetap unchecked sampai catatan kualitas diputuskan pemilik. Review/merge Fase 1–6 sudah terbukti; follow-up ini sendiri belum merged dan M1 **belum dinyatakan diterima penuh**.
 - Native Traces/Evals tetap belum aktif; WIP branch terpisah tidak diambil alih. Tidak ada database, conversation memory, UI produk baru, atau live runs tambahan.
 - Publikasi draft PR terhalang autentikasi: `gh` tidak tersedia, `GH_TOKEN`/`GITHUB_TOKEN` environment tidak tersedia, browser GitHub masih Sign in. Tidak mengambil credential dari file lain atau mengarang PR URL. Status push SSH dilaporkan terpisah saat handoff; jangan merge/ready otomatis.
+
+## 14. Follow-up — Studio metrics dan offline eval live viewing
+
+Atas permintaan pengguna, pekerjaan dilanjutkan pada `feat/studio-tracing-evals`. `git fetch origin` membuktikan acceptance follow-up sudah merged melalui PR #7; branch di-fast-forward dari `801ee7b` ke `origin/master` `63ff9ee` tanpa menghapus tiga perubahan eval yang sudah ada. Modul reusable diverifikasi dengan 10 focused tests, format/lint/typecheck lalu di-commit terpisah sebagai `0bb72f2`.
+
+### Implementasi dan batasnya
+
+- `createResearchStudio` mendaftarkan suite offline native `research-offline` serta `/research-monitor`, client script, dan safe JSON state. Halaman developer menempatkan Playground native di samping panel metrics/eval; refresh polling 500 ms. Ini extension developer pada server Studio, **bukan tab Metrics/Evals native**, yang tidak terdapat dalam bundle UI Studio 1.3.20.
+- Metrics runtime mengamati start, reservasi model/tool/search attempts, response, tool completion, dan finalisasi. Application run ID dan SDK run ID terpisah; status observasi `running` tidak mengubah `ResearchResponse`. Token total yang pending/tidak tersedia tetap null. Satu logger akhir dan seluruh policy/counters/finalizer tetap dipertahankan; callback yang melempar tidak mengganti hasil atau memicu retry.
+- Store per Studio meng-allowlist metric numerik/status saja; prompt/history/query/sumber/isi/path laporan/raw payload/error tidak disimpan. Retention maksimum 100 research runs, 20 eval runs, TTL 30 menit sejak update terakhir, dengan defensive copies dan terminal regression guard. Tidak ada database/persistence restart/conversation memory.
+- EvalReporter memperlihatkan core eval run ID, metric outcomes dan native totals. Mandatory failure dan target/evaluator invalid tetap ditolak; supporting fixture score bukan semantic judge. Offline eval tidak menggunakan provider produksi dan tidak menilai chat secara otomatis. Tidak menjalankan LIVE-01/02/03, live-model eval, paid judge, atau mengubah endpoint/model/budget.
+
+### Verifikasi aktual
+
+- TDD RED: enam monitor/API tests awal gagal karena suite/route belum tersedia. GREEN membuktikan in-flight/final buffered dan streaming metrics, report round-trip, safe failure, isolasi, dan eval native. Regression tambahan mencakup budget/invalid-tool attempts, direct-tool rejection, sink failure, bounded retention/TTL, mandatory failure meski supporting pass, serta target error.
+- Real HTTP smoke menemukan SDK `start()` membuat ulang app: route monitor menjadi 404 meskipun in-process tests lulus. Regression HTTP direproduksi RED, lalu GREEN dengan `configureApp` pada constructor dan sesudah public `start()` di factory scoped. Tidak mengakses private SDK fields atau mematikan Host/Origin guard; untrusted Origin terbukti 403.
+- `pnpm install --frozen-lockfile` dan full `pnpm run check` lulus: format/lint/typecheck/build, **154 unit/server**, **52 integration**, **6 SDK eval wrapper**, **12 behavior**. Mandatory suite 5/5 dan metric outcomes 10/10 pass. Focused monitor/store/server tests 25/25 pass. Independent read-only source review tidak menemukan security/logic issue konkret; bukan owner acceptance.
+- Browser nyata di server fixture port 4023 menampilkan native Playground dan panel Connected. Prompt melalui Playground memakai fake model/search: completed, 4 model calls, 3 tool calls, 1 search, report verified; input/output usage unavailable. Tombol offline eval memperlihatkan 5/5 passed, 0 failed, 0 invalid, serta kedua metric pada EVAL-01–05. Browser console/JS errors kosong. Fixture server, script, dan temporary report root dibersihkan setelah pemeriksaan.
+- Image source terbaru berhasil dibangun dengan frozen install pada tag `localhost/simple-agent-research:studio-monitor` dan tag acceptance `:phase5`. `node scripts/container-acceptance.mjs docker` passed: production UI, non-root/read-only root, CPU/memory config, fake research completed, host byte equality dan persistensi recreate; fixture acceptance dibersihkan. Container pengguna tidak direcreate.
+- **Blocked/not verified:** probe tambahan khusus monitor/native offline eval di container ditolak pada approval. Tidak diulang melalui command/jalur lain. Pengguna kemudian memilih eksplisit melanjutkan finalisasi tanpa probe tambahan tersebut. Acceptance Docker utama di atas tidak diklaim sebagai bukti panel/eval container yang belum diuji langsung.
+
+Dokumen README/ARCHITECTURE/DEVELOPMENT/EVALUATION/PLAN diselaraskan; 53 tautan Markdown lokal/heading pada 10 dokumen dan `git diff --check` valid. M1 quality WITH_NOTES/acceptance pemilik tidak diubah oleh keberhasilan fixture monitor. Native Traces/session stores tetap nonaktif dan trace export acceptance tetap kategori evidence terpisah.
+
+Studio lokal yang sebelumnya dijalankan coding-agent pada port 4022 direstart agar memuat source terbaru. `/research-monitor/state` HTTP 200; browser `/research-monitor` Connected dan tombol offline eval kembali 5/5 pass. Tidak mengirim prompt riset nyata pada instance produksi; tabel research masih kosong hingga penggunaan manual. Container pengguna pada 4021 tetap healthy dan tidak direcreate, sehingga tidak dianggap sudah memuat source baru.
+
+Draft PR masih blocked: `gh` tidak tersedia, boolean token GitHub environment false, dan browser repository menampilkan Sign in. Lookup publik open PR untuk head `feat/studio-tracing-evals` masih kosong; tidak mengambil credential dari file lain atau mengarang URL PR. Jangan merge atau mengubah ready otomatis.

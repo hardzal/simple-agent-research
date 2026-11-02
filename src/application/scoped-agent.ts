@@ -42,6 +42,7 @@ type ScopedAgentOptions = {
   recover?(scope: RunScope, error: unknown): string;
   finalize(scope: RunScope, event: AgentFinishEvent): void | Promise<void>;
   onClose?(scope: RunScope): void;
+  onProgress?(scope: RunScope): void;
 };
 
 /** Each SDK instance closes over one run; the registered definition holds no live scope. */
@@ -64,6 +65,13 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
     retries: false,
     tools: options.tools(inactive),
   };
+  function progress(scope: RunScope) {
+    try {
+      options.onProgress?.(scope);
+    } catch {
+      /* Telemetry never controls execution. */
+    }
+  }
   function bind(settings: AgentRunOptions) {
     settings = options.prepareInput?.(settings) ?? settings;
     const controller = new AbortController();
@@ -123,13 +131,16 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
               scope.assertActive();
               options.beforeCompletion?.(scope);
               scope.modelCalls++;
+              progress(scope);
             },
             onToolInput() {
               scope.assertActive();
               scope.toolCalls++;
+              progress(scope);
             },
             onCompletionResponse({ response }) {
               const transformed = options.transformResponse?.(scope, response);
+              progress(scope);
               return transformed ? { response: transformed } : undefined;
             },
           },
@@ -138,6 +149,7 @@ export function createScopedAgent(options: ScopedAgentOptions): Agent {
           onStart(event) {
             scope.assertActive();
             scope.sdkRunId = event.runId;
+            progress(scope);
           },
           onStepFinish() {
             scope.assertActive();

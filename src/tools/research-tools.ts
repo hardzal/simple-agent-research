@@ -18,6 +18,7 @@ export function createResearchTools(
     config: AppConfig;
     searchProvider: SearchProvider;
     reportStore: ReportStore;
+    onProgress?: () => void;
   },
 ) {
   const { config, searchProvider, reportStore } = dependencies;
@@ -41,6 +42,13 @@ export function createResearchTools(
     | undefined;
   let reportVerified = false;
   let errorType: SafeErrorCategory | null = null;
+  function progress() {
+    try {
+      dependencies.onProgress?.();
+    } catch {
+      /* Observing cannot change tool results. */
+    }
+  }
   function check() {
     if (status) throw new Error("RUN_TERMINAL");
     if (signal.aborted) {
@@ -63,6 +71,7 @@ export function createResearchTools(
       return await work();
     } finally {
       busy = false;
+      progress();
     }
   }
   function parse<T>(schema: z.ZodType<T>, input: unknown): T {
@@ -79,6 +88,7 @@ export function createResearchTools(
         throw new Error("SEARCH_QUOTA_EXCEEDED");
       }
       webSearchCalls++;
+      progress();
       try {
         const hits = await searchProvider.search(query, {
           maxResults: 5,

@@ -2,6 +2,12 @@ import type { Studio } from "@anvia/studio";
 import type { AppConfig } from "../config/index.js";
 import { createResearchRuntime } from "./research-runner.js";
 import { createScopedStudio } from "./scoped-studio.js";
+import { createOfflineResearchEvalSuite } from "../evaluation/offline-research.js";
+import { createStudioMonitor } from "../services/studio-monitor.js";
+import {
+  studioMonitorPage,
+  studioMonitorClient,
+} from "./studio-monitor-page.js";
 
 type RuntimeOverrides = Parameters<typeof createResearchRuntime>[1];
 
@@ -10,8 +16,43 @@ export async function createResearchStudio(
   config: AppConfig,
   overrides: RuntimeOverrides = {},
 ): Promise<Studio> {
-  const runtime = await createResearchRuntime(config, overrides);
-  return createScopedStudio(runtime.agent, { ui: true });
+  const monitor = createStudioMonitor();
+  const runtime = await createResearchRuntime(config, {
+    ...overrides,
+    onMetrics(snapshot) {
+      monitor.recordMetrics(snapshot);
+      overrides.onMetrics?.({ ...snapshot });
+    },
+  });
+  return createScopedStudio(runtime.agent, {
+    ui: true,
+    evals: [
+      {
+        ...createOfflineResearchEvalSuite(),
+        reporters: [monitor.evalReporter],
+      },
+    ],
+    configureApp(app) {
+      app.get("/research-monitor", (c) => {
+        c.header("Cache-Control", "no-store");
+        c.header(
+          "Content-Security-Policy",
+          "default-src 'self'; script-src 'self'; style-src 'unsafe-inline'; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'",
+        );
+        return c.html(studioMonitorPage);
+      });
+      app.get("/research-monitor/client.js", (c) => {
+        c.header("Cache-Control", "no-store");
+        return c.body(studioMonitorClient, 200, {
+          "Content-Type": "text/javascript; charset=utf-8",
+        });
+      });
+      app.get("/research-monitor/state", (c) => {
+        c.header("Cache-Control", "no-store");
+        return c.json(monitor.snapshot());
+      });
+    },
+  });
 }
 
 /**

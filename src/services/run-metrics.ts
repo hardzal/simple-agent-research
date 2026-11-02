@@ -30,6 +30,11 @@ export type RunMetrics = {
   validation_rejections: number;
   search_successes: number;
 };
+export type RunMetricsSnapshot = Omit<RunMetrics, "run_status"> & {
+  run_status: RunStatus | "running";
+  sdk_run_id: string | null;
+};
+
 export function createRunLogger(sink: (json: string) => void) {
   return {
     log(metrics: RunMetrics): void {

@@ -139,6 +139,53 @@ describe("production Studio server", () => {
     expect(s.search).not.toHaveBeenCalled();
   });
 
+  it("preserves monitor routes after SDK start rebuilds the app and keeps Host/Origin guards", async () => {
+    const f = await fixture();
+    const studio = await createResearchStudio(
+      { ...config, reportsDir: f.root },
+      {
+        model: f.model,
+        searchProvider: { search: f.search },
+        reportStore: { write: f.write, read: f.read },
+        logger: { log: f.log },
+      },
+    );
+    const port = await freePort();
+    const controller = new AbortController();
+    const closed = serveResearchStudio(
+      studio,
+      { studioPort: port },
+      controller.signal,
+    );
+    void closed.catch(() => {});
+    cleanups.push(async () => {
+      controller.abort();
+      await closed;
+    });
+    await listening(port);
+    expect((await http(port, "/research-monitor/state")).status).toBe(200);
+    expect(
+      (await http(port, "/research-monitor", undefined, "text/html")).status,
+    ).toBe(200);
+    expect((await http(port, "/research-monitor/client.js")).status).toBe(200);
+    const denied = await studio.app.request(
+      new Request(`http://127.0.0.1:${port}/research-monitor/state`, {
+        headers: { Origin: "https://untrusted.test" },
+      }),
+    );
+    expect(denied.status).toBe(403);
+    await http(port, "/agents/research/runs", run());
+    const snapshot = JSON.parse(
+      (await http(port, "/research-monitor/state")).body,
+    );
+    expect(snapshot.runs[0]).toMatchObject({
+      run_status: "completed",
+      report_verified: true,
+    });
+    expect(f.write).toHaveBeenCalledOnce();
+    expect(f.read).toHaveBeenCalledOnce();
+  });
+
   it.each([false, true])(
     "keeps policy and real report round-trip over HTTP stream=%s",
     async (stream) => {

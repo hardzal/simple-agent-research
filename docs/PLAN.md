@@ -2,7 +2,7 @@
 
 **Status:** Fase 1–6 merged melalui PR #2–#5; follow-up teknis LIVE-03/Docker passed pada `fix/m1-live-acceptance`; review kualitas dan penerimaan pemilik pending
 
-**Diperbarui:** 2026-10-29
+**Diperbarui:** 2026-11-02
 
 **Requirement:** [PRD.md](PRD.md)
 
@@ -49,7 +49,7 @@ Catatan riwayat: dependency dan bukti pada Fase 1–3 di bawah mencatat kondisi 
 | LIVE-03              | follow-up executable E2E passed; kualitas owner pending | Docker HTTP Studio completed, report/trace/host round-trip; CONTEXT §13                                          |
 | P6-03                | dokumentasi merged; acceptance ledger diperbarui        | README, EVALUATION, PRD §9, dan CONTEXT §12                                                                      |
 
-Fase 1–6 sudah merged. Follow-up `fix/m1-live-acceptance` dibuat dari `origin/master` terbaru pada worktree terpisah; perubahan tracing/evals yang belum selesai tidak dibawa. Gate executable LIVE-03, Docker Desktop/WSL2, Compose dan checks offline kini passed. Review coding-agent terhadap satu laporan berstatus WITH_NOTES; review manusia, acceptance M1 akhir, dan review/merge follow-up masih pending. Bukti gagal terdahulu tidak dihapus dan tidak ada live rerun otomatis.
+Fase 1–6 sudah merged. Follow-up `fix/m1-live-acceptance` dibuat dari `origin/master` terbaru pada worktree terpisah; perubahan tracing/evals yang belum selesai tidak dibawa. Gate executable LIVE-03, Docker Desktop/WSL2, Compose dan checks offline kini passed. Review coding-agent terhadap satu laporan berstatus WITH_NOTES; review manusia, acceptance M1 akhir, dan follow-up sudah merged melalui PR #7; acceptance kualitas pemilik tetap pending. Bukti gagal terdahulu tidak dihapus dan tidak ada live rerun otomatis.
 
 ## 3. Fase 1 — Project foundation
 
@@ -226,3 +226,16 @@ Dalam PLAN/CONTEXT dan PR, tulis:
 6. Branch, draft PR, dan titik lanjut setelah owner review/merge.
 
 Jangan menandai M1 selesai hanya karena agent menghasilkan teks laporan atau karena seluruh checkbox dokumentasi sudah terisi.
+
+## 12. Follow-up — Studio metrics dan offline eval viewing
+
+Atas permintaan pemilik, lanjutkan branch `feat/studio-tracing-evals` dari `origin/master` yang sudah memuat merge acceptance PR #7. Ini extension developer untuk FR-14/FR-15/evaluation, bukan fase produk baru, native persisted tracing, database, conversation memory, atau izin paid runs tambahan.
+
+| Task   | Hasil dan pemeriksaan                                                                                                | Status              |
+| ------ | -------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| OBS-01 | Ekstrak suite offline reusable, SDK/Studio typed compatibility, cleanup, no-fetch/plain-Node tests                   | verified offline    |
+| OBS-02 | Safe metrics in-flight/final, per-Studio bounded retention, sink-failure isolation, policy/invalid-tool/budget tests | verified offline    |
+| OBS-03 | Registrasi native eval API, metric reporter, monitor developer dengan Playground native dan polling                  | verified offline/UI |
+| OBS-04 | Regression real HTTP sesudah SDK start, Host/Origin guard, browser fake research dan tombol eval                     | verified offline/UI |
+
+Evidence dan publikasi dimiliki CONTEXT §14. Gate: frozen install, format/lint/typecheck/build, seluruh unit/integration/offline eval, local-link/diff checks, serta smoke browser tanpa API asli. Browser smoke tidak menggantikan live provider acceptance atau review kualitas M1. Image/Compose build terbaru dilaporkan terpisah; tidak memakai image lama sebagai bukti source terbaru.
