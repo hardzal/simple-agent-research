@@ -1,6 +1,6 @@
 # Evaluasi dan acceptance M1
 
-Requirement tetap dimiliki [PRD §7–9](PRD.md#7-evaluasi-dan-acceptance-criteria); bukti eksekusi terbaru dan keputusan acceptance ada di [CONTEXT §12](CONTEXT.md#12-fase-6--evaluasi-dan-finalisasi). Dokumen ini menjelaskan cara menjalankan dan membaca hasil, bukan mengubah kriteria produk.
+Requirement tetap dimiliki [PRD §7–9](PRD.md#7-evaluasi-dan-acceptance-criteria); bukti eksekusi terbaru dan keputusan acceptance ada di [CONTEXT §13](CONTEXT.md#13-follow-up-acceptance--docker-desktopwsl2-dan-live-03). Dokumen ini menjelaskan cara menjalankan dan membaca hasil, bukan mengubah kriteria produk.
 
 ## Offline: tanpa API key atau biaya provider
 
@@ -41,7 +41,7 @@ ALLOW_LIVE_TESTS=true REPORTS_DIR=./reports pnpm exec node --env-file=.env --imp
 Runner memuat config yang sama, membuat scoped Studio sementara pada loopback, menunggu readiness tanpa provider call, lalu mengirim **satu** request streaming untuk topik publik tetap: “Research tentang apa itu Redis dan fungsinya.” Setelah selesai/gagal, Studio dihentikan. Tidak perlu menyalakan `pnpm run studio` atau Compose bersamaan untuk case ini.
 
 - Case ID dan opt-in wajib; kredensial/config invalid ditolak sebelum provider call.
-- Budget lebih besar dari 5 model attempts, 3 search calls, atau 60 detik ditolak; budget yang lebih kecil tetap dihormati. Tidak ada transport retry atau automatic rerun.
+- Budget lebih besar dari 5 model attempts, 3 search calls, atau 180 detik ditolak; budget yang lebih kecil tetap dihormati. Default parser tetap 60 detik; acceptance 3 menit memerlukan `MAX_EXECUTION_MS=180000` dan otorisasi baru sesuai PRD §5. Evidence mencatat `maxExecutionMs`, `maxModelAttempts`, dan `maxSearchCalls` efektif. Tidak ada transport retry atau automatic rerun.
 - Endpoint/model berasal dari config yang sama; runner tidak menggantinya atau memilih fallback.
 - Hasil sukses memerlukan terminal response `completed`, search yang sukses, satu write dan read-back, metrics satu run, ketiga tool events, serta byte laporan host yang sama dengan konten read-back tervalidasi.
 - Host read oleh harness adalah pemeriksaan acceptance di luar application tool; tidak menambah kuota `readFile` milik agent.
@@ -52,7 +52,7 @@ Runner memuat config yang sama, membuat scoped Studio sementara pada loopback, m
 
 Exit nonzero berarti blocked/failure, bukan skipped-as-pass. Failure evidence membedakan tahap startup/readiness, research, verification, host report, atau trace; mencatat status/counters/category yang tersedia tanpa raw error. Jangan rerun otomatis setelah kegagalan. Catat hasil sebenarnya di CONTEXT dan minta otorisasi baru jika ingin menghabiskan satu live run tambahan.
 
-LIVE-03 ini memakai Studio lokal dan filesystem host. Isolasi container, bind mount, dan persistensi recreate dibuktikan oleh acceptance container terpisah; hasil lokal bukan bukti Docker Desktop.
+Command host di atas memakai Studio lokal dan filesystem host; hasilnya sendiri bukan bukti Docker Desktop. Follow-up §13 menjalankan fungsi harness yang sama dari image Docker terbaru, dengan provider environment pengguna, opt-in/case eksplisit, sandbox, dan reports bind mount. Satu POST tetap dikirim ke HTTP Studio sementara di dalam container; write/read-back dibandingkan dengan file bind mount, lalu file dan trace diverifikasi lagi dari Windows host. Acceptance fake container terpisah membuktikan persistensi recreate. Native trace/session store tetap nonaktif.
 
 ## Container acceptance terpisah
 

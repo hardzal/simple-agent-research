@@ -1,8 +1,8 @@
 # Architecture — Simple Contextual Research Agent
 
-**Status:** Fase 1–5 merged melalui PR #2/#3/#4; Fase 6 tersedia dan offline verified; live acceptance blocked
+**Status:** Fase 1–6 merged; follow-up executable LIVE-03 dan Docker Desktop/WSL2 passed; review kualitas/pemilik pending
 
-**Diperbarui:** 2026-10-28
+**Diperbarui:** 2026-10-29
 
 **Requirement:** [PRD.md](PRD.md)
 
@@ -128,6 +128,8 @@ Recovery berada pada adapter yang menangkap exception asli SDK sebelum scope dit
 ## 5. Model provider dan konfigurasi
 
 Gunakan `@anvia/openai` dengan custom `baseUrl`. Default awal yang akan diuji adalah Chat Completions (`LLM_API=chat`). Jangan menganggap URL berakhiran /v1 juga mendukung Responses API.
+
+Default gateway/model tetap tersedia; konfigurasi pengguna untuk follow-up acceptance memakai proxy OpenAI-compatible `http://host.docker.internal:20128/v1` dari Docker dan model `cx/gpt-6.1-sol`. Untuk eksekusi langsung di Windows host, alamat proxy adalah `http://localhost:20128/v1`; jangan menyamakan loopback container dengan host. Perubahan ini berasal dari `.env` pengguna, bukan fallback otomatis. `MAX_EXECUTION_MS=180000` diterima guard LIVE-03 maksimum 180 detik sesuai PRD §5; default parser tetap 60000 ms.
 
 Gateway/model ini merupakan pilihan deployment. LIVE-01 historis telah membuktikan tool calling, pengembalian tool result dan final output exact-match pada Chat API; cancellation diuji offline. Itu bukan bukti riset live E2E: LIVE-03 Fase 6 gagal pada deadline. Jangan diam-diam mengganti model, endpoint, atau API mode jika gagal. Usage yang tidak tersedia tetap null.
 
@@ -326,14 +328,14 @@ LIVE-03 terpisah dari ordinary checks. `scripts/live.ts --case LIVE-03` memerluk
 
 ## 11. Status verifikasi kontrak teknis
 
-| ID   | Verifikasi                                                                            | Task pemilik   | Bukti/status saat ini                                          |
-| ---- | ------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------- |
-| V-01 | Versi SDK, lifecycle, binding state dan policy pada generation/streaming/Studio       | P1-01, P1-02   | Verified offline; dilengkapi HTTP/UI regression Fase 5/6       |
-| V-02 | Chat API dan tool-result round-trip pada gateway/model pilihan                        | LIVE-01        | Passed historis; bukan bukti live riset E2E                    |
-| V-03 | Bentuk hasil Tavily dan pemetaan source fields                                        | P2-01, LIVE-02 | Fixtures dan LIVE-02 passed historis                           |
-| V-04 | Non-root, permission reports, read-only root, dan UI isolation di Docker Desktop/WSL2 | P5-01, P5-02   | Podman passed; Docker Desktop/WSL2 belum diverifikasi langsung |
+| ID   | Verifikasi                                                                            | Task pemilik   | Bukti/status saat ini                                       |
+| ---- | ------------------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------- |
+| V-01 | Versi SDK, lifecycle, binding state dan policy pada generation/streaming/Studio       | P1-01, P1-02   | Verified offline; dilengkapi HTTP/UI regression Fase 5/6    |
+| V-02 | Chat API dan tool-result round-trip pada gateway/model pilihan                        | LIVE-01        | Passed historis; bukan bukti live riset E2E                 |
+| V-03 | Bentuk hasil Tavily dan pemetaan source fields                                        | P2-01, LIVE-02 | Fixtures dan LIVE-02 passed historis                        |
+| V-04 | Non-root, permission reports, read-only root, dan UI isolation di Docker Desktop/WSL2 | P5-01, P5-02   | Podman historis dan Docker Desktop/WSL2 passed; CONTEXT §13 |
 
-Ledger hasil dan batas bukti dimiliki CONTEXT. LIVE-03 Fase 6 gagal pada deadline; live E2E dan review kualitas masih blocked, bukan kekurangan kode runner/eval. Bukti offline/Podman tidak menggantikan acceptance yang belum terpenuhi.
+Ledger hasil dan batas bukti dimiliki CONTEXT. LIVE-03 Fase 6 gagal pada deadline; satu follow-up Docker kini completed dengan trace summary dan host round-trip. Review kualitas coding-agent WITH_NOTES dan keputusan pemilik masih pending. Trace export bukan bukti tab native Traces/Evals aktif.
 
 ## 12. Referensi resmi
 

@@ -87,16 +87,16 @@ Pada streaming, delta/turn/tool events adalah draft. Hanya terminal response JSO
 
 Default provider adalah gateway kompatibel OpenAI `https://gateway.devscale.id/v1`, model `gpt-6-luna`, Chat Completions (`LLM_API=chat`), serta Tavily Search API. Tidak ada fallback endpoint/model atau automatic retry.
 
-| Batas default         | Nilai                                               |
-| --------------------- | --------------------------------------------------- |
-| Search per run        | 3 panggilan, termasuk yang gagal                    |
-| Model per run         | 5 total attempts, termasuk call awal dan yang gagal |
-| Deadline run          | 60 detik                                            |
-| Revisi draft          | 1 setelah draft pertama ditolak                     |
-| Successful write/read | Masing-masing 1 per run                             |
-| Tool concurrency      | 1                                                   |
-| Hasil per search      | Maksimum 5                                          |
-| Ukuran laporan UTF-8  | 65.536 byte                                         |
+| Batas default         | Nilai                                                        |
+| --------------------- | ------------------------------------------------------------ |
+| Search per run        | 3 panggilan, termasuk yang gagal                             |
+| Model per run         | 5 total attempts, termasuk call awal dan yang gagal          |
+| Deadline run          | Default 60 detik; acceptance terotorisasi maksimum 180 detik |
+| Revisi draft          | 1 setelah draft pertama ditolak                              |
+| Successful write/read | Masing-masing 1 per run                                      |
+| Tool concurrency      | 1                                                            |
+| Hasil per search      | Maksimum 5                                                   |
+| Ukuran laporan UTF-8  | 65.536 byte                                                  |
 
 Semua langkah memakai budget run awal, termasuk revisi dan read-back. Penolakan draft kedua menghentikan run; kegagalan I/O bukan kesempatan revisi konten. Batas operasi/waktu/ukuran ini bukan jaminan token atau biaya moneter. Config dan batas input/query/snippet ada di `.env.example` dan `src/config/index.ts`.
 
@@ -129,7 +129,7 @@ ALLOW_LIVE_TESTS=true pnpm exec node --env-file=.env --import tsx scripts/live.t
 - LIVE-02 melakukan satu query publik `Redis official documentation`, maksimum lima hasil, tanpa LLM/retry.
 - LIVE-03 menjalankan satu riset Redis melalui HTTP Studio sementara, lalu memeriksa host report round-trip dan menyimpan ringkasan trace. Command, guards, serta rubrik review ada di [EVALUATION](EVALUATION.md#live-03-tepat-satu-run-riset-melalui-http-studio).
 
-LIVE-01/02 memiliki bukti historis dan tidak perlu diulang sebagai dependency LIVE-03. Hasil dan blocker terkini ada di CONTEXT. LIVE-03 lokal bukan verifikasi Docker Desktop.
+LIVE-01/02 memiliki bukti historis dan tidak perlu diulang sebagai dependency LIVE-03. Hasil terkini ada di CONTEXT §13. Command LIVE-03 host sendiri bukan verifikasi Docker Desktop; follow-up yang dijalankan di image Docker dengan bind mount dibedakan eksplisit dari command host.
 
 ## Peta kode dan workflow
 

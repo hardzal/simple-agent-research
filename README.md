@@ -2,7 +2,7 @@
 
 Asisten riset sederhana untuk mencari informasi web dan menyimpannya sebagai laporan Markdown beserta sumbernya. Tulis topik atau pertanyaan lewat Anvia Studio, lalu buka laporan yang dihasilkan di komputer Anda.
 
-Proyek ini masih berupa percobaan (proof of concept). Pengujian otomatis tanpa API asli sudah lulus, tetapi uji riset dengan layanan asli terakhir berhenti karena batas waktu dan belum menghasilkan laporan. Detail hasilnya ada di [status proyek](docs/CONTEXT.md#12-fase-6--evaluasi-dan-finalisasi).
+Proyek ini masih berupa proof of concept. Checks offline, acceptance Docker Desktop/WSL2, dan satu LIVE-03 melalui HTTP Studio di Docker sudah lulus. Review kualitas coding-agent berstatus WITH_NOTES dan tetap memerlukan keputusan pemilik; M1 belum dinyatakan diterima penuh. Bukti terbaru ada di [status acceptance](docs/CONTEXT.md#13-follow-up-acceptance--docker-desktopwsl2-dan-live-03).
 
 ## Contoh permintaan
 
@@ -83,11 +83,11 @@ File yang ada di folder laporan belum tentu hasil yang berhasil. Gunakan status 
 
 - Riset menggunakan cuplikan hasil pencarian, bukan membaca seluruh isi artikel. Periksa sumber sebelum memakai laporan untuk keputusan penting.
 - Pengecekan sumber memastikan ID dan URL sesuai hasil pencarian. Pengecekan ini tidak menjamin semua kesimpulan benar.
-- Batas bawaan setiap permintaan adalah 60 detik, maksimal tiga pencarian dan lima pemanggilan model. Semua langkah, termasuk perbaikan dan penyimpanan laporan, memakai batas yang sama.
+- Batas bawaan setiap permintaan adalah 60 detik, maksimal tiga pencarian dan lima pemanggilan model. Follow-up acceptance yang diotorisasi memakai `MAX_EXECUTION_MS=180000` (3 menit); guard LIVE-03 menerima maksimum 180 detik. Semua langkah, termasuk perbaikan dan penyimpanan laporan, memakai batas yang sama.
 - Agent mendapat satu kesempatan memperbaiki draft yang ditolak, selama waktu dan jumlah pemanggilan masih tersedia. Aplikasi tidak mengulang otomatis permintaan yang gagal.
 - Proyek ini belum menyediakan riwayat percakapan permanen, login pengguna, atau layanan riset terjadwal.
 
-Container dan Studio sudah diuji menggunakan Podman. Docker Desktop/WSL2 belum diuji langsung. Keberhasilan pengujian dengan data buatan belum membuktikan bahwa riset dengan API asli selalu berhasil.
+Container dan Studio sudah diuji menggunakan Podman serta Docker Desktop dengan kernel WSL2. Acceptance Docker mencakup UI, sandbox, bind mount, dan persistensi recreate; satu riset live juga completed. Ini bukan jaminan semua topik atau setiap run selalu berhasil. Tab native Traces/Evals belum aktif; ringkasan trace LIVE-03 dapat dibuka sebagai file JSON.
 
 ## Memeriksa proyek tanpa API key
 
