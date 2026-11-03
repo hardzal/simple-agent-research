@@ -226,3 +226,9 @@ Dalam PLAN/CONTEXT dan PR, tulis:
 6. Branch, draft PR, dan titik lanjut setelah owner review/merge.
 
 Jangan menandai M1 selesai hanya karena agent menghasilkan teks laporan atau karena seluruh checkbox dokumentasi sudah terisi.
+
+## 12. Corrective follow-up — citation revision
+
+- Verified offline: instruksi mempertahankan sourceId lintas pencarian, termasuk subset ID tidak berurutan; feedback INVALID_REPORT menyediakan citationSources untuk mismatch/unknown ID.
+- Regression dua pencarian → draft renumbered ditolak tanpa write → satu revisi ID asli berhasil write/read-back; penolakan kedua tetap terminal. Budget dan validator tidak dilonggarkan.
+- Bukti checks dan batas deployment/live ada di CONTEXT §14. Tidak mengubah status acceptance M1 atau menambah izin live test.

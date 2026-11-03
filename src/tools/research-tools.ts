@@ -127,6 +127,16 @@ export function createResearchTools(
           code: "INVALID_REPORT" as const,
           issues,
           canRevise,
+          ...(issues.some((issue) =>
+            ["CITATION_SOURCE_MISMATCH", "UNKNOWN_SOURCE_ID"].includes(issue),
+          )
+            ? {
+                citationSources: registry.list().map(({ sourceId, url }) => ({
+                  sourceId,
+                  url,
+                })),
+              }
+            : {}),
         };
       }
       const hash = createHash("sha256").update(content, "utf8").digest("hex");

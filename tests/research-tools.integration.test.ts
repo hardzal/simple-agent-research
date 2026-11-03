@@ -51,6 +51,67 @@ async function fixture(options: Partial<typeof config> = {}) {
   return { root, active, search, store, tools };
 }
 describe("scoped research tools", () => {
+  it("returns authoritative citation mappings across searches for one corrective revision", async () => {
+    const { tools, search, store } = await fixture();
+    const write = vi.spyOn(store, "write");
+    const hits = Array.from({ length: 6 }, (_, index) => ({
+      title: `Source ${index + 1}`,
+      url: `https://example.com/source-${index + 1}`,
+      snippet: "untrusted search text",
+    }));
+    search.mockResolvedValueOnce(hits.slice(0, 5));
+    search.mockResolvedValueOnce(hits.slice(5));
+    await tools.webSearch({ query: "first" });
+    await tools.webSearch({ query: "second" });
+    const draft = (ids: string[]) =>
+      `# Harness\n\nFindings ${ids.map((id) => `[${id}]`).join(" ")}.\n\n## Sources\n${ids.map((id, index) => `- [${id}] ${hits[[0, 3, 5][index]!]!.url}`).join("\n")}\n`;
+    const rejected = await tools.writeFile({
+      content: draft(["S1", "S2", "S3"]),
+    });
+    expect(rejected).toEqual({
+      success: false,
+      code: "INVALID_REPORT",
+      issues: ["CITATION_SOURCE_MISMATCH"],
+      canRevise: true,
+      citationSources: hits.map((hit, index) => ({
+        sourceId: `S${index + 1}`,
+        url: hit.url,
+      })),
+    });
+    expect(write).not.toHaveBeenCalled();
+    expect(
+      await tools.writeFile({ content: draft(["S1", "S4", "S6"]) }),
+    ).toMatchObject({ success: true });
+    await tools.readFile({});
+    expect(write).toHaveBeenCalledTimes(1);
+    expect(tools.snapshot()).toMatchObject({
+      reportVerified: true,
+      validationRejections: 1,
+      webSearchCalls: 2,
+    });
+  });
+  it("does not grant extra revisions when returning mappings for unknown citations", async () => {
+    const { tools, store } = await fixture();
+    const write = vi.spyOn(store, "write");
+    await tools.webSearch({ query: "Redis" });
+    const content = report.replaceAll("[S1]", "[S99]");
+    expect(await tools.writeFile({ content })).toMatchObject({
+      canRevise: true,
+      issues: expect.arrayContaining(["UNKNOWN_SOURCE_ID"]),
+      citationSources: [{ sourceId: "S1", url: "https://redis.io/docs/" }],
+    });
+    expect(await tools.writeFile({ content })).toMatchObject({
+      canRevise: false,
+    });
+    await expect(tools.writeFile({ content: report })).rejects.toThrow(
+      "RUN_TERMINAL",
+    );
+    expect(write).not.toHaveBeenCalled();
+    expect(tools.snapshot()).toMatchObject({
+      status: "failed",
+      validationRejections: 2,
+    });
+  });
   it("searches, rejects a foreign draft before I/O, then writes and verifies exactly once", async () => {
     const { tools, active } = await fixture();
     await expect(tools.readFile({})).rejects.toThrow("READ_BEFORE_WRITE");

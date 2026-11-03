@@ -248,6 +248,8 @@ Sisa acceptance tidak berubah: LIVE-03 sukses beserta review kualitas belum ters
 
 ## 13. Follow-up acceptance — Docker Desktop/WSL2 dan LIVE-03
 
+Follow-up corrective citation yang lebih baru dicatat di §14; bukti acceptance di bagian ini tetap bersifat historis.
+
 Status: **gate executable/offline/Docker passed; kualitas WITH_NOTES, review manusia dan acceptance M1 akhir pending**. Branch `fix/m1-live-acceptance` berada di worktree `C:/Users/ThinkPad/Documents/Code/ai-engineer-product/agent-research-m1-acceptance`. Basis `origin/master` `801ee7b` sudah memuat Fase 1–6 melalui PR #2–#5 dan dokumentasi PR #6. Perubahan belum selesai pada `feat/studio-tracing-evals` di worktree semula dipertahankan; tidak di-stash, dihapus, atau dimasukkan ke commit acceptance.
 
 ### Otorisasi dan batas
@@ -285,3 +287,13 @@ Status: **gate executable/offline/Docker passed; kualitas WITH_NOTES, review man
 - PRD §9 menandai gate live/trace export dan Docker Desktop/WSL2 verified. FR Must acceptance tetap unchecked sampai catatan kualitas diputuskan pemilik. Review/merge Fase 1–6 sudah terbukti; follow-up ini sendiri belum merged dan M1 **belum dinyatakan diterima penuh**.
 - Native Traces/Evals tetap belum aktif; WIP branch terpisah tidak diambil alih. Tidak ada database, conversation memory, UI produk baru, atau live runs tambahan.
 - Publikasi draft PR terhalang autentikasi: `gh` tidak tersedia, `GH_TOKEN`/`GITHUB_TOKEN` environment tidak tersedia, browser GitHub masih Sign in. Tidak mengambil credential dari file lain atau mengarang PR URL. Status push SSH dilaporkan terpisah saat handoff; jangan merge/ready otomatis.
+
+## 14. Corrective follow-up — citation revision
+
+Branch `fix/citation-revision` dimulai dari `origin/master` terbaru setelah fetch. Payload pengguna menunjukkan model menomori ulang Databricks S4 menjadi S2 dan OpenAI S6 menjadi S3 setelah dua pencarian. Validator menolak mapping yang memang salah; bukan bukti parser keliru.
+
+- Instruksi melarang renumber sourceId lintas webSearch, memberi contoh subset S1/S4/S6, dan meminta revisi citation badan serta daftar sumber berdasarkan mapping resmi.
+- INVALID_REPORT untuk mismatch/unknown ID kini menyertakan `citationSources` dari registry run aktif, hanya ID dan URL. Tidak menyertakan judul/snippet atau menggemakan draft; validator, budget, serta satu kesempatan revisi tidak berubah.
+- RED → GREEN: regression gagal karena mapping belum dikembalikan, lalu lulus untuk dua pencarian, penolakan tanpa filesystem write, dan revisi ID nonberurutan yang berhasil write/read-back. Test instruksi juga gagal sebelum prompt diperbaiki. Guard tambahan memastikan penolakan kedua tetap terminal tanpa write.
+- `pnpm run check` exit 0: format, lint, typecheck, build, 138 unit/server, 54 integration, 6 SDK evaluation wrapper dan 12 behavior tests; mandatory 5/5. Tests memakai fake dependencies, tanpa request berbayar.
+- Belum rebuild/recreate container Studio pengguna atau menjalankan live quality test. Perubahan source tidak otomatis mengubah image/container yang sedang berjalan. Acceptance M1 historis tidak diubah oleh hasil offline ini.
