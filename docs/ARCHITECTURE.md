@@ -228,12 +228,15 @@ type WriteFileResult =
       code: "INVALID_REPORT";
       issues: string[];
       canRevise: boolean;
+      citationSources?: { sourceId: string; url: string }[];
     };
 ```
 
 Handler memeriksa scope, terminal latch, deadline, dan successful write quota. Validator berjalan sebelum report store menulis.
 
 Penolakan konten pertama mengembalikan issues yang aman; pengiriman berikutnya adalah satu-satunya revisi. Penolakan kedua menetapkan failure latch dan menghentikan pekerjaan berikutnya. Penerimaan pertama menutup izin write berikutnya. I/O failure dipetakan sebagai failed, bukan revisi konten tambahan.
+
+Untuk `CITATION_SOURCE_MISMATCH` atau `UNKNOWN_SOURCE_ID`, feedback menyertakan `citationSources`: seluruh pasangan ID–URL registry run aktif, tanpa judul/snippet atau isi draft. Agent memakai mapping ini untuk membetulkan citation badan dan daftar sumber, bukan menomori ulang sumber terpilih. ID stabil lintas pencarian; memilih S1, S4, S6 tetap memakai ID tersebut meskipun tidak berurutan. Feedback tidak menambah kesempatan revisi atau budget dan tidak melonggarkan validator.
 
 `path` selalu dibuat aplikasi dari reports root dan UUID run. Input model tidak menerima path, nama file, atau shell command.
 

@@ -2,9 +2,9 @@
 
 **Milestone:** M1 — Proof of Concept
 
-**Status:** Requirement M1 v1.1 dengan budget acceptance terotorisasi; gate teknis offline/Docker/LIVE-03 passed; acceptance kualitas/pemilik pending
+**Status:** Requirement M1 v1.1; gate teknis offline/Docker/LIVE-03 passed dan pemilik menerima report untuk scope M1; corrective citation menunggu merge melalui PR.
 
-**Diperbarui:** 2026-10-29
+**Diperbarui:** 2026-11-03
 
 Dokumen ini memiliki requirement produk dan acceptance criteria. Desain teknis berada di [ARCHITECTURE.md](ARCHITECTURE.md), urutan implementasi di [PLAN.md](PLAN.md), kondisi aktual di [CONTEXT.md](CONTEXT.md), dan aturan coding agent di [AGENTS.md](../AGENTS.md).
 
@@ -205,9 +205,9 @@ Token usage yang tidak diberikan gateway dicatat sebagai tidak tersedia, bukan a
 
 ## 9. Definition of Done M1
 
-Checklist berikut mencatat bukti sampai follow-up acceptance. `[x]` berarti kriteria tersebut terbukti dalam lingkup yang disebutkan; tidak otomatis berarti M1 diterima. Ledger terbaru ada di [CONTEXT §13](CONTEXT.md#13-follow-up-acceptance--docker-desktopwsl2-dan-live-03); hasil gagal terdahulu tetap tercatat di §12.
+Checklist berikut mencatat bukti dan penerimaan pemilik untuk M1. `[x]` berarti kriteria tersebut terbukti/diterima dalam lingkup yang disebutkan. Ledger terbaru ada di [CONTEXT §14](CONTEXT.md#14-corrective-follow-up--citation-revision); hasil gagal terdahulu tetap tercatat di §12.
 
-- [ ] FR Must diterima pemilik dalam lingkup M1. Implementasi/regression serta satu LIVE-03 faktual sudah terbukti; review coding-agent terhadap laporan berstatus WITH_NOTES. Fakta inti didukung snippet, tetapi beberapa contoh/definisi merupakan elaborasi yang tidak eksplisit di evidence. Review manusia dan keputusan atas keterbatasan semantik masih pending; bukan klaim generalisasi seluruh topik.
+- [x] FR Must diterima pemilik dalam lingkup M1 untuk bentuk laporan saat ini, setelah review struktur/format serta isi dan keterbatasannya. Penerimaan ini terbatas pada PoC M1 dan bukan klaim bahwa seluruh topik akan selalu akurat atau bahwa setiap klaim memiliki dukungan semantik penuh dari snippet. Bukti teknis/regression dan satu LIVE-03 faktual tercatat di CONTEXT §14; catatan WITH_NOTES historis terhadap laporan acceptance sebelumnya tetap tersimpan di §13.
 - [x] Lima mandatory cases executable dan lulus deterministic assertions. SDK EVAL-01–05: 5/5; bind mount EVAL-05 dibuktikan terpisah dengan Podman dan Docker Desktop/WSL2, bukan dinisbatkan pada unit test.
 - [x] Supporting cases kritis untuk revisi, bahasa, budget, isolation, dan filesystem lulus dengan fake/scripted dependencies.
 - [x] Laporan valid tersimpan pada host, tetap tersedia setelah container dibuat ulang; acceptance fake providers pada Podman dan Docker Desktop membuktikan byte equality/persistensi. LIVE-03 Docker juga membuktikan write/read-back dan bind-mounted report pada host.
@@ -216,9 +216,9 @@ Checklist berikut mencatat bukti sampai follow-up acceptance. `[x]` berarti krit
 - [x] Limit dan cancellation ditegakkan dalam kode, termasuk model attempts, quota search, deadline, dan penolakan late results.
 - [x] Docker Compose dan Anvia Studio dapat digunakan di Windows Docker Desktop/WSL2. Image terbaru, sandbox/bind mount/recreate, Compose up/recreate/healthy/down, serta browser Connected terbukti; lihat CONTEXT §13.
 - [x] Live tasks tercatat: LIVE-01/02 passed historis; kegagalan LIVE-03 terdahulu tetap failed; satu follow-up LIVE-03 Docker terotorisasi passed tanpa retry.
-- [x] Satu live end-to-end melalui HTTP Studio di Docker completed; ringkasan trace JSON, metrics, tool names, dan snippet sumber dapat diinspeksi. Ini bukan pengaktifan tab native Traces; review kualitas/persetujuan pemilik tetap terpisah.
+- [x] Satu live end-to-end melalui HTTP Studio di Docker completed; ringkasan trace JSON, metrics, tool names, dan snippet sumber dapat diinspeksi. Ini bukan pengaktifan tab native Traces; penerimaan pemilik atas report M1 saat ini dicatat terpisah.
 - [x] Setup, testing, keterbatasan, dan hasil evaluasi didokumentasikan dalam README, CONTAINERS, EVALUATION, PLAN, dan CONTEXT.
-- [x] Review dan merge Fase 1–6 dilakukan pemilik melalui PR #2–#5, dokumentasi melalui PR #6. Follow-up acceptance ini belum di-merge dan keputusan penerimaan M1 tetap milik pemilik.
+- [x] Review dan merge Fase 1–6 dilakukan pemilik melalui PR #2–#5, dokumentasi melalui PR #6, dan follow-up acceptance melalui PR #7. Pemilik menerima report saat ini untuk scope M1; corrective citation beserta pembaruan acceptance docs disiapkan untuk review/merge terpisah.
 
 ### Pemetaan requirement ke implementasi Fase 6
 

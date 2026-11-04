@@ -1,22 +1,22 @@
 # Project Context — Simple Contextual Research Agent
 
-**Diperbarui:** 2026-10-29
+**Diperbarui:** 2026-11-03
 
 **Milestone aktif:** M1
 
-**Status:** Fase 1–6 merged melalui PR #2–#5; follow-up LIVE-03 dan Docker Desktop/WSL2 passed; kualitas WITH_NOTES dan acceptance pemilik pending
+**Status:** Fase 1–6 dan follow-up acceptance PR #7 merged; corrective citation direview/commit, verified offline dan deployed lokal dengan live E2E passed. Pemilik menerima report saat ini dan keterbatasannya dalam scope M1; corrective citation belum merged.
 
 **Repository:** https://github.com/hardzal/simple-agent-research
 
 **Base branch:** master
 
-**Branch aktif:** fix/m1-live-acceptance (worktree acceptance terpisah)
+**Branch aktif:** fix/citation-revision
 
 Dokumen ini menyimpan kondisi aktual dan titik lanjut. Requirement dimiliki [PRD.md](PRD.md), desain di [ARCHITECTURE.md](ARCHITECTURE.md), task di [PLAN.md](PLAN.md), dan workflow di [AGENTS.md](../AGENTS.md).
 
 ## 1. Kondisi yang telah diverifikasi
 
-State terkini ada di §13; §12 dan bagian sebelumnya merupakan riwayat bukti pada waktu pelaksanaan. Fetch terbaru membuktikan `origin/master` pada `801ee7b`, memuat merge PR #5 (Fase 6) dan #6 (dokumentasi). Fase 5 di-merge melalui [PR #4](https://github.com/hardzal/simple-agent-research/pull/4) pada `a39bac1`; fetch membuktikan commit `c2d0ce4` sebagai ancestor master. Branch Fase 6 dibuat dari `origin/master` tersebut. Riwayat bukti Fase 5 ada di §11. Riwayat Fase 1–4 di bawah mempertahankan bukti saat eksekusi; blocker publikasi Fase 4 sudah selesai dengan merge [PR #3](https://github.com/hardzal/simple-agent-research/pull/3) pada `476821c`. Fetch sesi Fase 5 membuktikan `origin/master` memuat `3fa927b` sebagai ancestor. Podman dipilih pengguna untuk build/test; Docker Desktop belum diverifikasi.
+State terkini ada di §14; §4–§13 merupakan riwayat bukti pada waktu pelaksanaan, bukan status branch/deployment saat ini. Fetch dan pemeriksaan Git terakhir membuktikan `origin/master` pada `63ff9ee`, memuat merge follow-up acceptance [PR #7](https://github.com/hardzal/simple-agent-research/pull/7). HEAD lokal `559df48` pada `fix/citation-revision` memuat perbaikan citation dan berada satu commit di depan `origin/master`; perbaikan ini belum merged. Docker Desktop/WSL2 sudah diverifikasi historis di §13; rebuild/recreate terbaru memakai Podman di §14. Referensi worktree mesin lain, blockers, dan status belum merged pada ledger historis tidak menggantikan ringkasan aktual ini.
 
 Setelah pengguna menyatakan Fase 3 sudah di-merge, `git fetch origin` membuktikan `origin/master` pada `b77fcd0` (merge PR #2) dan `16f081f` merupakan ancestor-nya. Merge ini mencakup implementasi Fase 1–3. Branch `phase/04-report-validation` dibuat dari baseline tersebut. Commit aturan per-fitur yang sebelumnya lokal dibawa sebagai `34535b7`; implementasi Fase 4 tidak ditumpuk pada PR Fase 3.
 
@@ -24,36 +24,38 @@ Sebelum baseline dokumentasi PR #1, repository belum memiliki source aplikasi, p
 
 Implementasi Fase 1 mencakup package/tooling, config parser, provider factory, safe metrics logger, adapter scope, factory Studio tanpa persistence, serta guarded compatibility runner. Fase 2 menambahkan adapter Tavily, source registry, report validation/store, dan tiga scoped tools. Fase 3 menyediakan factory research agent, instructions, policy minimum, runner/entry point programatik, dan offline behavior cases. Fase 4 melengkapi validator/revisi/status. Fase 5 kini menyediakan image/Compose dan UI/server Studio dengan acceptance Podman.
 
-| Area                                      | Status                                                                                |
-| ----------------------------------------- | ------------------------------------------------------------------------------------- |
-| Requirement produk M1                     | Baseline dokumentasi sudah di-merge lewat PR #1                                       |
-| Arsitektur dan kontrak tools              | Adapter Tavily, registry, report store, validator, dan tiga scoped tools tersedia     |
-| Rencana enam fase                         | Fase 1–6 merged; follow-up acceptance teknis passed, keputusan pemilik pending        |
-| Aturan kerja Hermes dan draft PR per fase | Disusun berdasarkan keputusan pengguna                                                |
-| Paket/SDK yang terpasang                  | Verifikasi Fase 4 Node 24.14.0; pnpm 11.22.0; dependency/lockfile SDK tidak diubah    |
-| Unit/integration/offline eval             | 137 unit/server, 52 integration, 12 behavior, 6 SDK eval wrapper tests; mandatory 5/5 |
-| Gateway/model smoke test                  | LIVE-01 terakhir lulus; dua percobaan sebelumnya gagal validasi replay                |
-| Tavily live test                          | LIVE-02 lulus; satu query, lima hasil, tanpa LLM/retry                                |
-| Docker/Studio runtime                     | Podman historis; Docker Desktop/WSL2, Compose/UI, sandbox dan recreate passed; §13    |
+| Area                                      | Status                                                                                        |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Requirement produk M1                     | Baseline dokumentasi sudah di-merge lewat PR #1                                               |
+| Arsitektur dan kontrak tools              | Adapter Tavily, registry, report store, validator, dan tiga scoped tools tersedia             |
+| Rencana enam fase                         | Fase 1–6 dan PR #7 merged; corrective citation lokal verified; acceptance M1 pending          |
+| Aturan kerja Hermes dan draft PR per fase | Disusun berdasarkan keputusan pengguna                                                        |
+| Paket/SDK yang terpasang                  | Verifikasi Fase 4 Node 24.14.0; pnpm 11.22.0; dependency/lockfile SDK tidak diubah            |
+| Unit/integration/offline eval             | Gate terakhir §14: 138 unit/server, 54 integration, 12 behavior, 6 SDK wrapper; mandatory 5/5 |
+| Gateway/model smoke test                  | LIVE-01 terakhir lulus; dua percobaan sebelumnya gagal validasi replay                        |
+| Tavily live test                          | LIVE-02 lulus; satu query, lima hasil, tanpa LLM/retry                                        |
+| Docker/Studio runtime                     | Docker Desktop/WSL2 passed historis §13; Podman recreate/healthy dan live E2E passed §14      |
 
 ## 2. Keputusan pengguna yang telah dikumpulkan
 
-| Topik          | Keputusan                                                                | Sumber acuan     |
-| -------------- | ------------------------------------------------------------------------ | ---------------- |
-| Klarifikasi    | Akhiri request; pengguna mengirim ulang permintaan lengkap               | PRD §4.2         |
-| Draft ditolak  | Satu revisi, hanya selama budget awal masih tersedia                     | PRD §4.5         |
-| Bahasa laporan | Mengikuti bahasa permintaan kecuali ada instruksi bahasa eksplisit       | PRD §2           |
-| LLM            | Default gateway/gpt-6-luna; follow-up memakai proxy lokal/cx/gpt-6.1-sol | ARCH §1, §5; §13 |
-| Search         | Tavily Search API; pengguna sudah memiliki akses                         | ARCH §1          |
-| Development    | Windows, Docker Desktop/WSL2                                             | ARCH §9          |
-| Coding agent   | Hermes                                                                   | AGENTS           |
-| Review cadence | Berhenti setiap fase selesai dan checks lulus                            | AGENTS §3, §6    |
-| Live tests     | Hanya task live test yang ditentukan PLAN; ordinary checks memakai mock  | PLAN §9          |
-| Git handoff    | Branch terpisah dan draft PR ke master per fase; owner review/merge      | AGENTS §6        |
+| Topik          | Keputusan                                                                                              | Sumber acuan        |
+| -------------- | ------------------------------------------------------------------------------------------------------ | ------------------- |
+| Klarifikasi    | Akhiri request; pengguna mengirim ulang permintaan lengkap                                             | PRD §4.2            |
+| Draft ditolak  | Satu revisi, hanya selama budget awal masih tersedia                                                   | PRD §4.5            |
+| Bahasa laporan | Mengikuti bahasa permintaan kecuali ada instruksi bahasa eksplisit                                     | PRD §2              |
+| LLM            | Default gateway/gpt-6-luna; live terbaru cx/gpt-6-luna (API chat); cx/gpt-6.1-sol hanya bukti historis | ARCH §1, §5; §13–14 |
+| Search         | Tavily Search API; pengguna sudah memiliki akses                                                       | ARCH §1             |
+| Development    | Windows, Docker Desktop/WSL2                                                                           | ARCH §9             |
+| Coding agent   | Hermes                                                                                                 | AGENTS              |
+| Review cadence | Berhenti setiap fase selesai dan checks lulus                                                          | AGENTS §3, §6       |
+| Live tests     | Hanya task live test yang ditentukan PLAN; ordinary checks memakai mock                                | PLAN §9             |
+| Git handoff    | Branch terpisah dan draft PR ke master per fase; owner review/merge                                    | AGENTS §6           |
 
 Stack produk, tiga application tools, tanpa database/memory, dan scope M1 lainnya mengikuti PRD awal. Pengguna menyetujui arah research assistant personal dan implementasi M1 bertahap, lalu meminta pengecekan offline serta migrasi npm ke pnpm. pnpm 11.22.0 dipin di packageManager dengan pnpm-lock.yaml sebagai satu-satunya lockfile; package-lock.json dihapus. Node.js 24/Vitest tetap keputusan implementasi yang dituliskan terbuka di ARCHITECTURE.
 
 ## 3. Status verifikasi teknis
+
+Ringkasan V-01–V-04 berikut mempertahankan konteks fondasi; hasil deployment dan live terbaru ada di §14. Tidak ada gate runtime yang dijalankan ulang hanya untuk sinkronisasi dokumen ini.
 
 - V-01: binding scope/lifecycle, generation/streaming, direct tool rejection, cancellation/deadline, dan finalization seam terbukti dengan fake model. Factory scoped Studio wajib dipakai; konfigurasi default mengkloning agent dan melewati adapter. Trace persistence sementara nonaktif pada spike; integrasi UI/trace produk tetap wajib dibuktikan Fase 5.
 - V-02: LIVE-01 terakhir membuktikan tool-call → tool-result → final response pada gateway/model terpilih. Pemeriksaan tetap exact-match. Ini bukan bukti streaming provider, Tavily, riset end-to-end, atau UI Docker.
@@ -248,6 +250,8 @@ Sisa acceptance tidak berubah: LIVE-03 sukses beserta review kualitas belum ters
 
 ## 13. Follow-up acceptance — Docker Desktop/WSL2 dan LIVE-03
 
+Follow-up corrective citation yang lebih baru dicatat di §14; bukti acceptance di bagian ini tetap bersifat historis.
+
 Status: **gate executable/offline/Docker passed; kualitas WITH_NOTES, review manusia dan acceptance M1 akhir pending**. Branch `fix/m1-live-acceptance` berada di worktree `C:/Users/ThinkPad/Documents/Code/ai-engineer-product/agent-research-m1-acceptance`. Basis `origin/master` `801ee7b` sudah memuat Fase 1–6 melalui PR #2–#5 dan dokumentasi PR #6. Perubahan belum selesai pada `feat/studio-tracing-evals` di worktree semula dipertahankan; tidak di-stash, dihapus, atau dimasukkan ke commit acceptance.
 
 ### Otorisasi dan batas
@@ -285,3 +289,29 @@ Status: **gate executable/offline/Docker passed; kualitas WITH_NOTES, review man
 - PRD §9 menandai gate live/trace export dan Docker Desktop/WSL2 verified. FR Must acceptance tetap unchecked sampai catatan kualitas diputuskan pemilik. Review/merge Fase 1–6 sudah terbukti; follow-up ini sendiri belum merged dan M1 **belum dinyatakan diterima penuh**.
 - Native Traces/Evals tetap belum aktif; WIP branch terpisah tidak diambil alih. Tidak ada database, conversation memory, UI produk baru, atau live runs tambahan.
 - Publikasi draft PR terhalang autentikasi: `gh` tidak tersedia, `GH_TOKEN`/`GITHUB_TOKEN` environment tidak tersedia, browser GitHub masih Sign in. Tidak mengambil credential dari file lain atau mengarang PR URL. Status push SSH dilaporkan terpisah saat handoff; jangan merge/ready otomatis.
+
+## 14. Corrective follow-up — citation revision
+
+Branch `fix/citation-revision` dimulai dari `origin/master` terbaru setelah fetch. Payload pengguna menunjukkan model menomori ulang Databricks S4 menjadi S2 dan OpenAI S6 menjadi S3 setelah dua pencarian. Validator menolak mapping yang memang salah; bukan bukti parser keliru.
+
+- Instruksi melarang renumber sourceId lintas webSearch, memberi contoh subset S1/S4/S6, dan meminta revisi citation badan serta daftar sumber berdasarkan mapping resmi.
+- INVALID_REPORT untuk mismatch/unknown ID kini menyertakan `citationSources` dari registry run aktif, hanya ID dan URL. Tidak menyertakan judul/snippet atau menggemakan draft; validator, budget, serta satu kesempatan revisi tidak berubah.
+- RED → GREEN: regression gagal karena mapping belum dikembalikan, lalu lulus untuk dua pencarian, penolakan tanpa filesystem write, dan revisi ID nonberurutan yang berhasil write/read-back. Test instruksi juga gagal sebelum prompt diperbaiki. Guard tambahan memastikan penolakan kedua tetap terminal tanpa write.
+- `pnpm run check` exit 0: format, lint, typecheck, build, 138 unit/server, 54 integration, 6 SDK evaluation wrapper dan 12 behavior tests; mandatory 5/5. Tests memakai fake dependencies, tanpa request berbayar.
+- Pada handoff implementasi, container belum di-rebuild dan live belum dijalankan. Follow-up terotorisasi berikut menambahkan bukti deployment; acceptance M1 historis tidak diubah otomatis.
+
+### Deployment lokal dan satu verifikasi live setelah review pengguna
+
+- Pengguna menyatakan sudah review/commit; Git memverifikasi implementasi pada `559df48`, branch `fix/citation-revision`. Perubahan checklist PLAN yang belum di-commit dipertahankan.
+- `podman compose up -d --build --force-recreate studio` exit 0. Image `f42dfcde613d6fd19f6b420dbfffe40ecc9d884dba6fa4cdb5de70b3386051fe`; container baru `711cb144e8be665d8a72473b7b026abc83c14a59319ce8f35f5e27a3c214788e`, healthy. Pemeriksaan file dist membuktikan prompt Never renumber dan feedback citationSources tersedia. `/status` HTTP 200, satu agent; browser `/playground` Connected. Service lain tidak direcreate.
+- Satu request LIVE-03 dikirim langsung ke `/agents/research/runs` Studio aktif port 4021, bukan menjalankan managed server kedua dari runner standar. Probe eksplisit `--case LIVE-03`, `ALLOW_LIVE_TESTS=true`, guard maksimum 5 model attempts/3 search/180000 ms, satu POST streaming tanpa retry. Invocation pertama ditolak Node karena separator argumen CLI belum ada, sebelum kode/probe berjalan; invocation yang diperbaiki menghasilkan satu request berbayar. Endpoint/model/budget tidak diubah.
+- Hasil run `b0db7c3e-8bf9-4e74-ac62-2ee0ad07e281`: completed, HTTP 200, protokol anvia.client.v3, sekitar 15 detik. Log aplikasi: 4 model calls, 1 webSearch, 3 tool calls, 4 registered sources, 0 validation rejections, report_created/report_verified true. Trace tool names berisi webSearch/writeFile/readFile.
+- Evidence lokal ignored `reports/studio-recreate-b0db7c3e-8bf9-4e74-ac62-2ee0ad07e281.json`; laporan `reports/b0db7c3e-8bf9-4e74-ac62-2ee0ad07e281/report.md`, 2093 bytes. SHA-256 container dan host identik: `4bdddc47dbeb4a5ea9bc7d8f1feffaf0682e5e26013c2de3be77ccc53c455504`. Pembacaan host mengonfirmasi laporan Indonesia bertopik Redis dan daftar citation S1/S2/S3/S5 tanpa renumber.
+- Batas bukti: UI diperiksa Connected; pesan live dikirim melalui HTTP API, bukan klik browser. Live ini hanya satu pencarian dan tidak memicu revisi; multi-search/revision recovery tetap dibuktikan regression offline. Tidak menjalankan ulang live, quality judge, atau full semantic source review; human quality review tetap pending. Build menggunakan cache dengan verifikasi isi dist; bukan clean/no-cache build. Container tetap healthy setelah run.
+
+### Penerimaan pemilik dan titik lanjut aktual
+
+- Pemilik menyatakan menerima report yang dibuat agent saat ini untuk kebutuhan M1, termasuk isi dan keterbatasannya, serta menyetujuinya untuk kemudian di-merge dengan master. Penerimaan ini tidak menjamin generalisasi kualitas lintas topik atau dukungan semantik penuh untuk setiap klaim.
+- Catatan WITH_NOTES di §13 menilai laporan acceptance lama, bukan laporan Redis terbaru `b0db7c3e-8bf9-4e74-ac62-2ee0ad07e281`. Laporan terbaru tersedia pada path di atas dan merupakan artefak live yang menjadi konteks penerimaan; batas teknis satu search/no revision tetap dijelaskan di §14.
+- Berikutnya: siapkan integrasi corrective citation ke master melalui workflow review/PR; commit lokal tidak sama dengan merged. Deployment lokal, live E2E, dan acceptance report M1 sudah tercatat; tidak ada izin tambahan live run atau merge langsung.
+- Sinkronisasi ini hanya dokumentasi CONTEXT/PLAN; hasil gate runtime di atas adalah bukti pelaksanaan sebelumnya, bukan hasil rerun pada pembaruan dokumen.

@@ -1,8 +1,8 @@
 # Implementation Plan — Milestone 1
 
-**Status:** Fase 1–6 merged melalui PR #2–#5; follow-up teknis LIVE-03/Docker passed pada `fix/m1-live-acceptance`; review kualitas dan penerimaan pemilik pending
+**Status:** Fase 1–6 dan follow-up acceptance PR #7 merged; corrective citation pada `fix/citation-revision` direview/commit, verified offline dan deployed lokal dengan live E2E passed. Pemilik menerima report saat ini beserta keterbatasannya untuk scope M1; corrective citation belum merged.
 
-**Diperbarui:** 2026-10-29
+**Diperbarui:** 2026-11-03
 
 **Requirement:** [PRD.md](PRD.md)
 
@@ -37,19 +37,19 @@ Catatan riwayat: dependency dan bukti pada Fase 1–3 di bawah mencatat kondisi 
 
 ### Ringkasan penyelesaian sampai Fase 6
 
-| Task                 | Status implementasi/verifikasi saat ini                 | Bukti utama                                                                                                      |
-| -------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| P1-01–P1-03          | verified offline, merged                                | Config/provider/scope tests dan frozen install; CONTEXT §4                                                       |
-| LIVE-01              | verified live historis, merged                          | Tool-result replay exact-match pada run terakhir; CONTEXT §4                                                     |
-| P2-01–P2-03, LIVE-02 | verified offline + LIVE-02 passed historis, merged      | Adapter/registry/tools/filesystem tests; CONTEXT §5                                                              |
-| P3-01–P3-04          | verified offline, merged                                | Instructions/runtime/policy dan behavior fixtures; CONTEXT §7                                                    |
-| P4-01–P4-04          | verified offline, merged                                | Validator/revisi/error/late-result regression; CONTEXT §8                                                        |
-| P5-01–P5-04          | merged; verified offline/Podman/Docker Desktop          | UI, Compose, sandbox dan host round-trip/recreate; CONTEXT §11 dan §13                                           |
-| P6-01/P6-02          | verified offline, merged melalui PR #5                  | `tests/research.evaluation.test.ts` dan `tests/research.behavior.test.ts`; mandatory 5/5 serta negative controls |
-| LIVE-03              | follow-up executable E2E passed; kualitas owner pending | Docker HTTP Studio completed, report/trace/host round-trip; CONTEXT §13                                          |
-| P6-03                | dokumentasi merged; acceptance ledger diperbarui        | README, EVALUATION, PRD §9, dan CONTEXT §12                                                                      |
+| Task                 | Status implementasi/verifikasi saat ini                  | Bukti utama                                                                                                      |
+| -------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| P1-01–P1-03          | verified offline, merged                                 | Config/provider/scope tests dan frozen install; CONTEXT §4                                                       |
+| LIVE-01              | verified live historis, merged                           | Tool-result replay exact-match pada run terakhir; CONTEXT §4                                                     |
+| P2-01–P2-03, LIVE-02 | verified offline + LIVE-02 passed historis, merged       | Adapter/registry/tools/filesystem tests; CONTEXT §5                                                              |
+| P3-01–P3-04          | verified offline, merged                                 | Instructions/runtime/policy dan behavior fixtures; CONTEXT §7                                                    |
+| P4-01–P4-04          | verified offline, merged                                 | Validator/revisi/error/late-result regression; CONTEXT §8                                                        |
+| P5-01–P5-04          | merged; verified offline/Podman/Docker Desktop           | UI, Compose, sandbox dan host round-trip/recreate; CONTEXT §11 dan §13                                           |
+| P6-01/P6-02          | verified offline, merged melalui PR #5                   | `tests/research.evaluation.test.ts` dan `tests/research.behavior.test.ts`; mandatory 5/5 serta negative controls |
+| LIVE-03              | follow-up executable E2E passed; report diterima pemilik | Docker HTTP Studio completed, report/trace/host round-trip; CONTEXT §13–14                                       |
+| P6-03                | dokumentasi merged; acceptance ledger diperbarui         | README, EVALUATION, PRD §9, dan CONTEXT §12                                                                      |
 
-Fase 1–6 sudah merged. Follow-up `fix/m1-live-acceptance` dibuat dari `origin/master` terbaru pada worktree terpisah; perubahan tracing/evals yang belum selesai tidak dibawa. Gate executable LIVE-03, Docker Desktop/WSL2, Compose dan checks offline kini passed. Review coding-agent terhadap satu laporan berstatus WITH_NOTES; review manusia, acceptance M1 akhir, dan review/merge follow-up masih pending. Bukti gagal terdahulu tidak dihapus dan tidak ada live rerun otomatis.
+Fase 1–6 dan follow-up `fix/m1-live-acceptance` sudah merged, terakhir melalui PR #7 pada `origin/master` `63ff9ee`. Corrective citation berada pada HEAD lokal `559df48`, branch `fix/citation-revision`, belum merged. Checks offline serta rebuild/recreate Podman dan satu live E2E ke Studio aktif passed; bukti terbaru di CONTEXT §14. Pemilik menerima report saat ini beserta keterbatasannya untuk scope M1; acceptance M1 selesai. Catatan WITH_NOTES di CONTEXT §13 berlaku untuk laporan historis. Corrective citation masih perlu diintegrasikan melalui PR/master workflow; bukti gagal terdahulu tidak dihapus dan tidak ada live rerun otomatis.
 
 ## 3. Fase 1 — Project foundation
 
@@ -226,3 +226,19 @@ Dalam PLAN/CONTEXT dan PR, tulis:
 6. Branch, draft PR, dan titik lanjut setelah owner review/merge.
 
 Jangan menandai M1 selesai hanya karena agent menghasilkan teks laporan atau karena seluruh checkbox dokumentasi sudah terisi.
+
+## 12. Corrective follow-up — citation revision
+
+- [x] Instruksi mempertahankan sourceId lintas pencarian, termasuk subset ID tidak berurutan.
+- [x] Feedback INVALID_REPORT menyediakan citationSources untuk mismatch/unknown ID.
+- [x] Regression dua pencarian → draft renumbered ditolak tanpa write → satu revisi ID asli berhasil write/read-back.
+- [x] Guard penolakan kedua tetap terminal; budget dan validator tidak dilonggarkan.
+- [x] Seluruh gate offline lulus melalui `pnpm run check`; bukti di CONTEXT §14.
+- [x] Pengguna telah review dan commit implementasi pada `559df48` di branch `fix/citation-revision`.
+- [x] Rebuild/recreate Studio melalui Podman Compose; image berisi perbaikan citation, container healthy, HTTP status 200 dan UI Connected.
+- [x] Satu LIVE-03 ke endpoint Studio aktif port 4021: completed, report write/read-back verified dan hash host/container identik. Detail dan batas bukti di CONTEXT §14.
+- [x] Pemilik menerima struktur dan format laporan agent.
+- [x] Pemilik menerima report saat ini beserta keterbatasannya untuk scope M1; acceptance pemilik dicatat di PRD §9 dan CONTEXT §14.
+- [ ] Integrasi corrective citation ke master sesuai workflow; commit lokal tidak sama dengan merged.
+
+Checklist ini menutup implementasi, review, deployment lokal, dan acceptance report M1 untuk corrective citation. Belum bukti corrective branch sudah merged; merge mengikuti review PR oleh pemilik. Tidak menambah izin live test berikutnya.
